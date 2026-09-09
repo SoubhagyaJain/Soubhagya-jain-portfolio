@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* every micro-animation runs on its own clock, so the workspace never pulses in unison */
+  @keyframes tsCaret { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+  @keyframes tsExec { 0% { transform: translateY(0) } 33% { transform: translateY(5px) } 66% { transform: translateY(10px) } 100% { transform: translateY(0) } }
+  @keyframes tsReq { 0% { transform: translateX(0); opacity: 0 } 12% { opacity: 1 } 88% { opacity: 1 } 100% { transform: translateX(38px); opacity: 0 } }
+  @keyframes tsCell { 0%,100% { opacity: .18 } 50% { opacity: .95 } }
+  @keyframes tsPack { 0% { transform: translateY(9px) scale(.7); opacity: 0 } 30% { opacity: 1 } 60% { transform: translateY(0) scale(1); opacity: 1 } 100% { transform: translateY(-11px) scale(.9); opacity: 0 } }
+  @keyframes tsKV { 0% { transform: translateX(0); opacity: 0 } 20% { opacity: 1 } 50% { transform: translateX(15px); opacity: 1 } 51% { opacity: 0 } 52% { transform: translateX(15px); opacity: 0 } 70% { opacity: 1 } 100% { transform: translateX(0); opacity: 0 } }
+  @keyframes tsPaint { 0%,15% { opacity: .12 } 40%,100% { opacity: .85 } }
+  @keyframes tsToken { 0% { transform: translateX(-4px); opacity: 0 } 20% { opacity: 1 } 80% { opacity: 1 } 100% { transform: translateX(26px); opacity: 0 } }
+  @keyframes tsStage { 0%,10% { opacity: .16 } 25%,100% { opacity: .9 } }
+  @keyframes tsNN { 0% { r: 2; opacity: .8 } 100% { r: 11; opacity: 0 } }
+  @keyframes tsRank { 0%,45% { transform: translateY(0) } 55%,100% { transform: translateY(var(--to, 0px)) } }
+  @keyframes tsRoute { 0%,30% { opacity: .9 } 31%,100% { opacity: .12 } }
+  @keyframes tsTest { 0% { transform: translateX(0); opacity: 0 } 15% { opacity: 1 } 85% { opacity: 1 } 100% { transform: translateX(30px); opacity: 0 } }
+  @keyframes tsLoad { 0% { width: 2px } 70%,100% { width: 26px } }
+  @keyframes tsBatch { 0% { transform: translate(0,0) } 40%,60% { transform: translate(13px, var(--gather, 0px)) } 100% { transform: translate(30px, var(--gather, 0px)) } }
+</style>
+</helmet>
+<div style="position: relative; display: flex; flex-direction: column; gap: clamp(22px, 3vw, 40px); color: #f2ece0">
+
+  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap">
+    <div data-ts-rev="0" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); opacity: 0; transform: translateY(14px); transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">06</span><span style="opacity: .42; padding-right: .48em">/</span>Technology</div>
+    <div ref="{{ descRef }}" data-ts-rev="1" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(226,178,116,0.82); opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform 1s cubic-bezier(.2,.7,.2,1); text-align: right">what I combine to build real systems</div>
+  </div>
+
+  <div ref="{{ hostRef }}" style="position: relative; width: 100%; min-width: 0; aspect-ratio: 16 / 9.4; perspective: 1900px; perspective-origin: 50% 48%">
+    <div ref="{{ stageRef }}" style="position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform">
+      <svg ref="{{ svgRef }}" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible" aria-hidden="true">
+        <defs>
+          <linearGradient id="tsLink" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="rgba(216,228,232,0.1)"></stop>
+            <stop offset="0.5" stop-color="rgba(224,232,236,0.36)"></stop>
+            <stop offset="1" stop-color="rgba(216,228,232,0.1)"></stop>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div ref="{{ dotRef }}" style="position: absolute; inset: 0; pointer-events: none"></div>
+      <div ref="{{ modRef }}" style="position: absolute; inset: 0"></div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;signalRate&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0, &quot;max&quot;: 2.5, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Motion&quot; }
+}">
+// One workspace, fifteen instruments. Each module's micro-visual shows what that
+// technology actually does; the links show how they combine.
+const MODULES = [
+  { id: "python", l: "Python", x: 8, y: 15, z: 20, d: "the language everything else is glued together in", a: `
+    <g stroke="rgba(216,228,232,0.3)" stroke-width="0.9" stroke-linecap="round"><path d="M4 6h16M4 12h22M4 18h11"></path></g>
+    <rect x="0" y="3" width="2" height="18" fill="rgba(226,178,116,0.75)" style="animation: tsExec 3.4s cubic-bezier(.5,0,.5,1) infinite"></rect>
+    <rect x="13" y="16" width="1.6" height="5" fill="rgba(242,236,224,0.9)" style="animation: tsCaret 1.1s steps(1) infinite"></rect>` },
+  { id: "fastapi", l: "FastAPI", x: 27, y: 13, z: 5, d: "typed endpoints, validation and async request handling", a: `
+    <rect x="1" y="7" width="7" height="9" rx="1.5" fill="none" stroke="rgba(216,228,232,0.4)" stroke-width="0.9"></rect>
+    <rect x="30" y="7" width="7" height="9" rx="1.5" fill="none" stroke="rgba(216,228,232,0.4)" stroke-width="0.9"></rect>
+    <path d="M9 11.5h20" stroke="rgba(216,228,232,0.24)" stroke-width="0.8" stroke-dasharray="2 3"></path>
+    <circle cx="10" cy="11.5" r="1.5" fill="rgba(242,236,224,0.95)" style="animation: tsReq 2.6s linear infinite"></circle>
+    <circle cx="10" cy="11.5" r="1.2" fill="rgba(226,178,116,0.8)" style="animation: tsReq 2.6s linear infinite 1.3s"></circle>` },
+  { id: "serving", l: "Model Serving", x: 48, y: 12, z: 30, d: "queue, batch, stream — throughput under a latency budget", a: `
+    <g fill="rgba(242,236,224,0.85)">
+      <circle cx="3" cy="5" r="1.4" style="--gather: 6px; animation: tsBatch 3.2s cubic-bezier(.4,0,.4,1) infinite"></circle>
+      <circle cx="3" cy="9" r="1.4" style="--gather: 2px; animation: tsBatch 3.2s cubic-bezier(.4,0,.4,1) infinite"></circle>
+      <circle cx="3" cy="13" r="1.4" style="--gather: -2px; animation: tsBatch 3.2s cubic-bezier(.4,0,.4,1) infinite"></circle>
+      <circle cx="3" cy="17" r="1.4" style="--gather: -6px; animation: tsBatch 3.2s cubic-bezier(.4,0,.4,1) infinite"></circle>
+    </g>
+    <rect x="20" y="4" width="8" height="15" rx="2" fill="none" stroke="rgba(226,178,116,0.5)" stroke-width="0.9"></rect>
+    <g stroke="rgba(242,236,224,0.55)" stroke-width="0.9" stroke-linecap="round"><path d="M30 8h6M30 11.5h8M30 15h5"></path></g>` },
+  { id: "llms", l: "LLMs", x: 69, y: 14, z: 15, d: "token by token generation, with all the failure modes that implies", a: `
+    <rect x="10" y="3" width="12" height="17" rx="2" fill="none" stroke="rgba(226,178,116,0.55)" stroke-width="1"></rect>
+    <g stroke="rgba(216,228,232,0.2)" stroke-width="0.6"><path d="M13 3v17M16 3v17M19 3v17"></path></g>
+    <g fill="rgba(242,236,224,0.9)">
+      <rect x="24" y="6" width="4" height="2" rx="1" style="animation: tsToken 2.2s linear infinite"></rect>
+      <rect x="24" y="10.5" width="3" height="2" rx="1" style="animation: tsToken 2.2s linear infinite .7s"></rect>
+      <rect x="24" y="15" width="5" height="2" rx="1" style="animation: tsToken 2.2s linear infinite 1.4s"></rect>
+    </g>
+    <path d="M2 11.5h7" stroke="rgba(216,228,232,0.3)" stroke-width="0.9"></path>` },
+  { id: "localllms", l: "Local LLMs", x: 90, y: 16, z: -20, d: "models that run on your own hardware, no data leaving the box", a: `
+    <rect x="6" y="4" width="20" height="15" rx="2" fill="none" stroke="rgba(216,228,232,0.36)" stroke-width="0.9"></rect>
+    <rect x="10" y="8" width="12" height="7" rx="1" fill="none" stroke="rgba(226,178,116,0.45)" stroke-width="0.8"></rect>
+    <rect x="11" y="10.6" width="2" height="1.8" rx="0.9" fill="rgba(226,178,116,0.85)" style="animation: tsLoad 4.2s cubic-bezier(.3,0,.4,1) infinite"></rect>
+    <g stroke="rgba(216,228,232,0.24)" stroke-width="0.7"><path d="M6 8H3M6 11.5H3M6 15H3M26 8h3M26 11.5h3M26 15h3"></path></g>` },
+  { id: "docker", l: "Docker", x: 8, y: 47, z: -10, d: "the same environment on my laptop and in production", a: `
+    <g fill="none" stroke="rgba(216,228,232,0.34)" stroke-width="0.9">
+      <rect x="4" y="14" width="7" height="6" rx="1"></rect><rect x="12" y="14" width="7" height="6" rx="1"></rect><rect x="20" y="14" width="7" height="6" rx="1"></rect>
+    </g>
+    <rect x="12" y="14" width="7" height="6" rx="1" fill="rgba(226,178,116,0.5)" style="animation: tsPack 4.6s cubic-bezier(.4,0,.4,1) infinite"></rect>
+    <path d="M2 22h28" stroke="rgba(216,228,232,0.2)" stroke-width="0.8"></path>` },
+  { id: "redis", l: "Redis", x: 28, y: 45, z: 10, d: "features and cached answers, fetched in single-digit milliseconds", a: `
+    <g fill="none" stroke="rgba(216,228,232,0.34)" stroke-width="0.9"><ellipse cx="18" cy="7" rx="9" ry="3"></ellipse><path d="M9 7v8c0 1.7 4 3 9 3s9-1.3 9-3V7"></path></g>
+    <rect x="0" y="9" width="4" height="2" rx="1" fill="rgba(242,236,224,0.9)" style="animation: tsKV 2.9s cubic-bezier(.4,0,.4,1) infinite"></rect>
+    <rect x="0" y="14" width="3" height="2" rx="1" fill="rgba(226,178,116,0.8)" style="animation: tsKV 2.9s cubic-bezier(.4,0,.4,1) infinite 1.2s"></rect>` },
+  { id: "pytorch", l: "PyTorch", x: 48, y: 44, z: 25, d: "tensors, autograd and the layers underneath the model", a: `
+    <g fill="rgba(242,236,224,0.5)">
+      <rect x="2" y="4" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite"></rect><rect x="7" y="4" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite .3s"></rect><rect x="12" y="4" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite .6s"></rect>
+      <rect x="2" y="9" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite .9s"></rect><rect x="7" y="9" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite 1.2s"></rect><rect x="12" y="9" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite 1.5s"></rect>
+      <rect x="2" y="14" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite 1.8s"></rect><rect x="7" y="14" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite 2.1s"></rect><rect x="12" y="14" width="4" height="4" style="animation: tsCell 2.8s ease-in-out infinite 2.4s"></rect>
+    </g>
+    <path d="M18 11h5" stroke="rgba(216,228,232,0.3)" stroke-width="0.9"></path>
+    <rect x="24" y="6" width="9" height="10" rx="1.5" fill="none" stroke="rgba(226,178,116,0.45)" stroke-width="0.9"></rect>` },
+  { id: "rag", l: "RAG", x: 69, y: 45, z: 35, d: "query, retrieve, ground the answer in what was actually found", a: `
+    <g fill="none" stroke="rgba(216,228,232,0.28)" stroke-width="0.8"><path d="M4 11h26"></path></g>
+    <g fill="rgba(242,236,224,0.6)">
+      <circle cx="4" cy="11" r="1.8" style="animation: tsStage 3.6s ease-out infinite"></circle>
+      <circle cx="13" cy="11" r="1.8" style="animation: tsStage 3.6s ease-out infinite .5s"></circle>
+      <circle cx="22" cy="11" r="1.8" style="animation: tsStage 3.6s ease-out infinite 1s"></circle>
+      <circle cx="31" cy="11" r="2.2" fill="rgba(226,178,116,0.8)" style="animation: tsStage 3.6s ease-out infinite 1.5s"></circle>
+    </g>
+    <g stroke="rgba(216,228,232,0.16)" stroke-width="0.7"><path d="M13 11v6M22 11v-6"></path></g>` },
+  { id: "vector", l: "Vector Search", x: 90, y: 47, z: -25, d: "nearest neighbours in embedding space", a: `
+    <g fill="rgba(242,236,224,0.55)">
+      <circle cx="6" cy="6" r="1.2"></circle><circle cx="14" cy="4" r="1.2"></circle><circle cx="26" cy="8" r="1.2"></circle>
+      <circle cx="9" cy="16" r="1.2"></circle><circle cx="22" cy="17" r="1.2"></circle><circle cx="30" cy="14" r="1.2"></circle>
+    </g>
+    <circle cx="17" cy="11" r="1.8" fill="rgba(226,178,116,0.9)"></circle>
+    <circle cx="17" cy="11" r="2" fill="none" stroke="rgba(226,178,116,0.5)" stroke-width="0.7" style="animation: tsNN 3.1s ease-out infinite"></circle>
+    <g stroke="rgba(226,178,116,0.3)" stroke-width="0.6"><path d="M17 11l-3 -7M17 11l5 6"></path></g>` },
+  { id: "nextjs", l: "Next.js", x: 8, y: 79, z: 15, d: "the surface these systems get used through", a: `
+    <rect x="3" y="3" width="27" height="17" rx="2" fill="none" stroke="rgba(216,228,232,0.34)" stroke-width="0.9"></rect>
+    <path d="M3 7.5h27" stroke="rgba(216,228,232,0.26)" stroke-width="0.8"></path>
+    <g fill="rgba(242,236,224,0.7)">
+      <rect x="6" y="10" width="8" height="3" rx="1" style="animation: tsPaint 3.8s ease-out infinite"></rect>
+      <rect x="16" y="10" width="11" height="3" rx="1" style="animation: tsPaint 3.8s ease-out infinite .4s"></rect>
+      <rect x="6" y="15" width="14" height="3" rx="1" style="animation: tsPaint 3.8s ease-out infinite .8s"></rect>
+    </g>` },
+  { id: "eval", l: "Evaluation", x: 31, y: 81, z: -15, d: "harnesses that catch the regression before a user does", a: `
+    <rect x="14" y="4" width="9" height="15" rx="1.5" fill="none" stroke="rgba(216,228,232,0.36)" stroke-width="0.9"></rect>
+    <g fill="rgba(242,236,224,0.9)">
+      <circle cx="4" cy="7" r="1.3" style="animation: tsTest 2.7s linear infinite"></circle>
+      <circle cx="4" cy="11.5" r="1.3" style="animation: tsTest 2.7s linear infinite .55s"></circle>
+      <circle cx="4" cy="16" r="1.3" fill="rgba(226,178,116,0.9)" style="animation: tsTest 2.7s linear infinite 1.1s"></circle>
+    </g>
+    <g stroke="rgba(216,228,232,0.22)" stroke-width="0.7"><path d="M23 7h9M23 16h6"></path></g>` },
+  { id: "agents", l: "Agents", x: 53, y: 80, z: 20, d: "route the task, use the tool, verify the result", a: `
+    <circle cx="6" cy="11" r="2.4" fill="none" stroke="rgba(226,178,116,0.55)" stroke-width="1"></circle>
+    <g stroke="rgba(216,228,232,0.24)" stroke-width="0.8"><path d="M9 11h6M15 11l8 -6M15 11h8M15 11l8 6"></path></g>
+    <g fill="rgba(242,236,224,0.85)">
+      <rect x="24" y="3" width="7" height="4" rx="1" style="animation: tsRoute 4.5s steps(1) infinite"></rect>
+      <rect x="24" y="9" width="7" height="4" rx="1" style="animation: tsRoute 4.5s steps(1) infinite 1.5s"></rect>
+      <rect x="24" y="15" width="7" height="4" rx="1" style="animation: tsRoute 4.5s steps(1) infinite 3s"></rect>
+    </g>` },
+  { id: "bm25", l: "BM25", x: 73, y: 82, z: -10, d: "term frequency still beats embeddings on exact wording", a: `
+    <g fill="rgba(242,236,224,0.5)">
+      <rect x="3" y="16" width="4" height="5"></rect><rect x="9" y="10" width="4" height="11"></rect>
+      <rect x="15" y="6" width="4" height="15"></rect><rect x="21" y="13" width="4" height="8"></rect><rect x="27" y="18" width="4" height="3"></rect>
+    </g>
+    <path d="M2 21h31" stroke="rgba(216,228,232,0.26)" stroke-width="0.8"></path>
+    <rect x="15" y="6" width="4" height="15" fill="rgba(226,178,116,0.6)" style="animation: tsCell 3.3s ease-in-out infinite"></rect>` },
+  { id: "rerank", l: "Reranking", x: 91, y: 79, z: 25, d: "a cross-encoder reorders candidates by what actually answers", a: `
+    <g fill="rgba(242,236,224,0.55)">
+      <rect x="4" y="4" width="18" height="3" rx="1.5" style="--to: 12px; animation: tsRank 4.4s cubic-bezier(.4,0,.3,1) infinite"></rect>
+      <rect x="4" y="9" width="11" height="3" rx="1.5" style="--to: -5px; animation: tsRank 4.4s cubic-bezier(.4,0,.3,1) infinite" fill="rgba(226,178,116,0.8)"></rect>
+      <rect x="4" y="14" width="22" height="3" rx="1.5" style="--to: -5px; animation: tsRank 4.4s cubic-bezier(.4,0,.3,1) infinite"></rect>
+      <rect x="4" y="19" width="7" height="3" rx="1.5" style="--to: 0px; animation: tsRank 4.4s cubic-bezier(.4,0,.3,1) infinite" opacity="0.3"></rect>
+    </g>` }
+];
+
+// brushed metal body: vertical grain over a top-lit anodised gradient
+const BODY_BG = "repeating-linear-gradient(90deg,rgba(255,255,255,0.018) 0 1px,rgba(0,0,0,0.014) 1px 2px),linear-gradient(180deg,rgba(46,53,60,0.95) 0%,rgba(28,34,40,0.95) 42%,rgba(14,18,23,0.96) 100%)";
+const BODY_BG_ON = "repeating-linear-gradient(90deg,rgba(255,255,255,0.024) 0 1px,rgba(0,0,0,0.012) 1px 2px),linear-gradient(180deg,rgba(60,68,76,0.97) 0%,rgba(35,42,49,0.96) 42%,rgba(17,22,27,0.97) 100%)";
+const SHADOW = (on) => "0 1px 0 rgba(255,255,255,0.16) inset,0 -1px 0 rgba(0,0,0,0.5) inset,1px 0 0 rgba(255,255,255,0.05) inset,-1px 0 0 rgba(0,0,0,0.3) inset,0 0 0 1px " +
+  (on ? "rgba(226,178,116,0.5)" : "rgba(216,228,232,0.13)") + ",0 2px 3px -1px rgba(0,0,0,0.7),0 30px 44px -26px rgba(0,0,0,0.96)";
+
+const EDGES = [
+  ["python","fastapi"], ["fastapi","serving"], ["serving","llms"], ["llms","localllms"],
+  ["pytorch","localllms"], ["pytorch","serving"], ["docker","redis"], ["redis","fastapi"],
+  ["docker","serving"], ["nextjs","fastapi"], ["llms","rag"], ["rag","vector"],
+  ["rag","bm25"], ["vector","rerank"], ["bm25","rerank"], ["rerank","rag"],
+  ["agents","llms"], ["agents","rag"], ["eval","rag"], ["eval","agents"], ["eval","serving"]
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    ["hostRef","stageRef","svgRef","modRef","dotRef","descRef"].forEach(k => { this[k] = React.createRef(); });
+    this.m = { x: 0, y: 0, tx: 0, ty: 0 };
+    this.active = null;
+  }
+
+  renderVals() {
+    return { hostRef: this.hostRef, stageRef: this.stageRef, svgRef: this.svgRef,
+             modRef: this.modRef, dotRef: this.dotRef, descRef: this.descRef };
+  }
+
+  componentDidMount() {
+    const host = this.hostRef.current;
+    if (!host) return;
+    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.small = window.matchMedia("(max-width: 860px)").matches;
+    this.tiny = window.matchMedia("(max-width: 420px)").matches;
+    // rotation crosses the breakpoint: the board must be rebuilt in the other layout,
+    // or a rotated phone keeps a 5-across grid that no longer fits
+    this.syncBreak = () => {
+      const s = window.matchMedia("(max-width: 860px)").matches;
+      const t = window.matchMedia("(max-width: 420px)").matches;
+      const h = this.hostRef.current;
+      if (h) h.style.aspectRatio = t ? "10 / 15" : s ? "16 / 11" : "16 / 9.4";
+      if (s === this.small && t === this.tiny) return;
+      this.small = s; this.tiny = t;
+      if (!this.mods) return;
+      // reposition in place — cheaper and safer than a rebuild, and the link curves and
+      // packets both read m.x / m.y so they follow automatically
+      this.mods.forEach((m, i) => {
+        m.x = t ? 17 + (i % 3) * 33 : MODULES[i].x;
+        m.y = t ? 8 + Math.floor(i / 3) * 21 : MODULES[i].y;
+        m.el.style.left = m.x + "%";
+        m.el.style.top = m.y + "%";
+        const svg = m.el.querySelector("svg");
+        if (svg) {
+          svg.setAttribute("width", t ? "56" : s ? "70" : "88");
+          svg.setAttribute("height", t ? "37" : s ? "46" : "58");
+        }
+        if (m.label) {
+          m.label.style.fontSize = t ? "8px" : s ? "8.5px" : "9.5px";
+          m.label.style.letterSpacing = t ? ".08em" : s ? ".12em" : ".16em";
+        }
+      });
+      (this.paths || []).forEach(p => {
+        const A = p.A, B = p.B;
+        const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+        const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+        const bow = 3.2 * (((A.i + B.i) % 2) ? 1 : -1);
+        p.cx = mx + (-dy / len) * bow;
+        p.cy = my + (dx / len) * bow;
+        p.el.setAttribute("d", "M" + A.x + "," + A.y + " Q" + p.cx + "," + p.cy + " " + B.x + "," + B.y);
+      });
+    };
+    window.addEventListener("resize", this.syncBreak);
+
+    const ml = this.modRef.current;
+    this.mods = MODULES.map((spec, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-label", spec.l);
+      // machined instrument: brushed anodised body, recessed glass readout, engraved plate
+      b.style.cssText = "position:absolute;left:" + spec.x + "%;top:" + spec.y + "%;display:flex;flex-direction:column;gap:9px;padding:9px 9px 8px;border:0;border-radius:12px;background:" + BODY_BG + ";box-shadow:" + SHADOW(false) + ";cursor:pointer;opacity:0;transform:translate(-50%,-50%) scale(.94);transform-style:preserve-3d;transition:opacity .8s cubic-bezier(.2,.7,.2,1),box-shadow .45s ease,background .45s ease;will-change:transform";
+
+      const screen = document.createElement("div");
+      screen.style.cssText = "position:relative;border-radius:8px;padding:7px 8px 6px;overflow:hidden;background:radial-gradient(120% 140% at 30% 0%,rgba(30,40,48,0.96),rgba(9,13,17,0.98) 70%);box-shadow:0 1px 2px rgba(0,0,0,0.85) inset,0 0 0 1px rgba(0,0,0,0.55) inset,0 0 0 1.5px rgba(216,228,232,0.07)";
+      const svgWrap = document.createElement("div");
+      svgWrap.innerHTML = '<svg width="88" height="58" viewBox="0 0 36 24" fill="none" aria-hidden="true">' + spec.a + "</svg>";
+      svgWrap.style.cssText = "position:relative;display:block;line-height:0";
+      screen.appendChild(svgWrap);
+      // glass: scanline grain, then a single raking highlight across the top-left corner
+      const grain = document.createElement("div");
+      grain.style.cssText = "position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.028) 0 1px,rgba(0,0,0,0) 1px 3px)";
+      const gloss = document.createElement("div");
+      gloss.style.cssText = "position:absolute;inset:0;pointer-events:none;background:linear-gradient(146deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 22%,rgba(255,255,255,0) 46%),radial-gradient(120% 90% at 50% 120%,rgba(0,0,0,0.55),rgba(0,0,0,0) 60%)";
+      screen.appendChild(grain);
+      screen.appendChild(gloss);
+
+      const plate = document.createElement("div");
+      plate.style.cssText = "display:flex;align-items:center;gap:7px;padding:0 3px";
+      const led = document.createElement("span");
+      led.style.cssText = "width:4px;height:4px;border-radius:50%;background:rgba(226,178,116,0.5);box-shadow:0 0 5px 1px rgba(226,178,116,0.22);transition:background .4s ease,box-shadow .4s ease;flex:none";
+      const label = document.createElement("span");
+      label.textContent = spec.l;
+      // engraved: dark ink with a one-pixel light edge below, like etched aluminium
+      label.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(238,236,228,0.86);text-shadow:0 1px 0 rgba(255,255,255,0.07),0 -1px 0 rgba(0,0,0,0.6);white-space:nowrap;transition:color .4s ease";
+      plate.appendChild(led);
+      plate.appendChild(label);
+
+      b.appendChild(screen);
+      b.appendChild(plate);
+      b.__led = led;
+      // on a phone fifteen instruments must still read: the readout shrinks and the
+      // engraved plate loses its letter-spacing rather than the tiles overlapping
+      if (this.tiny) {
+        const svgEl = svgWrap.querySelector("svg");
+        if (svgEl) { svgEl.setAttribute("width", "56"); svgEl.setAttribute("height", "37"); }
+        b.style.padding = "6px 6px 5px";
+        b.style.gap = "6px";
+        screen.style.padding = "5px 5px 4px";
+        label.style.fontSize = "8px";
+        label.style.letterSpacing = ".08em";
+        led.style.width = "3px";
+        led.style.height = "3px";
+        plate.style.gap = "5px";
+      } else if (this.small) {
+        const svgEl = svgWrap.querySelector("svg");
+        if (svgEl) { svgEl.setAttribute("width", "70"); svgEl.setAttribute("height", "46"); }
+        b.style.padding = "7px 7px 6px";
+        label.style.fontSize = "8.5px";
+        label.style.letterSpacing = ".12em";
+      }
+      // A 5-across board cannot hold 15 instruments at phone width — the column pitch
+      // falls below the plate width and they collide. On a phone the same board is
+      // re-laid as 3 across by 5 down, in the same reading order.
+      let px = spec.x, py = spec.y;
+      if (this.tiny) {
+        px = 17 + (i % 3) * 33;
+        py = 8 + Math.floor(i / 3) * 21;
+        b.style.left = px + "%";
+        b.style.top = py + "%";
+      }
+      ml.appendChild(b);
+      const anims = [...b.querySelectorAll("[style*='animation']")];
+      // x/y are overridden, not shadowed: the link curves and packets read these
+      return { ...spec, x: px, y: py, el: b, label, anims, i, on: 0 };
+    });
+    this.byId = {};
+    this.mods.forEach(m => { this.byId[m.id] = m; });
+
+    // neighbours light up with the module they work with
+    this.nbrs = {};
+    EDGES.forEach(([a, b]) => {
+      (this.nbrs[a] = this.nbrs[a] || []).push(b);
+      (this.nbrs[b] = this.nbrs[b] || []).push(a);
+    });
+
+    const svg = this.svgRef.current;
+    this.paths = EDGES.map(([a, b]) => {
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const A = this.byId[a], B = this.byId[b];
+      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+      const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+      const bow = 3.2 * (((A.i + B.i) % 2) ? 1 : -1);
+      const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
+      p.setAttribute("d", "M" + A.x + "," + A.y + " Q" + cx + "," + cy + " " + B.x + "," + B.y);
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", "url(#tsLink)");
+      p.setAttribute("stroke-width", "1.2");
+      p.setAttribute("vector-effect", "non-scaling-stroke");
+      p.style.opacity = "0";
+      p.style.transition = "opacity .5s ease, stroke-width .4s ease";
+      svg.appendChild(p);
+      return { el: p, a, b, A, B, cx, cy };
+    });
+
+    // signals: sparse traffic across the graph, faster on the edges you are looking at
+    const dl = this.dotRef.current;
+    this.dots = this.paths.map((pathObj, i) => {
+      const d = document.createElement("div");
+      d.style.cssText = "position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#f2ece0;box-shadow:0 0 8px 2px rgba(242,236,224,0.24);opacity:0;will-change:transform";
+      dl.appendChild(d);
+      return { el: d, path: pathObj, phase: (i * 0.173) % 1, speed: 0.055 + (i % 5) * 0.012 };
+    });
+
+    const setActive = (id) => {
+      if (this.active === id) return;
+      this.active = id;
+      const near = id ? new Set([id].concat(this.nbrs[id] || [])) : null;
+      this.mods.forEach((m) => {
+        const isOn = !near || near.has(m.id);
+        const isMe = m.id === id;
+        m.el.style.opacity = String(m.shown ? (isOn ? 1 : 0.32) : 0);
+        m.el.style.background = isMe ? BODY_BG_ON : BODY_BG;
+        m.el.style.boxShadow = SHADOW(isMe);
+        if (m.el.__led) {
+          m.el.__led.style.background = isMe ? "rgba(238,196,132,0.98)" : "rgba(226,178,116,0.5)";
+          m.el.__led.style.boxShadow = isMe ? "0 0 8px 2px rgba(226,178,116,0.5)" : "0 0 5px 1px rgba(226,178,116,0.22)";
+        }
+        m.label.style.color = isMe ? "#ffffff" : "rgba(244,240,230,0.9)";
+        // idle modules keep ticking, just slower than the one under the cursor
+        const rate = !id ? "1" : isMe ? "1" : isOn ? "0.8" : "0.35";
+        if (m.rate !== rate) {
+          m.rate = rate;
+          m.anims.forEach((el) => { el.style.animationPlayState = "running"; });
+          m.el.style.setProperty("--rate", rate);
+        }
+      });
+      this.paths.forEach((p) => {
+        const hot = id && (p.a === id || p.b === id);
+        p.el.style.strokeWidth = hot ? "1.9" : "1.2";
+        p.hot = hot;
+      });
+      const dr = this.descRef.current;
+      if (dr) {
+        dr.textContent = id ? this.byId[id].d : "what I combine to build real systems";
+        dr.style.color = id ? "rgba(226,178,116,0.92)" : "rgba(226,178,116,0.82)";
+      }
+    };
+    this.setActive = setActive;
+
+    this.mods.forEach((m) => {
+      m.el.addEventListener("pointerenter", () => setActive(m.id));
+      m.el.addEventListener("focus", () => setActive(m.id));
+      m.el.addEventListener("pointerleave", () => setActive(null));
+      m.el.addEventListener("blur", () => setActive(null));
+      m.el.addEventListener("click", () => setActive(this.active === m.id ? null : m.id));
+    });
+
+    this.onScroll = () => {
+      const r = host.getBoundingClientRect();
+      const vh = window.innerHeight;
+      this.p = Math.min(1, Math.max(0, (vh * 0.88 - r.top) / (r.height * 0.6 + vh * 0.25)));
+      const revs = host.parentElement ? host.parentElement.querySelectorAll("[data-ts-rev]") : [];
+      revs.forEach((el) => { if (this.p > 0.04) { el.style.opacity = "1"; el.style.transform = "none"; } });
+      // assembly: modules arrive in dependency order rather than all at once
+      this.mods.forEach((m, i) => {
+        const at = 0.12 + i * 0.035;
+        if (this.p > at && !m.shown) {
+          m.shown = true;
+          m.el.style.opacity = this.active && this.active !== m.id ? "0.32" : "1";
+        }
+      });
+      this.exit = Math.max(0, Math.min(1, (vh * 0.3 - r.bottom) / (vh * 0.55)));
+    };
+    window.addEventListener("scroll", this.onScroll, { passive: true });
+    this.onScroll();
+
+    this.onMove = (e) => {
+      if (this.reduced || this.small) return;
+      const r = host.getBoundingClientRect();
+      this.m.tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      this.m.ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    };
+    window.addEventListener("pointermove", this.onMove, { passive: true });
+
+    // offscreen the whole workspace stops: no CSS animation, no rAF, no cost
+    this.live = true;
+    if ("IntersectionObserver" in window) {
+      this.io = new IntersectionObserver((en) => {
+        this.live = en[0].isIntersecting;
+        const st = this.live ? "running" : "paused";
+        this.mods.forEach(m => m.anims.forEach(el => { el.style.animationPlayState = st; }));
+      }, { rootMargin: "16% 0px" });
+      this.io.observe(host);
+    }
+
+    this.t0 = performance.now();
+    this.frame();
+    if (!this.reduced) {
+      const tick = () => { this.raf = requestAnimationFrame(tick); if (this.live) this.frame(); };
+      tick();
+    }
+  }
+
+  frame() {
+    const t = (performance.now() - this.t0) / 1000;
+    const exit = 1 - (this.exit || 0);
+
+    this.m.x += (this.m.tx - this.m.x) * 0.04;
+    this.m.y += (this.m.ty - this.m.y) * 0.04;
+    const st = this.stageRef.current;
+    if (st) st.style.transform = "rotateX(" + (-this.m.y * 1.8).toFixed(2) + "deg) rotateY(" + (this.m.x * 2.6).toFixed(2) + "deg)";
+
+    this.mods.forEach((m) => {
+      const par = 1 + m.z / 130;
+      const drift = this.reduced ? 0 : Math.sin(t * 0.42 + m.i * 1.3) * 1.1;
+      m.el.style.transform = "translate(-50%,-50%) translateZ(" + m.z + "px) translate3d(" +
+        (-this.m.x * 7 * par).toFixed(2) + "px," + (drift - this.m.y * 5 * par).toFixed(2) + "px,0)";
+      const soft = m.z < 0 ? -m.z / 55 : 0;
+      const fl = soft > 0.05 ? "blur(" + (soft * 0.9).toFixed(2) + "px)" : "none";
+      if (m.fl !== fl) { m.fl = fl; m.el.style.filter = fl; }
+    });
+
+    const rate = this.props.signalRate ?? 1;
+    this.paths.forEach((p, i) => {
+      const o = (p.A.shown && p.B.shown ? 1 : 0) * exit * (this.active ? (p.hot ? 1 : 0.3) : 0.75);
+      const q = Math.round(o * 20) / 20;
+      if (p.o !== q) { p.o = q; p.el.style.opacity = String(q); }
+    });
+    this.dots.forEach((d) => {
+      const p = d.path;
+      if (!p.A.shown || !p.B.shown) { if (d.el.style.opacity !== "0") d.el.style.opacity = "0"; return; }
+      const hot = this.active ? (p.hot ? 1 : 0) : 1;
+      const u = ((t * d.speed * rate * (p.hot ? 2.2 : 1) + d.phase) % 1 + 1) % 1;
+      const iu = 1 - u;
+      const x = iu * iu * p.A.x + 2 * iu * u * p.cx + u * u * p.B.x;
+      const y = iu * iu * p.A.y + 2 * iu * u * p.cy + u * u * p.B.y;
+      d.el.style.left = x.toFixed(3) + "%";
+      d.el.style.top = y.toFixed(3) + "%";
+      d.el.style.opacity = String(Math.sin(Math.PI * u) * (this.active ? hot * 0.95 : 0.5) * exit);
+    });
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("pointermove", this.onMove);
+    if (this.io) this.io.disconnect();
+  }
+}
+
+</script>
+</body>
+</html>

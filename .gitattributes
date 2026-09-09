@@ -1,0 +1,9 @@
+# Keep text files LF in the repository regardless of the platform they were authored
+# on, so the artboards don't churn between CRLF and LF across checkouts.
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.mp4 binary

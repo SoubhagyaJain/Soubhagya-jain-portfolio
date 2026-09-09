@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Instrument+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Caveat:wght@400;500&amp;display=swap" rel="stylesheet" />
+<style>
+  @keyframes btCaret { 0%,49% { opacity: 1 } 50%,100% { opacity: 0 } }
+  @keyframes btNudge { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+  @keyframes btBreathe { 0%,100% { opacity: .28 } 50% { opacity: .5 } }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position: relative; display: flex; flex-direction: column; gap: clamp(34px, 5.5vw, 78px); color: #f2ece0">
+
+  <div data-bt-rev="0" style="display: flex; align-items: center; gap: 14px; opacity: 0; transform: translateY(16px); transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1)">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); white-space: nowrap"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">07</span><span style="opacity: .42; padding-right: .48em">/</span>Beyond the terminal</span>
+    <span style="flex: 1; height: 1px; background: linear-gradient(90deg, rgba(214,230,236,0.24), rgba(214,230,236,0))"></span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: clamp(30px, 4.5vw, 76px); align-items: center">
+
+    <div style="display: flex; flex-direction: column; gap: clamp(22px, 3vw, 32px); min-width: 0">
+      <h3 data-bt-rev="1" style="margin: 0; max-width: 24ch; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(29px, 4.2vw, 62px); text-wrap: balance; line-height: 1.04; letter-spacing: -0.018em; color: #f9fbf6; text-wrap: pretty; opacity: 0; transform: translateY(22px); transition: opacity 1.4s cubic-bezier(.2,.7,.2,1), transform 1.4s cubic-bezier(.2,.7,.2,1)">I spend a lot of time building things, breaking them, and trying to understand why.</h3>
+      <p data-bt-rev="2" style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14.5px, 1.15vw, 17px); line-height: 1.66; color: rgba(240,246,240,0.82); text-wrap: pretty; opacity: 0; transform: translateY(18px); transition: opacity 1.2s cubic-bezier(.2,.7,.2,1), transform 1.2s cubic-bezier(.2,.7,.2,1)">Some days that means experimenting with an AI system. Others are spent working through ML and system design, tracing a bug that only appears when it matters, or writing down an idea clearly enough to discover that I didn&#8217;t understand it as well as I thought.</p>
+
+      <div data-bt-rev="3" style="display: flex; flex-direction: column; gap: 14px; padding-top: clamp(8px, 1.4vw, 16px); opacity: 0; transform: translateY(16px); transition: opacity 1.2s cubic-bezier(.2,.7,.2,1), transform 1.2s cubic-bezier(.2,.7,.2,1)">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.46)">I like the cycle</div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px">
+          <button type="button" data-loop="build" style="position: relative; padding: 7px 2px; border: 0; background: none; font-family: 'IBM Plex Mono', monospace; font-size: clamp(11px, 1vw, 13px); letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72); cursor: pointer; transition: color .4s ease, transform .4s ease">build</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(232,240,232,0.3)">&#8594;</span>
+          <button type="button" data-loop="observe" style="position: relative; padding: 7px 2px; border: 0; background: none; font-family: 'IBM Plex Mono', monospace; font-size: clamp(11px, 1vw, 13px); letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72); cursor: pointer; transition: color .4s ease, transform .4s ease">observe</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(232,240,232,0.3)">&#8594;</span>
+          <button type="button" data-loop="question" style="position: relative; padding: 7px 2px; border: 0; background: none; font-family: 'IBM Plex Mono', monospace; font-size: clamp(11px, 1vw, 13px); letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72); cursor: pointer; transition: color .4s ease, transform .4s ease">question</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(232,240,232,0.3)">&#8594;</span>
+          <button type="button" data-loop="learn" style="position: relative; padding: 7px 2px; border: 0; background: none; font-family: 'IBM Plex Mono', monospace; font-size: clamp(11px, 1vw, 13px); letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72); cursor: pointer; transition: color .4s ease, transform .4s ease">learn</button>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(232,240,232,0.3)">&#8594;</span>
+          <button type="button" data-loop="rebuild" style="position: relative; padding: 7px 2px; border: 0; background: none; font-family: 'IBM Plex Mono', monospace; font-size: clamp(11px, 1vw, 13px); letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72); cursor: pointer; transition: color .4s ease, transform .4s ease">rebuild</button>
+        </div>
+        <div ref="{{ stateRef }}" style="max-width: 40ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 13.5px; line-height: 1.5; color: rgba(226,178,116,0.9); min-height: 3em; transition: opacity .4s ease">the loop I actually work in</div>
+      </div>
+    </div>
+
+    <div ref="{{ hostRef }}" data-bt-rev="2" style="position: relative; width: 100%; min-width: 0; aspect-ratio: 10 / 9; opacity: 0; transition: opacity 1.7s cubic-bezier(.2,.7,.2,1)">
+
+      <div style="position: absolute; inset: -5% -6%; border-radius: 20px; background: radial-gradient(72% 62% at 50% 32%, rgba(30,38,46,0.62) 0%, rgba(13,18,24,0.72) 58%, rgba(7,11,15,0.8) 100%); box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 0 0 1px rgba(216,228,232,0.09), 0 54px 84px -58px rgba(0,0,0,0.95); pointer-events: none"></div>
+
+      <div ref="{{ backRef }}" style="position: absolute; inset: 0; pointer-events: none; will-change: transform">
+        <svg viewBox="0 0 120 108" preserveAspectRatio="none" style="position: absolute; inset: -6%; width: 112%; height: 112%; opacity: .5" aria-hidden="true">
+          <g stroke="rgba(216,228,232,0.055)" stroke-width="0.4" vector-effect="non-scaling-stroke">
+            <path d="M18 4v100M42 -2v112M66 -2v112M90 4v100"></path>
+            <path d="M-4 26h128M-4 48h128M-4 70h128M-4 90h128"></path>
+          </g>
+          <g stroke="rgba(216,228,232,0.075)" stroke-width="0.5" fill="none" stroke-linecap="round" vector-effect="non-scaling-stroke" style="animation: btBreathe 14s ease-in-out infinite">
+            <path d="M10 96c22-6 26-26 44-30s34 8 56-6"></path>
+            <path d="M14 16c18 10 40 4 52 16"></path>
+          </g>
+        </svg>
+        <div data-ghost="1" data-z="0.62" style="position: absolute; left: 8%; top: 9%; font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .08em; color: rgba(232,240,232,0.3); white-space: nowrap; filter: blur(0.4px)">p95 = f(batch, cache_hit)</div>
+        <div data-ghost="1" data-z="0.7" style="position: absolute; right: 9%; bottom: 15%; font-family: 'Caveat', 'Instrument Serif', cursive; font-size: 13px; color: rgba(232,240,232,0.26); white-space: nowrap; filter: blur(0.5px)">worked on my machine</div>
+        <div data-ghost="1" data-z="0.55" style="position: absolute; left: 12%; bottom: 26%; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: .1em; color: rgba(232,240,232,0.24); white-space: nowrap; filter: blur(0.4px)">retry &#183; timeout &#183; retry</div>
+      </div>
+
+      <div style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(58% 52% at 46% 44%, rgba(12,18,24,0) 0%, rgba(9,13,18,0.34) 78%)"></div>
+
+      <svg ref="{{ svgRef }}" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible" aria-hidden="true">
+        <g ref="{{ linkRef }}" fill="none" stroke-linecap="round">
+          <path data-link="0"></path>
+          <path data-link="1"></path>
+          <path data-link="2"></path>
+          <path data-link="3"></path>
+          <path data-link="4"></path>
+          <path data-link="5"></path>
+        </g>
+        <g ref="{{ traceRef }}" style="opacity: 0; transition: opacity .7s ease">
+          <path data-spark="base" fill="none" stroke="rgba(216,228,232,0.2)" stroke-width="0.8"></path>
+          <path data-spark="line" fill="none" stroke="rgba(226,178,116,0.62)" stroke-width="1" stroke-linejoin="round"></path>
+        </g>
+      </svg>
+
+      <div ref="{{ packetRef }}" style="position: absolute; inset: 0; pointer-events: none"></div>
+      <div ref="{{ nodeRef }}" style="position: absolute; inset: 0"></div>
+
+      <div ref="{{ tipRef }}" style="position: absolute; left: 0; top: 0; max-width: 21ch; padding: 7px 10px; border-radius: 8px; background: rgba(9,14,19,0.82); box-shadow: 0 0 0 1px rgba(216,228,232,0.13), 0 1px 0 rgba(255,255,255,0.1) inset; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 11.5px; line-height: 1.35; color: rgba(246,242,233,0.94); pointer-events: none; opacity: 0; transform: translate(-50%, -100%); transition: opacity .45s ease"></div>
+
+      <div ref="{{ frontRef }}" style="position: absolute; inset: 0; pointer-events: none; will-change: transform">
+        <div data-frag="terminal" data-z="-0.34" style="position: absolute; left: 2%; top: 70%; padding: 9px 11px; border-radius: 8px; background: rgba(11,16,21,0.86); box-shadow: 0 0 0 1px rgba(216,228,232,0.12), 0 1px 0 rgba(255,255,255,0.06) inset, 0 22px 34px -24px rgba(0,0,0,0.9); opacity: 0; transition: opacity 1s ease">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .06em; color: rgba(232,240,232,0.55); white-space: nowrap">$ pytest -k retrieval</div>
+          <div style="display: flex; align-items: center; gap: 5px; padding-top: 3px">
+            <span ref="{{ termRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(232,240,232,0.5); white-space: nowrap; transition: color .5s ease">failed</span>
+            <span style="display: inline-block; width: 4px; height: 8px; background: rgba(242,236,224,0.7); animation: btCaret 1.15s steps(1) infinite"></span>
+          </div>
+        </div>
+
+        <div data-frag="note" data-z="-0.28" style="position: absolute; left: 54%; top: 78%; max-width: 44%; opacity: 0; transition: opacity 1s ease">
+          <div ref="{{ strikeRef }}" style="position: relative; font-family: 'Caveat', 'Instrument Serif', cursive; font-size: 15px; line-height: 1.25; color: rgba(232,240,232,0.42); transition: color .5s ease">assume the index is fresh
+            <span ref="{{ strikeLineRef }}" style="position: absolute; left: 0; top: 52%; width: 0; height: 1px; background: rgba(226,178,116,0.7); transition: width .8s cubic-bezier(.2,.7,.2,1)"></span>
+          </div>
+          <div ref="{{ rewriteRef }}" style="font-family: 'Caveat', 'Instrument Serif', cursive; font-size: 16px; line-height: 1.25; color: rgba(246,241,230,0.92); opacity: 0; transform: translateY(4px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1)">it was three days stale</div>
+        </div>
+
+        <div data-frag="scribble" data-z="-0.16" style="position: absolute; right: 3%; top: 13%; font-family: 'Caveat', 'Instrument Serif', cursive; font-size: 14px; color: rgba(232,240,232,0.42); white-space: nowrap; opacity: 0.34; transition: opacity 1s ease">why only under load?</div>
+      </div>
+    </div>
+  </div>
+
+  <p data-bt-rev="4" style="margin: 0; max-width: 34ch; padding-top: clamp(18px, 2.6vw, 30px); border-top: 1px solid rgba(214,230,236,0.14); font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(21px, 2.6vw, 38px); line-height: 1.24; letter-spacing: -0.008em; color: #f8fbf6; text-wrap: pretty; opacity: 0; transform: translateY(20px); transition: opacity 1.4s cubic-bezier(.2,.7,.2,1), transform 1.4s cubic-bezier(.2,.7,.2,1)">Because most of the progress happens somewhere between <span style="font-style: italic; color: rgba(248,251,246,0.72)">&#8220;it works&#8221;</span> and <span style="font-style: italic; color: rgba(248,251,246,0.72)">&#8220;now I understand why.&#8221;</span></p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 1240, &quot;height&quot;: 760 }
+}">
+// The loop lives in real space: six nodes on a tilted ring, projected through a
+// perspective camera that drifts. Depth is computed, not faked with layered divs.
+const NODES = [
+  { id: "idea",    l: "idea",    x: -0.74, y: -0.32, z:  0.30, tip: "start with a rough mental model" },
+  { id: "build",   l: "build",   x: -0.08, y: -0.20, z: -0.20, tip: "turn the idea into something testable" },
+  { id: "run",     l: "run",     x:  0.66, y: -0.26, z:  0.24, tip: "watch what the system actually does" },
+  { id: "trace",   l: "trace",   x:  0.34,  y: 0.30, z: -0.30, tip: "find the assumption that failed" },
+  { id: "note",    l: "note",    x: -0.30,  y: 0.36, z:  0.08, tip: "turn failure into understanding" },
+  { id: "rebuild", l: "rebuild", x: -0.80,  y: 0.10, z: -0.06, tip: "come back with fewer guesses" }
+];
+
+// each edge bows through depth so the ring reads as a loop, not a flat polygon
+const LINKS = [
+  { a: 0, b: 1, cy: -0.10, cz:  0.14 },
+  { a: 1, b: 2, cy: -0.16, cz:  0.10 },
+  { a: 2, b: 3, cy:  0.02, cz: -0.16 },
+  { a: 3, b: 4, cy:  0.14, cz: -0.10 },
+  { a: 4, b: 5, cy:  0.12, cz:  0.10 },
+  { a: 5, b: 1, cy: -0.02, cz: -0.18 }
+];
+
+const STAGES = {
+  build:    { say: "a rough version, wired up just enough to run", nodes: [0, 1], links: [0], lead: 1 },
+  observe:  { say: "watch it under real conditions, not the happy path", nodes: [0, 1, 2], links: [0, 1], lead: 2 },
+  question: { say: "one connection stops making sense", nodes: [0, 1, 2, 3], links: [0, 1, 2], doubt: 2, lead: 3 },
+  learn:    { say: "write it down until the wrong assumption shows itself", nodes: [0, 1, 2, 3, 4], links: [0, 1, 2, 3], lead: 4 },
+  rebuild:  { say: "same system, fewer things I am guessing about", nodes: [0, 1, 2, 3, 4, 5], links: [0, 1, 2, 3, 4, 5], clean: true, lead: 5 }
+};
+const ORDER = ["build", "observe", "question", "learn", "rebuild"];
+const NODE_STAGE = { idea: "build", build: "build", run: "observe", trace: "question", note: "learn", rebuild: "rebuild" };
+const N_SAMP = 20;
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    ["rootRef","hostRef","nodeRef","linkRef","svgRef","stateRef","termRef","strikeRef","strikeLineRef",
+     "rewriteRef","packetRef","backRef","frontRef","tipRef","traceRef"]
+      .forEach(k => { this[k] = React.createRef(); });
+    this.m = { x: 0, y: 0, tx: 0, ty: 0 };
+    this.stage = null;
+    this.tipNode = null;
+  }
+
+  renderVals() {
+    return { rootRef: this.rootRef, hostRef: this.hostRef, nodeRef: this.nodeRef, linkRef: this.linkRef,
+             svgRef: this.svgRef, stateRef: this.stateRef, termRef: this.termRef, strikeRef: this.strikeRef,
+             strikeLineRef: this.strikeLineRef, rewriteRef: this.rewriteRef, packetRef: this.packetRef,
+             backRef: this.backRef, frontRef: this.frontRef, tipRef: this.tipRef, traceRef: this.traceRef };
+  }
+
+  componentDidMount() {
+    const host = this.hostRef.current, root = this.rootRef.current;
+    if (!host || !root) return;
+    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.small = window.matchMedia("(max-width: 860px)").matches;
+    this.buildNodes();
+    this.buildLinks();
+    this.buildStages();
+    this.initMobile();
+    this.measure();
+    this.project();
+    this.apply("build");
+    this.startLoop();
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    clearTimeout(this.resume);
+    clearInterval(this.cycle);
+    window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("pointermove", this.onMove);
+    window.removeEventListener("resize", this.onResize);
+    if (this.io) this.io.disconnect();
+  }
+
+  buildNodes() {
+    const nl = this.nodeRef.current;
+    this.nodes = NODES.map((n, i) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.textContent = n.l;
+      // cam() already returns absolute host coordinates, so the plate anchors at 0,0
+      el.style.cssText = "position:absolute;left:0;top:0;border:0;padding:10px 14px;border-radius:10px;" +
+        "background:linear-gradient(180deg,rgba(32,39,46,0.94),rgba(15,20,26,0.95));" +
+        "box-shadow:0 1px 0 rgba(255,255,255,0.16) inset,0 -1px 0 rgba(0,0,0,0.4) inset,0 0 0 1px rgba(216,228,232,0.14),0 28px 42px -26px rgba(0,0,0,0.95);" +
+        "font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;" +
+        "color:rgba(246,242,233,0.96);white-space:nowrap;cursor:pointer;opacity:0;" +
+        "transition:opacity .8s cubic-bezier(.2,.7,.2,1),box-shadow .5s ease,color .4s ease";
+      el.addEventListener("pointerenter", () => { this.takeOver(); this.apply(NODE_STAGE[n.id], n.id); });
+      el.addEventListener("focus", () => { this.takeOver(); this.apply(NODE_STAGE[n.id], n.id); });
+      el.addEventListener("pointerleave", () => this.release());
+      el.addEventListener("blur", () => this.release());
+      nl.appendChild(el);
+      return { el: el, def: NODES[i], on: 0, scr: { x: 0, y: 0, k: 1 } };
+    });
+  }
+
+  buildLinks() {
+    this.links = [...this.linkRef.current.querySelectorAll("[data-link]")].map((el, i) => {
+      const d = document.createElement("div");
+      d.style.cssText = "position:absolute;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;" +
+        "background:radial-gradient(circle at 34% 32%,#ffffff,#f0ead9 60%,#c3baa4);" +
+        "box-shadow:0 0 10px 2px rgba(242,236,224,0.28);opacity:0;will-change:transform";
+      this.packetRef.current.appendChild(d);
+      return { el: el, dot: d, def: LINKS[i], g: 0, gt: 0, speed: 0.15 + Math.random() * 0.06, phase: Math.random() };
+    });
+    this.sparks = {};
+    [...this.traceRef.current.querySelectorAll("[data-spark]")].forEach(el => { this.sparks[el.dataset.spark] = el; });
+  }
+
+  buildStages() {
+    this.frags = {};
+    [...this.hostRef.current.querySelectorAll("[data-frag]")].forEach(el => { this.frags[el.dataset.frag] = el; });
+    this.ghosts = [...this.hostRef.current.querySelectorAll("[data-ghost]")];
+
+    this.buttons = [...this.rootRef.current.querySelectorAll("[data-loop]")];
+    this.buttons.forEach(b => {
+      b.addEventListener("pointerenter", () => { this.takeOver(); this.apply(b.dataset.loop); });
+      b.addEventListener("focus", () => { this.takeOver(); this.apply(b.dataset.loop); });
+      b.addEventListener("click", () => { this.takeOver(); this.apply(b.dataset.loop); });
+      b.addEventListener("pointerleave", () => this.release());
+    });
+
+    this.onScroll = () => {
+      const r = this.hostRef.current.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const p = Math.min(1, Math.max(0, (vh * 0.9 - r.top) / (r.height * 0.7 + vh * 0.3)));
+      this.rootRef.current.querySelectorAll("[data-bt-rev]").forEach(el => {
+        const i = parseInt(el.dataset.btRev, 10) || 0;
+        if (p > 0.03 + i * 0.05) { el.style.opacity = "1"; el.style.transform = "none"; }
+      });
+      if (p > 0.2) ["terminal", "note"].forEach(k => { if (this.frags[k]) this.frags[k].style.opacity = "1"; });
+    };
+    window.addEventListener("scroll", this.onScroll, { passive: true });
+    this.onScroll();
+  }
+
+  takeOver() { this.manual = true; clearTimeout(this.resume); clearInterval(this.cycle); }
+  release() {
+    clearTimeout(this.resume);
+    // the loop resumes on its own once you stop steering it
+    this.resume = setTimeout(() => { this.manual = false; this.tipRef.current.style.opacity = "0"; this.autoCycle(); }, 2600);
+  }
+
+  autoCycle() {
+    if (this.reduced) return;
+    clearInterval(this.cycle);
+    let c = ORDER.indexOf(this.stage) + 1;
+    this.cycle = setInterval(() => { if (!this.manual && this.live !== false) this.apply(ORDER[c++ % ORDER.length]); }, 3900);
+  }
+
+  // On a phone the ring and the annotation planes cannot share the same box: the loop
+  // compresses into the upper field and the annotations move to a reserved band beneath it.
+  initMobile() {
+    this.ring = { s: 1, oy: 0 };
+    const host = this.hostRef.current;
+    this.syncBreak = () => {
+      const small = window.matchMedia("(max-width: 860px)").matches;
+      if (small === this.smallApplied) return;
+      this.smallApplied = small;
+      this.small = small;
+      host.style.aspectRatio = small ? "10 / 12" : "10 / 9";
+      this.ring = small ? { s: 0.80, oy: -0.28 } : { s: 1, oy: 0 };
+
+      const t = this.frags.terminal, n = this.frags.note, sc = this.frags.scribble;
+      if (t) {
+        t.style.cssText += small
+          ? ";left:0;right:auto;top:auto;bottom:0;transform:none"
+          : "";
+        if (!small) { t.style.left = "2%"; t.style.top = "70%"; t.style.bottom = "auto"; }
+        else { t.style.left = "0"; t.style.top = "auto"; t.style.bottom = "0"; }
+      }
+      if (n) {
+        if (small) { n.style.left = "auto"; n.style.right = "0"; n.style.top = "auto"; n.style.bottom = "2px"; n.style.maxWidth = "56%"; n.style.textAlign = "right"; }
+        else { n.style.left = "54%"; n.style.right = "auto"; n.style.top = "78%"; n.style.bottom = "auto"; n.style.maxWidth = "44%"; n.style.textAlign = "left"; }
+      }
+      // the marginal scribble has nowhere to sit on a phone
+      if (sc) sc.style.display = small ? "none" : "block";
+      this.ghosts.forEach(g => { g.style.display = small ? "none" : "block"; });
+      this.measure();
+      this.project();
+    };
+    window.addEventListener("resize", this.syncBreak);
+    this.syncBreak();
+  }
+
+  measure() {
+    const host = this.hostRef.current;
+    this.W = host.clientWidth || 1;
+    this.H = host.clientHeight || 1;
+    const svg = this.svgRef.current;
+    if (svg) svg.setAttribute("viewBox", "0 0 " + this.W + " " + this.H);
+  }
+
+  // ── camera ────────────────────────────────────────────────────────────────
+  project() {
+    const t = performance.now() / 1000;
+    const W = this.W, H = this.H;
+    // slow drift plus a little pointer influence: the scene is being looked at, not spun
+    const yaw = Math.sin(t * 0.11) * 0.13 + this.m.x * 0.16;
+    const pitch = Math.sin(t * 0.083 + 1.4) * 0.05 + this.m.y * 0.07;
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const F = 1.95, SX = W * 0.40, SY = H * 0.40;
+    const R = this.ring || { s: 1, oy: 0 };
+    this.cam = (x, y, z) => {
+      const x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
+      const y1 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
+      const k = F / (F + z2);
+      return { x: W / 2 + x1 * k * SX * R.s, y: H / 2 + (y1 * R.s + R.oy) * k * SY, k: k, z: z2 };
+    };
+
+    this.nodes.forEach(n => {
+      const d = n.def;
+      const p = this.cam(d.x, d.y, d.z);
+      n.scr = p;
+      const el = n.el;
+      const sc = (0.82 + 0.34 * (p.k - 0.82)).toFixed(3);
+      el.style.transform = "translate(-50%,-50%) translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px) scale(" + (0.86 + (p.k - 1) * 0.9).toFixed(3) + ")";
+      el.style.zIndex = String(Math.round(200 - p.z * 100));
+      // far nodes sit back in the haze; near ones carry the ink
+      const depth = 0.55 + 0.45 * Math.min(1, Math.max(0, (p.k - 0.82) / 0.36));
+      n.want = n.on * depth;
+    });
+
+    // screen-space de-collide: on a narrow ring two node plates can share the same spot,
+    // so the one further back yields instead of stacking
+    const st = STAGES[this.stage] || STAGES.build;
+    const leadId = NODES[st.lead] && NODES[st.lead].id;
+    // Rank first (lead > active > nearer), then let whoever comes second in that order
+    // yield — gating on n.on could never separate two equally-active nodes.
+    const order = this.nodes.slice().sort((a, b) => {
+      const rank = (n) => (n.def.id === leadId ? 4 : 0) + n.on * 2 + n.scr.k;
+      return rank(b) - rank(a);
+    });
+    const taken = [];
+    order.forEach(n => {
+      // the plate's own measured box, not a constant: the plates run 39–80px wide, so a
+      // fixed 82px probe reported collisions between nodes that clearly clear each other
+      const w = (n.el.offsetWidth || 70) * n.scr.k, h = (n.el.offsetHeight || 30) * n.scr.k;
+      const b = { l: n.scr.x - w / 2, r: n.scr.x + w / 2, t: n.scr.y - h / 2, b: n.scr.y + h / 2 };
+      const hit = taken.some(o => b.l < o.r - 3 && b.r > o.l + 3 && b.t < o.b - 2 && b.b > o.t + 2);
+      // a real collision dims a stage member; it never deletes one
+      if (hit && n.def.id !== leadId) n.want *= n.on >= 1 ? 0.55 : 0.1; else taken.push(b);
+      n.el.style.opacity = n.want.toFixed(3);
+      n.el.style.pointerEvents = n.want > 0.4 ? "auto" : "none";
+    });
+
+    const pathFor = (l, frac) => {
+      const A = l.def, a = this.nodes[A.a].def, b = this.nodes[A.b].def;
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, mz = (a.z + b.z) / 2;
+      const c1 = { x: a.x + (mx - a.x) * 0.7, y: a.y + (my - a.y) * 0.7 + A.cy, z: a.z + (mz - a.z) * 0.7 + A.cz };
+      const c2 = { x: b.x + (mx - b.x) * 0.7, y: b.y + (my - b.y) * 0.7 + A.cy, z: b.z + (mz - b.z) * 0.7 + A.cz };
+      const n = Math.max(2, Math.round(N_SAMP * frac));
+      let d = "";
+      for (let i = 0; i <= n; i++) {
+        const uu = Math.min(1, (i / n) * frac);
+        const m1 = 1 - uu;
+        const x = m1 * m1 * m1 * a.x + 3 * m1 * m1 * uu * c1.x + 3 * m1 * uu * uu * c2.x + uu * uu * uu * b.x;
+        const y = m1 * m1 * m1 * a.y + 3 * m1 * m1 * uu * c1.y + 3 * m1 * uu * uu * c2.y + uu * uu * uu * b.y;
+        const z = m1 * m1 * m1 * a.z + 3 * m1 * m1 * uu * c1.z + 3 * m1 * uu * uu * c2.z + uu * uu * uu * b.z;
+        const p = this.cam(x, y, z);
+        d += (i ? "L" : "M") + p.x.toFixed(1) + " " + p.y.toFixed(1);
+      }
+      return d;
+    };
+    this.bez = (l, uu) => {
+      const A = l.def, a = this.nodes[A.a].def, b = this.nodes[A.b].def;
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, mz = (a.z + b.z) / 2;
+      const c1 = { x: a.x + (mx - a.x) * 0.7, y: a.y + (my - a.y) * 0.7 + A.cy, z: a.z + (mz - a.z) * 0.7 + A.cz };
+      const c2 = { x: b.x + (mx - b.x) * 0.7, y: b.y + (my - b.y) * 0.7 + A.cy, z: b.z + (mz - b.z) * 0.7 + A.cz };
+      const m1 = 1 - uu;
+      return this.cam(
+        m1 * m1 * m1 * a.x + 3 * m1 * m1 * uu * c1.x + 3 * m1 * uu * uu * c2.x + uu * uu * uu * b.x,
+        m1 * m1 * m1 * a.y + 3 * m1 * m1 * uu * c1.y + 3 * m1 * uu * uu * c2.y + uu * uu * uu * b.y,
+        m1 * m1 * m1 * a.z + 3 * m1 * m1 * uu * c1.z + 3 * m1 * uu * uu * c2.z + uu * uu * uu * b.z
+      );
+    };
+
+    const S = STAGES[this.stage] || STAGES.build;
+    this.links.forEach((l, i) => {
+      l.g += (l.gt - l.g) * 0.06;
+      if (l.g < 0.01) { if (l.el.getAttribute("d")) l.el.setAttribute("d", ""); return; }
+      l.el.setAttribute("d", pathFor(l, l.g));
+      const doubt = S.doubt === i;
+      const mid = this.bez(l, 0.5);
+      const fade = 0.3 + 0.7 * Math.min(1, Math.max(0, (mid.k - 0.8) / 0.4));
+      l.el.setAttribute("stroke", doubt ? "rgba(226,178,116," + (0.9 * fade).toFixed(2) + ")"
+        : S.clean ? "rgba(232,240,243," + (0.8 * fade).toFixed(2) + ")"
+        : "rgba(216,228,232," + (0.52 * fade).toFixed(2) + ")");
+      l.el.setAttribute("stroke-width", ((doubt ? 1.7 : S.clean ? 1.8 : 1.4) * mid.k).toFixed(2));
+      l.el.setAttribute("stroke-dasharray", doubt ? "3 4" : "");
+    });
+
+    // the execution trace hangs in space under the run node
+    if (this.sparks.base) {
+      const p0 = this.cam(-0.62, 0.62, 0.1), p1 = this.cam(0.62, 0.62, 0.1);
+      this.sparks.base.setAttribute("d", "M" + p0.x.toFixed(1) + " " + p0.y.toFixed(1) + "L" + p1.x.toFixed(1) + " " + p1.y.toFixed(1));
+      const jag = [0, -0.06, 0.1, -0.08, 0.04, -0.05, 0.07, -0.03, 0.05, 0];
+      let d = "";
+      jag.forEach((j, i) => {
+        const u = i / (jag.length - 1);
+        const p = this.cam(-0.62 + 1.24 * u, 0.62 + j, 0.1);
+        d += (i ? "L" : "M") + p.x.toFixed(1) + " " + p.y.toFixed(1);
+      });
+      this.sparks.line.setAttribute("d", d);
+    }
+
+    // parallax on the annotation planes, from their own declared depth
+    const par = (el) => {
+      const z = parseFloat(el.dataset.z) || 0;
+      const dx = (yaw * -1) * z * this.W * 0.16, dy = (pitch * -1) * z * this.H * 0.14;
+      el.style.transform = "translate3d(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px,0)";
+    };
+    if (!this.small) {
+      this.ghosts.forEach(par);
+      Object.keys(this.frags).forEach(k => par(this.frags[k]));
+    }
+
+    if (this.tipNode !== null && this.tipNode !== undefined) {
+      const n = this.nodes[this.tipNode];
+      const tip = this.tipRef.current;
+      tip.style.left = n.scr.x.toFixed(1) + "px";
+      tip.style.top = (n.scr.y - 26 * n.scr.k).toFixed(1) + "px";
+    }
+  }
+
+  // ── stage state ───────────────────────────────────────────────────────────
+  apply(id, tipId) {
+    const S = STAGES[id];
+    if (!S) return;
+    const changed = this.stage !== id;
+    this.stage = id;
+    const on = new Set(S.nodes);
+    this.nodes.forEach((n, i) => { n.on = on.has(i) ? 1 : 0.34; });
+
+    const drawn = new Set(S.links);
+    this.links.forEach((l, i) => { l.gt = drawn.has(i) ? 1 : 0; });
+
+    if (this.traceRef.current) this.traceRef.current.style.opacity = (id === "observe" || id === "question") ? "1" : id === "rebuild" ? "0.4" : "0";
+    if (this.frags.scribble) this.frags.scribble.style.opacity = id === "question" ? "0.92" : "0.32";
+
+    const learned = id === "learn" || id === "rebuild";
+    if (this.strikeLineRef.current) this.strikeLineRef.current.style.width = learned ? "100%" : "0";
+    if (this.strikeRef.current) this.strikeRef.current.style.color = learned ? "rgba(232,240,232,0.3)" : "rgba(232,240,232,0.42)";
+    if (this.rewriteRef.current) {
+      this.rewriteRef.current.style.opacity = learned ? "1" : "0";
+      this.rewriteRef.current.style.transform = learned ? "none" : "translateY(4px)";
+    }
+    if (this.termRef.current) {
+      this.termRef.current.textContent = learned ? "found it" : "failed";
+      this.termRef.current.style.color = learned ? "rgba(226,178,116,0.95)" : "rgba(232,240,232,0.5)";
+    }
+
+    this.nodes.forEach((n, i) => {
+      const lead = i === S.lead;
+      n.el.style.boxShadow = "0 1px 0 rgba(255,255,255,0.16) inset,0 -1px 0 rgba(0,0,0,0.4) inset,0 0 0 1px " +
+        (lead ? "rgba(226,178,116,0.5)" : "rgba(216,228,232,0.14)") + ",0 28px 42px -26px rgba(0,0,0,0.95)";
+    });
+
+    if (changed && this.stateRef.current) this.stateRef.current.textContent = S.say;
+    this.buttons.forEach(b => {
+      const me = b.dataset.loop === id;
+      b.style.color = me ? "#ffffff" : "rgba(240,246,240,0.72)";
+      b.style.transform = me ? "translateY(-2px)" : "none";
+    });
+
+    // the microcopy chip rides the node it belongs to
+    const tip = this.tipRef.current;
+    const idx = tipId ? NODES.findIndex(n => n.id === tipId) : (this.manual ? S.lead : -1);
+    if (tip) {
+      if (idx >= 0) {
+        this.tipNode = idx;
+        tip.textContent = NODES[idx].tip;
+        tip.style.opacity = "1";
+      } else {
+        this.tipNode = null;
+        tip.style.opacity = "0";
+      }
+    }
+  }
+
+  // ── loop ──────────────────────────────────────────────────────────────────
+  startLoop() {
+    const host = this.hostRef.current;
+    this.onResize = () => { this.measure(); this.project(); };
+    window.addEventListener("resize", this.onResize);
+
+    this.live = true;
+    if ("IntersectionObserver" in window) {
+      this.io = new IntersectionObserver((en) => { this.live = en[0].isIntersecting; }, { rootMargin: "16% 0px" });
+      this.io.observe(host);
+    }
+    if (!this.reduced && !this.small) {
+      this.onMove = (e) => {
+        const r = host.getBoundingClientRect();
+        this.m.tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+        this.m.ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      };
+      window.addEventListener("pointermove", this.onMove, { passive: true });
+    }
+    if (this.reduced) { this.links.forEach(l => { l.g = l.gt; }); this.project(); return; }
+
+    const tick = () => {
+      this.raf = requestAnimationFrame(tick);
+      if (!this.live) return;
+      this.m.x += (this.m.tx - this.m.x) * 0.03;
+      this.m.y += (this.m.ty - this.m.y) * 0.03;
+      this.project();
+      this.packets();
+    };
+    tick();
+    this.autoCycle();
+  }
+
+  // work moving through the loop: one packet per assembled edge
+  packets() {
+    const t = performance.now() / 1000;
+    const S = STAGES[this.stage] || STAGES.build;
+    this.links.forEach((l, i) => {
+      if (l.g < 0.96) { if (l.dot.style.opacity !== "0") l.dot.style.opacity = "0"; return; }
+      const u = ((t * l.speed + l.phase) % 1 + 1) % 1;
+      const p = this.bez(l, u);
+      l.dot.style.transform = "translate3d(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px,0) scale(" + p.k.toFixed(2) + ")";
+      // the uncertain edge loses its packet halfway across
+      const fade = S.doubt === i ? Math.max(0, 1 - u * 1.9) : Math.sin(Math.PI * u);
+      l.dot.style.opacity = (fade * 0.92 * Math.min(1, p.k)).toFixed(3);
+    });
+  }
+}
+</script>
+</body>
+</html>

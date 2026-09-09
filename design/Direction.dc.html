@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>html, body { background: #080b0e; }</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</helmet>
+<div ref="{{ rootRef }}" style="position: relative; color: #f2ece0; background: rgba(6,10,14,0.74)">
+
+  <div ref="{{ scrollRef }}" style="position: relative; height: 520vh">
+    <div style="position: sticky; top: 0; height: 100vh; min-height: 520px; overflow: hidden">
+
+      <canvas ref="{{ canvasRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block"></canvas>
+
+      <div ref="{{ scrimRef }}" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.1s ease; background: linear-gradient(96deg, rgba(6,10,14,0.9) 0%, rgba(6,10,14,0.74) 32%, rgba(6,10,14,0.24) 56%, rgba(6,10,14,0) 72%)"></div>
+      <div ref="{{ layerRef }}" style="position: absolute; inset: 0; pointer-events: none">
+        <div data-word="retrieval" style="position: absolute; left: 56%; top: 12%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Retrieval</div>
+        <div data-word="agents" style="position: absolute; left: 47%; top: 30%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Agents</div>
+        <div data-word="evaluation" style="position: absolute; left: 62%; top: 48%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Evaluation</div>
+        <div data-word="inference" style="position: absolute; left: 52%; top: 66%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Inference</div>
+        <div data-word="observability" style="position: absolute; left: 66%; top: 78%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Observability</div>
+        <div data-word="infrastructure" style="position: absolute; left: 58%; top: 89%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Infrastructure</div>
+      </div>
+
+      <div ref="{{ legendRef }}" data-dir="legend" style="position: absolute; right: clamp(22px, 4vw, 54px); bottom: clamp(74px, 12vh, 118px); width: min(300px, 40vw); display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; border-radius: 14px; background: rgba(7,13,19,0.78); border: 1px solid rgba(214,230,236,0.2); box-shadow: 0 24px 60px -28px rgba(0,0,0,0.9); backdrop-filter: blur(9px); pointer-events: none; opacity: 0; transition: opacity .8s ease">
+        <div style="display: flex; flex-direction: column; gap: 7px">
+          <div ref="{{ stageNoRef }}" data-dir="stageNo" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,186,124,0.95)">Stage 01</div>
+          <div ref="{{ stageTitleRef }}" data-dir="stageTitle" style="font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; line-height: 1.12; color: #fbfdf8">A single request</div>
+          <div ref="{{ stageBodyRef }}" data-dir="stageBody" style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 13.5px; line-height: 1.55; color: rgba(240,246,240,0.88); text-wrap: pretty">Everything starts as one question arriving with no system around it yet.</div>
+        </div>
+        <div style="height: 1px; background: rgba(214,230,236,0.16)"></div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.5)">Key</div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 0; border-top: 2px solid rgba(226,240,246,0.9)"></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Request path</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 0; border-top: 2px dashed rgba(158,196,216,0.95)"></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Feedback loop</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; display: flex; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: rgba(240,232,214,0.98)"></span></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Live traffic</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; display: flex; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: rgba(232,186,124,0.98)"></span></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Under load / failing</span></div>
+        </div>
+      </div>
+
+      <div style="position: absolute; left: clamp(22px, 4vw, 54px); right: clamp(22px, 4vw, 54px); bottom: clamp(18px, 3vh, 30px); display: flex; align-items: center; gap: 16px; pointer-events: none">
+        <div ref="{{ stepRef }}" data-dir="step" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .24em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.75); white-space: nowrap"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">01</span><span style="opacity: .42; padding-right: .48em">/</span>07</div>
+        <div style="flex: 1; position: relative; height: 3px; background: rgba(214,230,236,0.18); border-radius: 3px; overflow: hidden">
+          <div ref="{{ barRef }}" data-dir="bar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, rgba(214,230,236,0.55), rgba(232,186,124,0.98)); border-radius: 3px; transition: width .18s linear"></div>
+        </div>
+        <div ref="{{ hintRef }}" data-dir="hint" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(232,240,232,0.5); white-space: nowrap">Scroll to build the system &#8595;</div>
+      </div>
+
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 5vh, 60px) clamp(22px, 4vw, 54px); box-sizing: border-box; pointer-events: none">
+
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap">
+          <div ref="{{ eyebrowRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); opacity: 0; transition: opacity 1.2s ease"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">08</span><span style="opacity: .42; padding-right: .48em">/</span>Direction</div>
+          <div ref="{{ phaseRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.42); transition: opacity .5s ease">Unresolved</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 26px); max-width: min(560px, 46vw)">
+          <h3 ref="{{ headRef }}" style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(28px, 3.7vw, 56px); text-wrap: balance; line-height: 1.04; letter-spacing: -0.02em; color: #fbfdf8; text-wrap: pretty; opacity: 0; transform: translateY(24px); transition: opacity 1.5s cubic-bezier(.2,.7,.2,1), transform 1.5s cubic-bezier(.2,.7,.2,1)">From making AI work<br />to making AI hold up.</h3>
+          <p ref="{{ p1Ref }}" style="margin: 0; max-width: 40ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.82); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I&#8217;m building toward the engineering layer where models meet reality &#8212; retrieval, agents, evaluation, inference, observability, and the infrastructure that keeps them reliable under real load.</p>
+          <p ref="{{ p2Ref }}" style="margin: 0; max-width: 38ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.7); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I want to work on systems where quality, latency, cost and failure recovery are designed together &#8212; not patched in later.</p>
+        </div>
+
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: clamp(20px, 4vw, 60px); flex-wrap: wrap; max-width: min(900px, 92vw)">
+          <div ref="{{ closeRef }}" style="display: flex; flex-direction: column; gap: 10px; opacity: 0; transform: translateY(18px); transition: opacity 1.3s ease, transform 1.3s cubic-bezier(.2,.7,.2,1)">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.5)">The direction is simple</div>
+            <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(22px, 2.6vw, 38px); line-height: 1.16; color: #f8fbf6">Fewer demos.<br />Deeper systems.</div>
+          </div>
+          <a ref="{{ ctaRef }}" href="#selected-systems" style="display: inline-flex; align-items: center; gap: 12px; padding: 14px 0 11px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.95); border-bottom: 1px solid rgba(246,250,244,0.28); pointer-events: auto; opacity: 0; transform: translateY(14px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1), gap .45s cubic-bezier(.2,.7,.2,1), border-bottom-color .45s ease" style-hover="gap: 22px; border-bottom-color: rgba(246,250,244,0.9)">Explore selected systems <span style="font-size: 13px">&#8594;</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+// One persistent canvas scene. Scroll is the only input: an unfinished blueprint
+// gains a layer of engineering at a time until it is a system that survives failure.
+const NODES = [
+  { id: "query",  x: 0.09, y: 0.30, at: 0.06, l: "query" },
+  { id: "ret",    x: 0.25, y: 0.21, at: 0.16, l: "retrieve" },
+  { id: "rank",   x: 0.37, y: 0.31, at: 0.21, l: "rerank" },
+  { id: "ground", x: 0.49, y: 0.22, at: 0.26, l: "ground" },
+  { id: "orch",   x: 0.29, y: 0.52, at: 0.34, l: "orchestrator" },
+  { id: "tools",  x: 0.15, y: 0.67, at: 0.39, l: "tools" },
+  { id: "mem",    x: 0.43, y: 0.69, at: 0.40, l: "memory" },
+  { id: "verify", x: 0.55, y: 0.56, at: 0.43, l: "verify" },
+  { id: "harn",   x: 0.68, y: 0.74, at: 0.52, l: "harness" },
+  { id: "batch",  x: 0.65, y: 0.37, at: 0.62, l: "batch" },
+  { id: "model",  x: 0.77, y: 0.47, at: 0.65, l: "model" },
+  { id: "r1",     x: 0.90, y: 0.29, at: 0.74, l: "replica" },
+  { id: "r2",     x: 0.92, y: 0.46, at: 0.76, l: "replica" },
+  { id: "r3",     x: 0.90, y: 0.63, at: 0.78, l: "replica" },
+  { id: "mon",    x: 0.60, y: 0.87, at: 0.84, l: "monitor" }
+];
+
+const LINKS = [
+  ["query", "ret", 0.14], ["ret", "rank", 0.20], ["rank", "ground", 0.25],
+  ["ground", "orch", 0.33], ["orch", "tools", 0.38], ["orch", "mem", 0.40],
+  ["orch", "verify", 0.42], ["verify", "orch", 0.46],
+  ["harn", "verify", 0.53], ["harn", "model", 0.56],
+  ["query", "batch", 0.61], ["batch", "model", 0.64],
+  ["model", "r1", 0.73], ["model", "r2", 0.75], ["model", "r3", 0.77],
+  ["r2", "mon", 0.83], ["mon", "orch", 0.88]
+];
+
+const PHASES = [
+  [0.00, "Unresolved"], [0.16, "Retrieval forming"], [0.34, "Orchestration"],
+  [0.52, "Observing itself"], [0.62, "Traffic"], [0.74, "Operations"], [0.90, "Operational"]
+];
+
+const WORDS = [
+  ["retrieval", 0.16, 0.40], ["agents", 0.34, 0.56], ["evaluation", 0.52, 0.68],
+  ["inference", 0.62, 0.80], ["observability", 0.83, 0.94], ["infrastructure", 0.74, 0.97]
+];
+
+// Plain-language reading of each stage, so the diagram explains itself to anyone.
+const STAGES = [
+  [0.00, "Stage 01", "A single request", "One question arrives with nothing built around it yet — no retrieval, no checks, no fallback."],
+  [0.14, "Stage 02", "Finding the right context", "The question searches a knowledge base, then re-ranks what came back and throws away weak matches before anything is answered."],
+  [0.33, "Stage 03", "An agent that can act", "An orchestrator decides the steps: call tools, remember earlier turns, and verify its own answer before returning it."],
+  [0.52, "Stage 04", "Testing it on purpose", "An evaluation harness replays hard cases against the system so quality is measured, not assumed."],
+  [0.61, "Stage 05", "Serving real traffic", "Requests are batched and pushed through the model while latency, queue depth and throughput are watched live."],
+  [0.74, "Stage 06", "Surviving failure", "Traffic spreads across replicas. When one drops out, the rest absorb it and the system keeps answering."],
+  [0.88, "Stage 07", "A system that holds up", "Monitoring feeds back into the orchestrator, so what breaks in production changes how the system behaves next."]
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    ["rootRef","scrollRef","canvasRef","layerRef","scrimRef","eyebrowRef","phaseRef","headRef","p1Ref","p2Ref","closeRef","ctaRef",
+     "legendRef","barRef","stepRef","hintRef","stageNoRef","stageTitleRef","stageBodyRef"]
+      .forEach(k => { this[k] = React.createRef(); });
+    this.p = 0;
+    this.hoverCta = 0;
+  }
+
+  renderVals() {
+    return { rootRef: this.rootRef, scrollRef: this.scrollRef, canvasRef: this.canvasRef, layerRef: this.layerRef,
+             eyebrowRef: this.eyebrowRef, phaseRef: this.phaseRef, headRef: this.headRef,
+             p1Ref: this.p1Ref, p2Ref: this.p2Ref, closeRef: this.closeRef, ctaRef: this.ctaRef,
+             scrimRef: this.scrimRef, legendRef: this.legendRef, barRef: this.barRef, stepRef: this.stepRef,
+             hintRef: this.hintRef, stageNoRef: this.stageNoRef, stageTitleRef: this.stageTitleRef,
+             stageBodyRef: this.stageBodyRef };
+  }
+
+  componentDidMount() {
+    const cv = this.canvasRef.current, sec = this.scrollRef.current;
+    if (!cv || !sec) return;
+    this.ctx = cv.getContext("2d");
+    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this.small = window.matchMedia("(max-width: 860px)").matches;
+    // re-read on rotation, so a landscape phone does not keep the portrait treatment
+    this.syncBreak = () => {
+      this.small = window.matchMedia("(max-width: 860px)").matches;
+      if (sec) sec.style.height = this.small ? "360vh" : "520vh";
+    };
+    window.addEventListener("resize", this.syncBreak);
+    this.syncBreak();
+
+    this.byId = {};
+    NODES.forEach(n => { this.byId[n.id] = n; });
+    this.links = LINKS.map(([a, b, at], i) => ({ a: this.byId[a], b: this.byId[b], at, i, phase: (i * 0.19) % 1 }));
+
+    // the direction field: faint traces that start scattered and gradually agree
+    const dense = this.small ? 240 : 620;
+    this.field = [];
+    for (let i = 0; i < dense; i++) {
+      this.field.push({
+        x: Math.random(), y: Math.random(),
+        a0: Math.random() * Math.PI * 2,
+        len: 0.007 + Math.random() * 0.016,
+        w: 0.35 + Math.random() * 0.65
+      });
+    }
+
+    // the stage panel now carries the explanation, so the floating labels stand down entirely
+    this.words = {};
+    this.layerRef.current.style.display = "none";
+
+    if (this.small) {
+      const lg = this.legendRef.current;
+      if (lg) {
+        lg.style.width = "auto";
+        lg.style.left = "clamp(22px, 4vw, 54px)";
+        lg.style.bottom = "clamp(58px, 9vh, 90px)";
+      }
+      const h = this.hintRef.current;
+      if (h) h.style.display = "none";
+    }
+
+    const cta = this.ctaRef.current;
+    if (cta) {
+      cta.addEventListener("pointerenter", () => { this.ctaHot = true; });
+      cta.addEventListener("pointerleave", () => { this.ctaHot = false; });
+      cta.addEventListener("focus", () => { this.ctaHot = true; });
+      cta.addEventListener("blur", () => { this.ctaHot = false; });
+    }
+
+    this.t0 = performance.now();
+    this.onScroll = () => {
+      const r = sec.getBoundingClientRect();
+      const span = Math.max(1, sec.offsetHeight - window.innerHeight);
+      // target only: this.p eases toward it in the loop so the chapter never snaps
+      this.pTarget = Math.min(1, Math.max(0, -r.top / span));
+      if (this.reduced) { this.p = this.pTarget; this.draw(); }
+      // copy always follows scroll, even if the animation loop is paused
+      this.copy();
+    };
+    window.addEventListener("scroll", this.onScroll, { passive: true });
+    this.onScroll();
+
+    this.live = true;
+    if ("IntersectionObserver" in window) {
+      this.io = new IntersectionObserver((en) => {
+        // only the ambient loop pauses; scroll still draws every frame it needs
+        const e = en[en.length - 1];
+        if (e && e.target === sec) this.live = e.isIntersecting;
+      }, { rootMargin: "25% 0px" });
+      this.io.observe(sec);
+    }
+
+    this.draw();
+    this.copy();
+    if (!this.reduced) {
+      cancelAnimationFrame(this.raf);
+      this.pTarget = this.p;
+      const tick = () => {
+        this.raf = requestAnimationFrame(tick);
+        // frame-rate-independent ease toward the scroll target: buttery, never overshoots
+        const t = this.pTarget === undefined ? this.p : this.pTarget;
+        const d = t - this.p;
+        this.p += Math.abs(d) < 0.0004 ? d : d * 0.14;
+        this.copy();
+        if (!this.live) return;
+        this.draw();
+      };
+      tick();
+    }
+  }
+
+  draw() {
+    const cv = this.canvasRef.current, ctx = this.ctx;
+    if (!cv || !ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, this.small ? 1.25 : 1.6);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    const pw = Math.max(1, Math.round(W * dpr)), ph = Math.max(1, Math.round(H * dpr));
+    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    const t = (performance.now() - this.t0) / 1000;
+    const p = this.p;
+    const cl = (v, a, b) => Math.min(b === undefined ? 1 : b, Math.max(a === undefined ? 0 : a, v));
+    const ease = (k) => k * k * (3 - 2 * k);
+    // the camera barely moves: the system assembles around the viewer
+    const zoom = (0.9 + 0.12 * ease(cl(p / 0.9))) * (1 - 0.14 * (1 - ease(cl((p - 0.55) / 0.22))));
+    // while the statement holds the left column, the architecture sits to its right
+    const clear = 1 - ease(cl((p - 0.55) / 0.22));
+    const shiftX = 0.16 * clear - 0.02 * p, shiftY = 0.012 * Math.sin(p * 3.14) - 0.03 * clear;
+    const X = (nx) => (0.5 + (nx - 0.5 + shiftX) * zoom) * W;
+    const Y = (ny) => (0.5 + (ny - 0.5 + shiftY) * zoom) * H;
+
+    // ── direction field: alignment IS the story, so it is drawn first and faintest
+    const align = ease(cl((p - 0.05) / 0.85));
+    const target = -0.32;
+    ctx.lineCap = "round";
+    for (let i = 0; i < this.field.length; i++) {
+      const f = this.field[i];
+      const wobble = Math.sin(t * 0.22 + i) * 0.22 * (1 - align);
+      const ang = f.a0 * (1 - align) + (target + wobble) * (align || 0.0001) + (1 - align) * wobble;
+      const x = X(f.x), y = Y(f.y);
+      const L = f.len * Math.min(W, H) * (0.8 + 0.6 * align);
+      ctx.strokeStyle = "rgba(198,214,224," + (0.035 + 0.075 * align * f.w).toFixed(3) + ")";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x - Math.cos(ang) * L, y - Math.sin(ang) * L);
+      ctx.lineTo(x + Math.cos(ang) * L, y + Math.sin(ang) * L);
+      ctx.stroke();
+    }
+
+    // ── architecture: each connection draws only once its layer is reached
+    this.links.forEach((l) => {
+      const rev = ease(cl((p - l.at) / 0.09));
+      if (rev <= 0.001) return;
+      const ax = X(l.a.x), ay = Y(l.a.y), bx = X(l.b.x), by = Y(l.b.y);
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+      const bow = (l.i % 2 ? 1 : -1) * len * 0.13;
+      const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
+      l.cx = cx; l.cy = cy; l.rev = rev;
+      // a returning path (verify→orch, mon→orch) reads cooler and thinner
+      const back = l.b.id === "orch" && l.a.id !== "ground";
+      ctx.strokeStyle = back ? "rgba(164,198,218," + (0.62 * rev).toFixed(3) + ")"
+                            : "rgba(222,236,242," + (0.7 * rev).toFixed(3) + ")";
+      ctx.lineWidth = back ? 1.3 : 1.7;
+      ctx.setLineDash(back ? [4, 6] : []);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      // partial draw while the layer is still forming
+      if (rev < 1) {
+        const ex = (1 - rev) * (1 - rev) * ax + 2 * (1 - rev) * rev * cx + rev * rev * bx;
+        const ey = (1 - rev) * (1 - rev) * ay + 2 * (1 - rev) * rev * cy + rev * rev * by;
+        ctx.quadraticCurveTo(ax + (cx - ax) * rev, ay + (cy - ay) * rev, ex, ey);
+      } else {
+        ctx.quadraticCurveTo(cx, cy, bx, by);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // ── the replica that goes away, and comes back
+    const failWindow = p > 0.80 && p < 0.995;
+    const cycle = (t % 16) / 16;
+    const down = failWindow && cycle > 0.30 && cycle < 0.62;
+
+    // ── nodes: matte plates that emerge from the dark, warming slightly under load
+    NODES.forEach((n, i) => {
+      const rev = ease(cl((p - n.at) / 0.08));
+      if (rev <= 0.002) return;
+      const x = X(n.x), y = Y(n.y);
+      const gone = down && n.id === "r3";
+      const a = rev * (gone ? 0.34 : 1);
+      if (gone) {
+        // the failing replica is marked, not just dimmed — the recovery must be legible
+        ctx.strokeStyle = "rgba(234,150,104,0.85)";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(x - 7, y - 7); ctx.lineTo(x + 7, y + 7);
+        ctx.moveTo(x + 7, y - 7); ctx.lineTo(x - 7, y + 7); ctx.stroke();
+        ctx.font = "500 10px 'IBM Plex Mono', monospace";
+        ctx.textAlign = "right";
+        ctx.fillStyle = "rgba(236,164,116,0.95)";
+        ctx.fillText("REPLICA DOWN \u2192 REROUTED", x - 14, y + 4);
+      }
+      const load = n.id === "model" ? cl((p - 0.62) / 0.2) : 0;
+      const r = (n.id === "model" || n.id === "orch") ? 8.5 : 6.4;
+
+      ctx.beginPath();
+      ctx.arc(x, y + 7, r * 2.4, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(2,6,10," + (0.35 * a).toFixed(3) + ")";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      const g = ctx.createLinearGradient(x, y - r, x, y + r);
+      g.addColorStop(0, "rgba(46,54,62," + a.toFixed(3) + ")");
+      g.addColorStop(1, "rgba(16,21,26," + a.toFixed(3) + ")");
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = load > 0.02
+        ? "rgba(234,188,124," + ((0.6 + 0.4 * load) * a).toFixed(3) + ")"
+        : "rgba(224,236,240," + (0.68 * a).toFixed(3) + ")";
+      ctx.stroke();
+
+      // label plate keeps every name readable over the field and the curves
+      const key = n.id === "model" || n.id === "orch";
+      const fs = key ? 13 : 11.5;
+      ctx.font = "500 " + fs + "px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "center";
+      const lbl = n.l.toUpperCase();
+      const tw = ctx.measureText(lbl).width;
+      const ly = y - r - 15;
+      ctx.fillStyle = "rgba(6,11,16," + (0.72 * a).toFixed(3) + ")";
+      ctx.beginPath();
+      const rx = x - tw / 2 - 6, ry = ly - fs + 1, rw = tw + 12, rh = fs + 6;
+      if (ctx.roundRect) { ctx.roundRect(rx, ry, rw, rh, 4); } else { ctx.rect(rx, ry, rw, rh); }
+      ctx.fill();
+      ctx.fillStyle = key ? "rgba(250,252,248," + (0.98 * a).toFixed(3) + ")"
+                          : "rgba(238,246,240," + (0.9 * a).toFixed(3) + ")";
+      ctx.fillText(lbl, x, ly);
+    });
+
+    // ── signals: the details that make it feel operational
+    const sig = (l, u, col, size) => {
+      const iu = 1 - u;
+      const x = iu * iu * X(l.a.x) + 2 * iu * u * l.cx + u * u * X(l.b.x);
+      const y = iu * iu * Y(l.a.y) + 2 * iu * u * l.cy + u * u * Y(l.b.y);
+      ctx.beginPath();
+      ctx.arc(x, y, size || 2, 0, Math.PI * 2);
+      ctx.fillStyle = col;
+      ctx.fill();
+      return [x, y];
+    };
+    this.links.forEach((l) => {
+      if (!l.rev || l.rev < 1) return;
+      const back = l.b.id === "orch" && l.a.id !== "ground";
+      let speed = 0.17;
+      let u = ((t * speed + l.phase) % 1 + 1) % 1;
+      if (back) u = 1 - u;
+      let alpha = 0.35 + Math.sin(Math.PI * u) * 0.65;
+      let col = back ? "rgba(176,206,224," : "rgba(246,242,232,";
+
+      // a reranked chunk gets rejected before it reaches grounding
+      if (l.a.id === "rank" && u > 0.55) alpha *= cl(1 - (u - 0.55) * 4);
+      // the batch waits for one more request before it moves
+      if (l.b.id === "batch") { const hold = (t % 4) / 4; if (hold < 0.45 && u > 0.62) u = 0.62; }
+      // a test trace diverges from its pair
+      if (l.a.id === "harn") { const div = Math.sin(t * 0.5 + l.i) > 0.7; if (div) col = "rgba(226,178,116,"; }
+      // traffic avoids the replica that is down
+      if (down && l.b.id === "r3") alpha *= 0.1;
+      if (down && (l.b.id === "r1" || l.b.id === "r2")) { speed = 0.24; alpha = Math.min(1, alpha * 1.3); }
+
+      sig(l, u, col + alpha.toFixed(3) + ")", l.a.id === "batch" ? 3.8 : 3.1);
+    });
+
+    // ── instrumentation, embedded rather than dashboarded
+    if (p > 0.62) {
+      const a = cl((p - 0.62) / 0.1) * 0.92;
+      ctx.font = "400 10.5px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = "rgba(234,242,234," + a.toFixed(3) + ")";
+      ctx.textAlign = "left";
+      ctx.fillText("TTFT 180MS", X(0.65) + 16, Y(0.31));
+      ctx.fillText("QUEUE " + (1 + Math.floor((t % 4) / 1.3)), X(0.65) + 16, Y(0.35));
+      ctx.fillText("P95 42MS", X(0.77) + 16, Y(0.53));
+      ctx.fillText("TOKENS/S 1.4K", X(0.77) + 16, Y(0.57));
+    }
+
+    // ── the final output trace runs to the CTA, and answers when it is hovered
+    if (p > 0.86) {
+      const a = cl((p - 0.86) / 0.1);
+      const cta = this.ctaRef.current;
+      if (cta) {
+        const cr = cta.getBoundingClientRect(), pr = cv.getBoundingClientRect();
+        const tx = cr.left - pr.left + 8, ty = cr.top - pr.top + cr.height / 2;
+        const sx = X(this.byId.r2.x), sy = Y(this.byId.r2.y);
+        const hot = this.ctaHot ? 1 : 0;
+        this.ctaGlow = (this.ctaGlow || 0) + (hot - (this.ctaGlow || 0)) * 0.08;
+        ctx.strokeStyle = "rgba(226,178,116," + ((0.16 + 0.34 * this.ctaGlow) * a).toFixed(3) + ")";
+        ctx.lineWidth = 1 + this.ctaGlow * 0.5;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo((sx + tx) / 2, Math.max(sy, ty) + 60, tx, ty);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const u = ((t * (0.16 + 0.3 * this.ctaGlow)) % 1 + 1) % 1;
+        const iu = 1 - u;
+        const mx = (sx + tx) / 2, my = Math.max(sy, ty) + 60;
+        const px = iu * iu * sx + 2 * iu * u * mx + u * u * tx;
+        const py = iu * iu * sy + 2 * iu * u * my + u * u * ty;
+        ctx.beginPath();
+        ctx.arc(px, py, 2.4 + this.ctaGlow, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(240,224,190," + ((0.5 + 0.5 * this.ctaGlow) * a).toFixed(3) + ")";
+        ctx.fill();
+      }
+    }
+
+    this.copy();
+  }
+
+  // driven by scroll so the chapter reads correctly with no animation loop at all
+  copy() {
+    const p = this.p;
+    const cl = (v) => Math.min(1, Math.max(0, v));
+    // written unconditionally: React re-renders reapply the template's inline opacity:0,
+    // so a cached flag would strand elements invisible
+    const show = (ref, on, dy) => {
+      const el = ref.current;
+      if (!el) return;
+      const o = on ? "1" : "0";
+      const tr = on ? "none" : "translateY(" + (dy || 16) + "px)";
+      if (el.style.opacity !== o) el.style.opacity = o;
+      if (el.style.transform !== tr) el.style.transform = tr;
+    };
+    show(this.eyebrowRef, p > 0.01, 0);
+    show(this.headRef, p > 0.05 && p < 0.62, 24);
+    show(this.p1Ref, p > 0.12 && p < 0.55, 16);
+    show(this.p2Ref, p > 0.30 && p < 0.55, 16);
+    show(this.closeRef, p > 0.88, 18);
+    const sc = this.scrimRef.current;
+    if (sc) {
+      const o = String((p > 0.03 && p < 0.60) ? 1 : (p > 0.86 ? 0.55 : 0));
+      if (sc.style.opacity !== o) sc.style.opacity = o;
+    }
+    show(this.ctaRef, p > 0.90, 14);
+
+    // ── plain-language stage panel: the part that makes the diagram readable.
+    // Nodes are resolved from the live DOM (every match, not a cached ref) and written
+    // unconditionally, so neither a stale ref nor a re-render can strand the panel.
+    let si = 0;
+    STAGES.forEach((st, i) => { if (p >= st[0]) si = i; });
+    const stage = STAGES[si];
+    const root = this.rootRef.current || document;
+    const all = (k) => root.querySelectorAll('[data-dir="' + k + '"]');
+    const setText = (k, txt) => all(k).forEach(el => { if (el.textContent !== txt) el.textContent = txt; });
+    setText("stageNo", stage[1]);
+    setText("stageTitle", stage[2]);
+    setText("stageBody", stage[3]);
+    setText("step", String(si + 1).padStart(2, "0") + " / 07");
+    const lgOn = (this.small ? (p > 0.50 && p < 0.95) : (p > 0.03 && p < 0.95)) ? "1" : "0";
+    all("legend").forEach(el => { el.style.opacity = lgOn; });
+    const w = Math.round(p * 1000) / 10 + "%";
+    all("bar").forEach(el => { el.style.width = w; });
+    all("hint").forEach(el => { el.style.opacity = (!this.small && p < 0.06) ? "1" : "0"; });
+
+    const down = p > 0.80 && p < 0.995 && ((performance.now() - this.t0) / 1000 % 16) / 16 > 0.30 && ((performance.now() - this.t0) / 1000 % 16) / 16 < 0.62;
+    let label = PHASES[0][1];
+    PHASES.forEach(([at, name]) => { if (p >= at) label = name; });
+    const pr = this.phaseRef.current;
+    if (pr && pr.__l !== label) { pr.__l = label; pr.textContent = down ? "Recovering" : label; }
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener("scroll", this.onScroll);
+    if (this.io) this.io.disconnect();
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Build output. `node build.mjs` regenerates it from design/ with no dependencies,
+# and committing it would duplicate ~3 MB of image assets that already live in
+# design/assets/.
+dist/
+
+node_modules/
+*.log
+
+.DS_Store
+Thumbs.db
+desktop.ini
