@@ -11,3 +11,7 @@ Thumbs.db
 desktop.ini
 
 .vercel
+
+# Working artifacts from audit/analysis runs, not source.
+artifacts/
+graphify-out/
