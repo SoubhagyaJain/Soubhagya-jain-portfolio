@@ -125,6 +125,14 @@
      width, losing the bay, the bench and the bicycle. The cut is already upright, so
      it must not take the panorama's 90deg rotation or its overscaled sizing. The
      element carries those inline, hence !important. */
+  /* A fixed element with backdrop-filter re-blurs whatever scrolls beneath it, for
+     every frame of the page. Phones pay that continuously, so halve the radius. */
+  @media (max-width: 820px) {
+    [data-mobile-nav-pill] {
+      backdrop-filter: blur(8px) saturate(1.25) brightness(.82) !important;
+      -webkit-backdrop-filter: blur(8px) saturate(1.25) brightness(.82) !important;
+    }
+  }
   @media (max-width: 820px) and (orientation: portrait) {
     img[data-memory-plate] {
       transform: translate(-50%, -50%) scale(1.2) !important;
@@ -1212,11 +1220,24 @@ class Component extends DCLogic {
     const pill = this.pillRef.current;
     if (!pill) return;
     const k = Math.min(1, Math.max(0, t)); // densifies as the hero gives way
-    if (!window.matchMedia("(max-width: 660px)").matches) pill.style.height = (58 - 10 * k).toFixed(1) + "px";
-    const b = (16 + 9 * k).toFixed(1);
-    pill.style.backdropFilter = "blur(" + b + "px) saturate(" + (1.3 + 0.1 * k).toFixed(2) + ") brightness(" + (0.8 - 0.04 * k).toFixed(2) + ")";
-    pill.style.webkitBackdropFilter = pill.style.backdropFilter;
-    pill.style.background = "linear-gradient(178deg, rgba(255,255,255," + (0.18 + 0.07 * k).toFixed(3) + ") 0%, rgba(8,18,26," + (0.52 + 0.12 * k).toFixed(3) + ") 46%, rgba(255,255,255," + (0.09 + 0.05 * k).toFixed(3) + ") 100%)";
+
+    // This ran on every scroll frame. Re-blurring a fixed element's backdrop is among
+    // the most expensive things a phone can be asked to do, and the height write forces
+    // layout of the pill's contents each time. Quantise the travel into twelve steps —
+    // visually identical, but the DOM is touched twelve times instead of hundreds — and
+    // leave the blur alone entirely on small screens, where it keeps the value the
+    // markup set rather than being re-evaluated as the page scrolls under it.
+    const q = Math.round(k * 12) / 12;
+    if (this.navQ === q) return;
+    this.navQ = q;
+
+    if (!window.matchMedia("(max-width: 660px)").matches) pill.style.height = (58 - 10 * q).toFixed(1) + "px";
+    if (!this.small) {
+      const b = (16 + 9 * q).toFixed(1);
+      pill.style.backdropFilter = "blur(" + b + "px) saturate(" + (1.3 + 0.1 * q).toFixed(2) + ") brightness(" + (0.8 - 0.04 * q).toFixed(2) + ")";
+      pill.style.webkitBackdropFilter = pill.style.backdropFilter;
+    }
+    pill.style.background = "linear-gradient(178deg, rgba(255,255,255," + (0.18 + 0.07 * q).toFixed(3) + ") 0%, rgba(8,18,26," + (0.52 + 0.12 * q).toFixed(3) + ") 46%, rgba(255,255,255," + (0.09 + 0.05 * q).toFixed(3) + ") 100%)";
   }
 
   componentDidMount() {
@@ -1456,6 +1477,24 @@ class Component extends DCLogic {
     let last = 0;
     const frame = (now) => {
       this.raf = requestAnimationFrame(frame);
+
+      // Past the hero this is a full-screen fragment shader painting behind twenty
+      // screens of content that nobody is looking at — and on a phone GPU that one
+      // element can eat the whole frame budget. uScroll saturates at 1, so beyond that
+      // only ambient motion remains, and it is under a veil and a dim layer by then.
+      // Park instead: preserveDrawingBuffer keeps the last frame on screen, so the
+      // backdrop still reads as the photograph, it has simply stopped breathing.
+      // Phones park earlier because they can least afford it. Never park mid-dusk.
+      const parkAt = this.small ? 0.72 : 1;
+      const settled = Math.abs((this.state.night ? 1 : 0) - this.nightMix) < 0.002;
+      if (this.scroll >= parkAt && settled && this.uploaded) {
+        if (this.parked) return;
+        this.parked = true;          // fall through once, so we park on a fresh frame
+      } else if (this.parked) {
+        this.parked = false;
+        last = 0;                    // resume immediately rather than waiting a budget
+      }
+
       // the landscape is background motion: ~50fps near the hero, ~24fps once it has receded
       const budget = (this.scroll > 0.55 ? 41 : 20) * (this.small ? 1.7 : 1);
       if (now - last < budget) return;
