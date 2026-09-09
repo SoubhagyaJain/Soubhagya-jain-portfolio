@@ -3,10 +3,22 @@
 A static site compiled from the Claude Design project
 [*World alive with natural motion*](https://claude.ai/design/p/dc4e5ced-b98d-4045-a5c1-82403772017f).
 
+**Live:** https://soubhagya-jain-portfolio.vercel.app
+
 ```bash
 node build.mjs                                   # design/ -> dist/
 python -m http.server 4173 --directory dist      # then open http://localhost:4173
 ```
+
+## Deployment
+
+Vercel is linked to this repository, so **every push to `main` deploys to
+production** — no manual step. Build settings come from `vercel.json`
+(`node build.mjs` → `dist/`); there are no dependencies to install, so a build takes
+a few seconds.
+
+`dist/` is gitignored, which is why the build config matters: without it Vercel would
+treat this as a plain static site, serve the repo root, and find no `index.html`.
 
 ## Layout
 
