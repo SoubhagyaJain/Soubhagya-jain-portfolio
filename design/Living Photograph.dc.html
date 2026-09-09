@@ -152,7 +152,7 @@
     <div style="position: absolute; inset: 0; overflow: hidden">
       <picture>
         <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-day-portrait.jpg">
-        <img data-hero-cover="day" src="assets/plate-day.jpg" alt="A wooden bench and a bicycle above a wide blue bay on a summer afternoon" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); transition: opacity 1.2s ease">
+        <img data-hero-cover="day" src="assets/plate-day-wide.jpg" alt="A wooden bench and a bicycle above a wide blue bay on a summer afternoon" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); transition: opacity 1.2s ease">
       </picture>
       <picture>
         <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-night-portrait.jpg">
@@ -256,7 +256,7 @@
           <div data-memory="1" style="position: absolute; left: 50%; top: 52%; width: min(116%, 740px); aspect-ratio: 4 / 3; transform: translate(-50%, -50%); pointer-events: none; opacity: .16; overflow: hidden; -webkit-mask-image: radial-gradient(58% 54% at 50% 50%, #000 18%, rgba(0,0,0,0.5) 52%, transparent 82%); mask-image: radial-gradient(58% 54% at 50% 50%, #000 18%, rgba(0,0,0,0.5) 52%, transparent 82%)">
             <picture>
               <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-day-portrait.jpg">
-              <img data-memory-plate="1" src="assets/plate-day.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 150%; transform: translate(-50%, -50%) rotate(-90deg) scale(1.2); filter: blur(16px) saturate(0.35) brightness(0.5)">
+              <img data-memory-plate="1" src="assets/plate-day-wide.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 150%; transform: translate(-50%, -50%) rotate(-90deg) scale(1.2); filter: blur(16px) saturate(0.35) brightness(0.5)">
             </picture>
           </div>
           <div data-portrait="1" style="position: relative; width: 100%; max-width: 620px; margin-left: auto; margin-right: auto; aspect-ratio: 1 / 1; will-change: transform">
@@ -397,7 +397,7 @@
   &quot;cameraDrift&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0, &quot;max&quot;: 2.5, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Motion&quot; },
   &quot;sparkle&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0, &quot;max&quot;: 2, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Light&quot; },
   &quot;atmosphere&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0, &quot;max&quot;: 2, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Light&quot; },
-  &quot;plate&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;assets/plate-day.jpg&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Light&quot; },
+  &quot;plate&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;assets/plate-day-wide.jpg&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Light&quot; },
   &quot;nightPlate&quot;: { &quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;assets/plate-night-wide.jpg&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Light&quot; }
 }">
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
@@ -414,10 +414,14 @@ uniform float uT, uWind, uWater, uDrift, uGlint, uHaze, uScroll, uIntro, uQ, uGu
 // viewport keeps only about a quarter of its width, which throws away the bay, the
 // bench and the bicycle. So the scene aspect, the horizon height and the stored
 // orientation all arrive from the CPU rather than being baked in. HZ travels with
-// uNight because the day and night portrait cuts frame the sea slightly differently.
+// gNight because the day and night portrait cuts frame the sea slightly differently.
 uniform float TEX_ASPECT;   // scene aspect, width / height
 uniform float HZ;           // horizon height in scene space
 uniform float uRot;         // 1 = plate stored rotated, 0 = already upright
+
+// How much of night this pixel has taken. uNight is the global progress; this is
+// that progress swept across the frame, set once at the top of main().
+float gNight;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
 float vnoise(vec2 p){
@@ -464,7 +468,7 @@ vec4 photo(vec2 uv){
   vec2 s = uRot > 0.5 ? vec2(clamp(1.0 - uv.y, 0.002, 0.998), up.x) : up;
   vec4 day = texture2D(uTex, s);
   if (uNight < 0.001) return day;
-  return mix(day, texture2D(uTexN, s), uNight);
+  return mix(day, texture2D(uTexN, s), gNight);
 }
 float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
 
@@ -477,6 +481,15 @@ void main(){
 
   float t = uT;
   float sc = uScroll;
+
+  // Dusk sweeps, it does not cross-fade. Night advances from the far side of the sky
+  // and the last light clings around the sun before the moon takes over, so the toggle
+  // reads as the hour turning rather than two photographs dissolving into each other.
+  // At uNight 0 and 1 every pixel is fully day or fully night; the gradient only
+  // exists in between, which is why the endpoints stay exactly as authored.
+  float lead = clamp(distance(uv, vec2(0.66, 0.125)) / 1.15, 0.0, 1.0);
+  float band = 0.42;   // width of the terminator, in units of the transition
+  gNight = smoothstep(0.0, 1.0, clamp(uNight * (1.0 + band) - (1.0 - lead) * band, 0.0, 1.0));
 
   // ---- rough depth from the plate itself: sky far, water mid, path + foliage near
   vec3 pre = photo(uv).rgb;
@@ -522,8 +535,8 @@ void main(){
   off.x += above * (-t * 0.00040 * (0.35 + 0.65 * skyDepth));
   off += above * (fbm(base * vec2(2.3, 3.9) + vec2(t * 0.0055, -t * 0.0032)) - 0.5) * vec2(0.011, 0.0045) * skyDepth;
   // at night the cloud deck itself creeps: a second, slower shear on the upper sky only
-  off.x += above * uNight * (-t * 0.00052) * (0.4 + 0.6 * skyDepth);
-  off.y += above * uNight * (fbm(base * vec2(1.4, 2.6) + vec2(t * 0.0031, 0.0)) - 0.5) * 0.0042 * skyDepth;
+  off.x += above * gNight * (-t * 0.00052) * (0.4 + 0.6 * skyDepth);
+  off.y += above * gNight * (fbm(base * vec2(1.4, 2.6) + vec2(t * 0.0031, 0.0)) - 0.5) * 0.0042 * skyDepth;
 
   // water: swell travelling toward the shore, fine chop, both bigger up close
   float wd = smoothstep(HZ, 0.78, base.y);
@@ -536,7 +549,7 @@ void main(){
   float shoreT = smoothstep(HZ + 0.02, 0.72, base.y);
   float setPhase = base.y * 46.0 - t * 0.62 + fbm(base * vec2(3.0, 8.0)) * 2.2;
   float crest = pow(max(sin(setPhase) * 0.5 + 0.5, 0.0), 3.0);
-  off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * uNight);
+  off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * gNight);
 
   // ---- foliage as volume: three depth shells, each branch on its own pivot
   float branch = fbm(base * 3.1 + 11.0);           // which branch this pixel belongs to
@@ -597,8 +610,8 @@ void main(){
   }
 
   // ---- afternoon sun on the water: sheen, glitter, slow surface shading
-  vec2 sun = mix(vec2(0.20, 0.11), vec2(0.845, 0.135), uNight) + uMouse * 0.022;
-  vec3 lightTint = mix(vec3(1.0, 0.965, 0.90), vec3(0.86, 0.92, 1.0), uNight);
+  vec2 sun = mix(vec2(0.663, 0.127), vec2(0.657, 0.121), gNight) + uMouse * 0.022;
+  vec3 lightTint = mix(vec3(1.0, 0.965, 0.90), vec3(0.86, 0.92, 1.0), gNight);
   float sunPath = exp(-pow(abs(fuv.x - sun.x) * 1.5, 1.6)) * smoothstep(HZ - 0.01, HZ + 0.10, fuv.y);
   if (detail > 0.01) {
     float lit = smoothstep(0.34, 0.72, luma(col));
@@ -613,11 +626,11 @@ void main(){
       float column = exp(-pow(abs(fuv.x - sun.x) * (2.1 / breathe), 1.5));
       // stretched vertically toward the shore, the way a real moon path does
       float stretch = 0.6 + 0.9 * smoothstep(HZ, 0.72, fuv.y);
-      glit = mix(glit, streak * 5.2 * column * stretch, uNight);
+      glit = mix(glit, streak * 5.2 * column * stretch, gNight);
     }
     float sheen = pow(max(vnoise(fuv * vec2(28.0, 115.0) + vec2(-t * 0.05, -t * 0.33)), 0.0), 3.0);
     col += water * uGlint * glit * (0.5 + 1.4 * sunPath) * lit * lightTint * 0.80 * detail;
-    col += water * uGlint * sheen * sunPath * 0.085 * mix(vec3(1.0, 0.97, 0.93), vec3(0.88, 0.93, 1.0), uNight) * detail;
+    col += water * uGlint * sheen * sunPath * 0.085 * mix(vec3(1.0, 0.97, 0.93), vec3(0.88, 0.93, 1.0), gNight) * detail;
     col += water * (fbm(fuv * vec2(9.0, 25.0) + vec2(t * 0.03, -t * 0.06)) - 0.5) * 0.028 * vec3(0.85, 0.95, 1.0) * detail;
     if (uNight > 0.01) {
       // wave crests catching the moon as they roll in, brightest on the near side of each set
@@ -625,17 +638,17 @@ void main(){
       float ph2 = fuv.y * 46.0 - t * 0.62 + fbm(fuv * vec2(3.0, 8.0)) * 2.2;
       float lip = pow(max(sin(ph2) * 0.5 + 0.5, 0.0), 9.0);
       float lane = 0.35 + 0.65 * exp(-pow(abs(fuv.x - sun.x) * 1.3, 1.6));
-      col += water * lip * sT * lane * vec3(0.16, 0.19, 0.24) * uNight * uGlint * detail;
+      col += water * lip * sT * lane * vec3(0.16, 0.19, 0.24) * gNight * uGlint * detail;
       // slow reflected sheet: the broad, dim glow the water returns between the crests
       float sheet = fbm(fuv * vec2(6.0, 16.0) + vec2(t * 0.017, -t * 0.045));
-      col += water * sheet * lane * vec3(0.030, 0.038, 0.052) * uNight * detail;
+      col += water * sheet * lane * vec3(0.030, 0.038, 0.052) * gNight * detail;
     }
   }
 
   // ---- sun finding gaps between the moving leaves
   if (detail > 0.01) {
     float lg = pow(vnoise(base * 115.0 + vec2(t * 0.45, -t * 0.32)), 9.0);
-    col += canopy * smoothstep(0.42, 0.86, luma(col)) * exp(-length((fuv - sun) * vec2(1.1, 1.6)) * 1.7) * lg * mix(vec3(1.0, 0.94, 0.80), vec3(0.84, 0.90, 1.0), uNight) * 1.05 * uGlint * detail;
+    col += canopy * smoothstep(0.42, 0.86, luma(col)) * exp(-length((fuv - sun) * vec2(1.1, 1.6)) * 1.7) * lg * mix(vec3(1.0, 0.94, 0.80), vec3(0.84, 0.90, 1.0), gNight) * 1.05 * uGlint * detail;
   }
 
   // ---- pollen: a few motes near the flowers, only where the light catches them
@@ -653,11 +666,11 @@ void main(){
     col *= 1.0 + clamp(turn, -0.5, 0.5) * 0.085 * detail;
     // sun catching a leaf face as it rolls over
     float face = pow(max(sin(t * 1.9 + ph * 2.0) * 0.5 + 0.5, 0.0), 8.0) * leaf;
-    col += canopy * face * exp(-length((fuv - sun) * vec2(0.9, 1.4)) * 1.5) * mix(vec3(1.0, 0.95, 0.82), vec3(0.82, 0.88, 1.0), uNight) * 0.20 * uGlint * detail;
+    col += canopy * face * exp(-length((fuv - sun) * vec2(0.9, 1.4)) * 1.5) * mix(vec3(1.0, 0.95, 0.82), vec3(0.82, 0.88, 1.0), gNight) * 0.20 * uGlint * detail;
     // and the near foreground: chrome and painted metal picking up a travelling highlight
     float metal = smoothstep(0.62, 1.0, fuv.y) * smoothstep(0.30, 0.74, luma(col)) * (1.0 - smoothstep(0.02, 0.09, green));
     float sparkTravel = pow(vnoise(fuv * vec2(150.0, 260.0) + vec2(t * 0.06, -t * 0.14)), 16.0);
-    col += metal * sparkTravel * mix(vec3(1.0, 0.97, 0.91), vec3(0.86, 0.92, 1.0), uNight) * 0.65 * uGlint * detail * (1.0 - 0.72 * uNight);
+    col += metal * sparkTravel * mix(vec3(1.0, 0.97, 0.91), vec3(0.86, 0.92, 1.0), gNight) * 0.65 * uGlint * detail * (1.0 - 0.72 * gNight);
   }
 
   // ---- windborne seed and pollen drift: two layers, carried by the same gust
@@ -686,8 +699,8 @@ void main(){
       c.y = 0.58 + 0.34 * hash(vec2(sd, 4.4)) + sin(t * 0.5 + sd) * 0.012;
       float pulse = pow(max(sin(t * (0.7 + 0.5 * hash(vec2(sd, 9.1))) + sd * 3.0), 0.0), 5.0);
       float d = length((fuv - c) * vec2(1.0, 1.55));
-      col += smoothstep(0.007, 0.0, d) * pulse * vec3(0.95, 0.86, 0.45) * 1.1 * uNight * uLife * detail;
-      col += smoothstep(0.022, 0.0, d) * pulse * vec3(0.6, 0.55, 0.24) * 0.16 * uNight * uLife * detail;
+      col += smoothstep(0.007, 0.0, d) * pulse * vec3(0.95, 0.86, 0.45) * 1.1 * gNight * uLife * detail;
+      col += smoothstep(0.022, 0.0, d) * pulse * vec3(0.6, 0.55, 0.24) * 0.16 * gNight * uLife * detail;
     }
   }
   if (uQ > 0.5 && detail > 0.3 && uLife > 0.01 && uNight < 0.98) {
@@ -701,7 +714,7 @@ void main(){
         vec3 wingCol = mix(vec3(0.94, 0.90, 0.80), vec3(0.99, 0.96, 0.88), sunPath) * shade;
         vec3 bodyCol = vec3(0.20, 0.17, 0.14);
         vec3 c2 = mix(wingCol, bodyCol, body * 0.85);
-        col = mix(col, c2, clamp(a, 0.0, 1.0) * 0.9 * here * (1.0 - uNight));
+        col = mix(col, c2, clamp(a, 0.0, 1.0) * 0.9 * here * (1.0 - gNight));
       }
     }
   }
@@ -712,18 +725,18 @@ void main(){
     float edge = abs(luma(photo(fuv + vec2(0.0012, 0.0)).rgb) - lum) + abs(luma(photo(fuv + vec2(0.0, 0.0016)).rgb) - lum);
     float hard = smoothstep(0.05, 0.16, edge) * smoothstep(0.42, 0.98, fuv.y);
     float toward = 1.0 - smoothstep(0.0, 0.55, abs(fuv.x - sun.x));
-    col += hard * (0.20 + 0.5 * toward) * mix(vec3(0.055, 0.05, 0.042), vec3(0.05, 0.062, 0.085), uNight) * detail;
+    col += hard * (0.20 + 0.5 * toward) * mix(vec3(0.055, 0.05, 0.042), vec3(0.05, 0.062, 0.085), gNight) * detail;
   }
 
   // ---- aerial perspective: mountains hazier than the coastline
-  vec3 haze = mix(vec3(0.762, 0.845, 0.905), vec3(0.108, 0.148, 0.225), uNight);
+  vec3 haze = mix(vec3(0.762, 0.845, 0.905), vec3(0.108, 0.148, 0.225), gNight);
   float aer = smoothstep(HZ + 0.105, HZ - 0.03, fuv.y) * 0.38 + smoothstep(HZ - 0.025, HZ - 0.125, fuv.y) * 0.22;
   // night haze is not flat: banks of it slide along the ridgeline
   float hazeRoll = 0.78 + 0.42 * fbm(vec2(fuv.x * 2.2 - t * 0.012, fuv.y * 5.0 + t * 0.006));
-  aer *= mix(1.0, hazeRoll, uNight);
+  aer *= mix(1.0, hazeRoll, gNight);
   col = mix(col, haze, clamp(aer, 0.0, 0.60) * uHaze);
-  float occl = uNight > 0.01 ? mix(1.0, 0.42 + 0.58 * fbm(vec2(t * 0.013, 5.2)), uNight) : 1.0;
-  col += exp(-abs(fuv.x - sun.x) * 1.1) * smoothstep(HZ + 0.05, HZ - 0.05, fuv.y) * mix(vec3(0.05, 0.042, 0.028), vec3(0.022, 0.028, 0.045) * occl, uNight);
+  float occl = uNight > 0.01 ? mix(1.0, 0.42 + 0.58 * fbm(vec2(t * 0.013, 5.2)), gNight) : 1.0;
+  col += exp(-abs(fuv.x - sun.x) * 1.1) * smoothstep(HZ + 0.05, HZ - 0.05, fuv.y) * mix(vec3(0.05, 0.042, 0.028), vec3(0.022, 0.028, 0.045) * occl, gNight);
   if (uNight > 0.01) {
     // volumetric cloud deck: soft banks drifting across the moon, lit brightest at their edges
     float cy = smoothstep(HZ + 0.02, -0.05, fuv.y);
@@ -733,14 +746,14 @@ void main(){
     float edge = smoothstep(0.40, 0.56, dens) - smoothstep(0.56, 0.74, dens);
     float nearMoon = exp(-length((fuv - sun) * vec2(0.85, 1.25)) * 2.6);
     // the cloud dims the sky it covers, and its rim burns where the moon is behind it
-    col = mix(col, col * 0.86 + vec3(0.030, 0.038, 0.055), body * 0.55 * uNight);
-    col += edge * cy * (0.10 + 1.5 * nearMoon) * vec3(0.075, 0.086, 0.105) * uNight;
+    col = mix(col, col * 0.86 + vec3(0.030, 0.038, 0.055), body * 0.55 * gNight);
+    col += edge * cy * (0.10 + 1.5 * nearMoon) * vec3(0.075, 0.086, 0.105) * gNight;
 
     // the halo around the moon itself thins and thickens as cloud passes over it
     float halo = exp(-length((fuv - sun) * vec2(1.0, 1.5)) * 7.0);
     float veil = 1.0 - 0.55 * body;
-    col += halo * (occl * 0.9 - 0.35) * veil * vec3(0.10, 0.12, 0.16) * uNight;
-    col += exp(-length((fuv - sun) * vec2(1.0, 1.4)) * 2.4) * veil * occl * vec3(0.016, 0.020, 0.030) * uNight;
+    col += halo * (occl * 0.9 - 0.35) * veil * vec3(0.10, 0.12, 0.16) * gNight;
+    col += exp(-length((fuv - sun) * vec2(1.0, 1.4)) * 2.4) * veil * occl * vec3(0.016, 0.020, 0.030) * gNight;
   }
 
   // ---- grade: warm light, cool shade, soft vignette, dither against sky banding
@@ -753,18 +766,18 @@ void main(){
     float slow = 0.90 + 0.10 * sin(t * (0.5 + 0.9 * cellId) + cellId * 32.0);
     float air = 0.94 + 0.06 * vnoise(fuv * vec2(180.0, 320.0) + vec2(t * 0.30, t * 0.10));
     float flick = slow * air;
-    col += warm * lampBand * flick * vec3(0.19, 0.115, 0.032) * uNight;
+    col += warm * lampBand * flick * vec3(0.19, 0.115, 0.032) * gNight;
     // the halation each lamp throws into the humid air over the bay
-    col += warm * lampBand * flick * vec3(0.055, 0.032, 0.010) * uNight * smoothstep(0.3, 0.85, luma(col));
+    col += warm * lampBand * flick * vec3(0.055, 0.032, 0.010) * gNight * smoothstep(0.3, 0.85, luma(col));
     // stars, only in the clear upper sky, and only where the plate is already dark
     float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ, 0.02, fuv.y);
     float star = pow(vnoise(fuv * vec2(420.0, 740.0)), 26.0);
     float tw = 0.6 + 0.4 * sin(t * 1.6 + vnoise(fuv * 300.0) * 40.0);
-    col += clearSky * star * tw * vec3(0.9, 0.94, 1.0) * 0.85 * uNight;
+    col += clearSky * star * tw * vec3(0.9, 0.94, 1.0) * 0.85 * gNight;
   }
   float ll = luma(col);
-  col = mix(col, col * mix(vec3(1.042, 1.010, 0.960), vec3(0.99, 1.005, 1.045), uNight), smoothstep(0.35, 0.95, ll));
-  col = mix(col, col * mix(vec3(0.958, 0.986, 1.042), vec3(0.92, 0.965, 1.06), uNight), smoothstep(0.34, 0.02, ll));
+  col = mix(col, col * mix(vec3(1.042, 1.010, 0.960), vec3(0.99, 1.005, 1.045), gNight), smoothstep(0.35, 0.95, ll));
+  col = mix(col, col * mix(vec3(0.958, 0.986, 1.042), vec3(0.92, 0.965, 1.06), gNight), smoothstep(0.34, 0.02, ll));
   col = (col - 0.5) * 1.03 + 0.5;
   vec2 vg = (uv - 0.5) * vec2(1.02, 1.0);
   col *= 1.0 - dot(vg, vg) * 0.28;
@@ -793,6 +806,7 @@ class Component extends DCLogic {
     this.tipRef = React.createRef();
     this.mouse = { x: 0, y: 0 };
     this.nightMix = 0;
+    this.duskFrom = 0;
     this.state = { night: false };
     this.target = { x: 0, y: 0 };
     this.scroll = 0;
@@ -1340,11 +1354,11 @@ class Component extends DCLogic {
     const res = window.__resources || {};
     const CUTS = {
       wide: {
-        day: res.dayPlate || this.props.plate || "assets/plate-day.jpg",
+        day: res.dayPlate || this.props.plate || "assets/plate-day-wide.jpg",
         night: res.nightPlate || this.props.nightPlate || "assets/plate-night-wide.jpg",
         // the wide night cut frames more sky than the day one, so the sea meets the
         // sky lower down; HZ already interpolates between the two by nightMix
-        aspect: 2133 / 1200, hzDay: 0.383, hzNight: 0.43, rot: 1
+        aspect: 2133 / 1200, hzDay: 0.415, hzNight: 0.43, rot: 1
       },
       tall: {
         day: this.props.platePortrait || "assets/plate-day-portrait.jpg",
@@ -1443,9 +1457,20 @@ class Component extends DCLogic {
       this.mouse.y += (this.target.y - this.mouse.y) * 0.022;
       gl.uniform1i(u.uTex, 0);
       gl.uniform1i(u.uTexN, 1);
+      // Dusk on a real clock. The old ease moved a fixed fraction per frame, so it ran
+      // at whatever rate the display happened to have and never quite arrived; this is
+      // a fixed 2.6s with an ease at both ends, identical at 30, 60 or 120Hz. The
+      // sweep in the shader needs the full travel to read, so it is unhurried.
       const want = this.state.night ? 1 : 0;
-      this.nightMix += (want - this.nightMix) * 0.035;   // dusk, not a light switch
-      if (Math.abs(want - this.nightMix) < 0.002) this.nightMix = want;
+      if (this.duskTo !== want) {
+        this.duskTo = want;
+        this.duskFrom = this.nightMix;
+        this.duskAt = performance.now();
+      }
+      const kd = Math.min(1, (performance.now() - (this.duskAt || 0)) / 2600);
+      const ease = kd * kd * (3 - 2 * kd);
+      this.nightMix = this.duskFrom + (want - this.duskFrom) * ease;
+      if (kd >= 1) this.nightMix = want;
       gl.uniform1f(u.uNight, this.uploadedN ? this.nightMix : 0);
       gl.uniform1f(u.TEX_ASPECT, this.cut.aspect);
       gl.uniform1f(u.uRot, this.cut.rot);
