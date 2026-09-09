@@ -1,0 +1,14 @@
+{
+  "name": "soubhagya-jain-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio site compiled from a Claude Design project.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && python -m http.server 4173 --directory dist"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
