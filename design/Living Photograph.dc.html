@@ -632,7 +632,12 @@ void main(){
 
   // water: swell travelling toward the shore, fine chop, both bigger up close
   float wd = smoothstep(HZ, 0.78, base.y);
-  float swell = sin(base.y * 150.0 + base.x * 6.0 - t * 1.1 + fbm(base * vec2(5.0, 14.0) + t * 0.05) * 6.28);
+  float swellPh = base.y * 150.0 + base.x * 6.0 - t * 1.1 + fbm(base * vec2(5.0, 14.0) + t * 0.05) * 6.28;
+  float swell = sin(swellPh);
+  // A calm sea is close to a sine. A storm sea is not: the crest sharpens and the trough
+  // flattens out, because the water at the top is moving faster than the form beneath it.
+  // A second harmonic does exactly that, and only in storm.
+  swell += gStorm * 0.45 * sin(2.0 * swellPh);
   float chop = sin(base.y * 470.0 - t * 2.5 + fbm(base * vec2(22.0, 58.0) - t * 0.15) * 9.0);
   float wamp = uWater * (0.00020 + 0.00110 * wd * wd) * (1.0 + 1.15 * gStorm);
   off.y += water * (swell * wamp + chop * wamp * 0.35);
@@ -642,6 +647,12 @@ void main(){
   float setPhase = base.y * 46.0 - t * 0.62 + fbm(base * vec2(3.0, 8.0)) * 2.2;
   float crest = pow(max(sin(setPhase) * 0.5 + 0.5, 0.0), 3.0);
   off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * gNight + 1.30 * gStorm);
+
+  // The long swell underneath everything. In a storm the whole surface is heaving on a
+  // period far longer than any wave you can pick out, so the sea lifts and drops as one
+  // body rather than only rippling. Slow enough that it is felt in the horizon rather
+  // than seen as a wave.
+  off.y += water * gStorm * uWater * (sin(base.y * 7.0 - t * 0.29) * 0.6 + sin(base.y * 4.0 - t * 0.17 + 1.9) * 0.4) * 0.0019 * wd;
 
   // Heat coming off the far shore at midday. The band is the one the town actually stands
   // in - measured off the plate, HZ+0.08 to HZ+0.20 - and water is subtracted out, because
@@ -963,6 +974,69 @@ void main(){
     // normalised strike intensity, independent of how much storm is currently mixed in,
     // so a flash mid-transition does not also fade
     float fN = clamp(flash / max(gStorm, 0.001), 0.0, 1.0);
+
+    // ---- a sea with weather in it ---------------------------------------------
+    // The plate has its swell and its whitecaps painted in already; what a photograph
+    // cannot do is let them travel. All of this lights the plate's own water rather than
+    // drawing a new sea over the top of it.
+    //
+    // The mask is deliberately not the blue-keyed one the rest of the shader uses. That
+    // keys on blueness, and foam is white - so it fades out exactly where the breaking is,
+    // which is the one place a storm sea needs to be readable.
+    float seaS = smoothstep(HZ - 0.010, HZ + 0.030, fuv.y) * smoothstep(0.84, 0.66, fuv.y)
+               * (1.0 - smoothstep(0.02, 0.09, green));
+    // Everything below is water, and water is perhaps a third of the frame. The sea band
+    // is one contiguous stripe, so this branch is coherent across a warp and the sky and
+    // the foreground pay nothing for it at all.
+    if (seaS > 0.002) {
+    float nearS = smoothstep(HZ, 0.76, fuv.y);     // 0 at the horizon, 1 in close
+
+    // Perspective. A sea seen from a bluff has its wavelength crushed toward the horizon
+    // and stretched out in close, and phase has to be built from that or the whole bay
+    // reads as evenly spaced stripes rather than as water going away from you. For a flat
+    // plane, distance runs as 1/(y - horizon), and integrating a frequency that falls off
+    // as its square gives exactly this - so the waves stay one coherent train while their
+    // spacing on screen changes. Time is added rather than subtracted so a crest travels
+    // toward the shore, which is the direction the sets are actually going.
+    float persp = 1.0 / max(fuv.y - HZ + 0.090, 0.030);
+
+    // Three trains, not one. A storm sea is confused: the swell the weather system sent,
+    // a shorter wind sea riding on top of it, and a cross set at an angle to both. Where
+    // they happen to agree you get a peak bigger than any of them on its own, and the
+    // surface stops reading as corrugated and starts reading as unpredictable.
+    float confused = sin(persp * 3.1 + t * 0.74) * 0.46
+                   + sin(persp * 5.4 + fuv.x * 13.0 + t * 1.21) * 0.28
+                   + sin(persp * 1.9 - fuv.x * 8.0 + t * 0.44) * 0.34;
+    col += seaS * confused * nearS * vec3(0.030, 0.036, 0.042) * gStorm * detail;
+
+    // Breaking, and the foam it leaves behind. Foam is not part of the crest: it is left
+    // in the water when the crest topples and then takes a second or two to die. So the
+    // lip is narrow and the trail behind it is long, and the trail is measured from the
+    // moment of breaking rather than from the wave's own phase - which is what stops foam
+    // blinking on and off with the wave that made it.
+    // vnoise, not fbm: this only has to stop the sets arriving as one straight rank, and
+    // a single low-frequency octave does that for a quarter of the cost.
+    float setP = persp * 4.0 + t * 0.80 + vnoise(fuv * vec2(3.0, 7.0)) * 2.6;
+    float lip = pow(max(sin(setP), 0.0), 16.0);
+    float since = fract((setP - 1.5708) / 6.28318);        // 0 the instant it breaks
+    float breaks = smoothstep(0.14, 0.70, nearS);
+    col += seaS * lip * breaks * vec3(0.44, 0.50, 0.57) * 1.00 * gStorm * detail;
+    col += seaS * exp(-since * 4.2) * breaks * vec3(0.19, 0.23, 0.28) * 0.58 * gStorm * detail;
+
+    // Wind dragging the foam out into lines along its own direction. In a photograph this
+    // is the clearest single sign that a sea is being blown rather than merely rolling.
+    // Broad, not hairline: streaks lie along the wind, so they are wide across the frame
+    // and only loosely separated up it, and they take the same perspective as the sets.
+    float lanes = smoothstep(0.54, 0.86, fbm(vec2(fuv.x * 18.0 + fuv.y * 5.0 - t * 0.34, persp * 2.6)));
+    col += seaS * lanes * nearS * vec3(0.15, 0.18, 0.21) * 0.52 * gStorm * detail;
+
+    if (uQ > 0.5 && detail > 0.3) {
+      // Spindrift: torn off the crest and carried downwind, so it exists only where a
+      // wave is actually breaking and always leans the same way the rain does.
+      float mote = pow(vnoise(fuv * vec2(150.0, 320.0) + vec2(t * 1.9, -t * 0.35)), 22.0);
+      col += seaS * mote * lip * breaks * vec3(0.55, 0.60, 0.66) * 2.0 * gStorm * detail;
+    }
+    }
 
     // Wet stone. The path holds a film of water, so it returns the sky and the lamps as a
     // slow shifting sheen, and the rain landing on it stipples that sheen continuously.
