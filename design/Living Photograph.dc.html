@@ -1785,6 +1785,7 @@ class Component extends DCLogic {
       // as the hero leaves and is fully a texture by the time the first chapter is under
       // the reader. It is never removed, so the world still continues behind the page.
       const deep = cl((y - vh * 0.5) / (vh * 0.85));
+      this.deep = deep;          // the draw loop reads this to decide its frame rate
       this.scroll = cine;
       const copy = this.copyRef.current;
       if (copy) {
@@ -2077,8 +2078,26 @@ class Component extends DCLogic {
         last = 0;                    // resume immediately rather than waiting a budget
       }
 
-      // the landscape is background motion: ~50fps near the hero, ~24fps once it has receded
-      const budget = (this.scroll > 0.55 ? 41 : 20) * (this.small ? 1.7 : 1);
+      // The landscape is background motion - but "background" is not one state. While the
+      // photograph is still being looked at it has to move at the display's rate; only
+      // once it has sunk behind the chapters can it fall back to ambient. Tying that to
+      // the scrim which does the sinking, rather than to a scroll number chosen
+      // separately from it, is what keeps the two in step: the old threshold dropped to
+      // 24fps at 1.1vh while the scrim was still fading until 1.35vh, so for a quarter of
+      // a screen the picture was fully visible and running at less than half rate.
+      //
+      // Storm is the case that exposes it. Rain is thin, fast and high contrast, and at
+      // 24fps it strobes rather than falls - the same rate that reads as perfectly calm
+      // behind a still day plate. So the fast window stays open while there is rain in
+      // the frame, until the hero is genuinely gone.
+      const ground = 1 - (this.deep === undefined ? 0 : this.deep);
+      const rainy = this.wCur[2] > 0.02;
+      const fast = ground > 0.02 || (rainy && this.scroll < 0.92);
+      // A phone keeps a penalty, but a smaller one while the picture is still up: the
+      // shader costs 0.77ms there against a 27ms budget - thirty-five times the headroom -
+      // so the throttle was buying battery in the one stretch where it was also buying
+      // visible stutter. Once the ground has sunk, the full penalty comes back.
+      const budget = (fast ? 16 : 41) * (this.small ? (fast ? 1.5 : 1.7) : 1);
       if (now - last < budget) return;
       last = now;
       draw();
