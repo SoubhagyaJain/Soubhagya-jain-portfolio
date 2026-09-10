@@ -1719,9 +1719,19 @@ class Component extends DCLogic {
     this.navQ = q;
 
     if (!window.matchMedia("(max-width: 660px)").matches) pill.style.height = (58 - 10 * q).toFixed(1) + "px";
-    if (!this.small) {
-      const b = (16 + 9 * q).toFixed(1);
-      pill.style.backdropFilter = "blur(" + b + "px) saturate(" + (1.3 + 0.1 * q).toFixed(2) + ") brightness(" + (0.8 - 0.04 * q).toFixed(2) + ")";
+
+    // The blur is set once and then left alone, on every screen size.
+    //
+    // Quantising to twelve steps fixed how *often* this was written, but not what it
+    // costs when it is: changing any part of a backdrop-filter invalidates the blurred
+    // copy of everything behind the element, and behind this one is a full-screen
+    // photograph that is itself moving. Twelve re-blurs of the whole backdrop during the
+    // exact stretch where the reader is scrolling out of the hero is a poor trade for
+    // nine pixels of blur radius nobody can see. The gradient underneath still animates,
+    // which carries the same read for the price of an ordinary paint.
+    if (!this.small && !this.navBlurSet) {
+      this.navBlurSet = true;
+      pill.style.backdropFilter = "blur(21px) saturate(1.35) brightness(0.78)";
       pill.style.webkitBackdropFilter = pill.style.backdropFilter;
     }
     pill.style.background = "linear-gradient(178deg, rgba(255,255,255," + (0.18 + 0.07 * q).toFixed(3) + ") 0%, rgba(8,18,26," + (0.52 + 0.12 * q).toFixed(3) + ") 46%, rgba(255,255,255," + (0.09 + 0.05 * q).toFixed(3) + ") 100%)";
@@ -1784,7 +1794,13 @@ class Component extends DCLogic {
       // water. The photograph is the page's ground, and a ground has to recede: it sinks
       // as the hero leaves and is fully a texture by the time the first chapter is under
       // the reader. It is never removed, so the world still continues behind the page.
-      const deep = cl((y - vh * 0.5) / (vh * 0.85));
+      // Eased, and over a longer run. Sinking this linearly across 0.85vh put the whole
+      // change into less than one screen of scrolling, and a scrim travelling at a
+      // constant rate reads as the page lurching darker rather than as the world
+      // receding. smoothstep leaves and arrives gently and does its work in the middle,
+      // which is where the reader is already moving fastest.
+      const dRaw = cl((y - vh * 0.45) / (vh * 1.15));
+      const deep = dRaw * dRaw * (3 - 2 * dRaw);
       this.deep = deep;          // the draw loop reads this to decide its frame rate
       this.scroll = cine;
       const copy = this.copyRef.current;
