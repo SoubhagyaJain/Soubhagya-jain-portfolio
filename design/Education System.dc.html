@@ -441,12 +441,23 @@ class Component extends DCLogic {
     const yaw = Math.sin(t * 0.085) * 0.10 + this.m.x * 0.13 - settle * 0.10;
     const pitch = Math.sin(t * 0.063 + 1.1) * 0.04 + this.m.y * 0.055 + settle * 0.06;
     const cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
-    const F = 2.15, SX = W * 0.345, SY = H * 0.36;
+    // The legend is an overlay pinned to the bottom of this stage, so the node field
+    // has to end above it — and by construction, not by hoping the plates land clear.
+    // The lowest subject sits at y = 1, which the camera maps to CY + SY; keeping that
+    // above LEGEND_BAND is what makes a collision impossible rather than unlikely.
+    // Narrow screens shrink the stage without shrinking the legend, which is why the
+    // reserve is proportionally larger there.
+    const LEGEND_BAND = W <= 768 ? 0.26 : 0;      // fraction of stage height it owns
+    const CY = 0.5 - LEGEND_BAND * 0.42;          // lift the field out of that band
+    // the extra margin is half a node plate: nodes are centred on their projected
+    // point, so the field's edge is not the plate's edge
+    const SYf = Math.min(0.36, (1 - LEGEND_BAND) - CY - (LEGEND_BAND ? 0.075 : 0.03));
+    const F = 2.15, SX = W * 0.345, SY = H * SYf;
     const cam = (x, y, z) => {
       const x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
       const y1 = y * cp - z1 * sp, z2 = y * sp + z1 * cp;
       const k = F / (F + z2);
-      return { x: W / 2 + x1 * k * SX, y: H / 2 + y1 * k * SY, k: k, z: z2 };
+      return { x: W / 2 + x1 * k * SX, y: H * CY + y1 * k * SY, k: k, z: z2 };
     };
     this.cam = cam;
 

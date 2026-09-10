@@ -161,3 +161,43 @@ submit handler already validates and assembles the payload.
   the default.
 - Every artboard honours `prefers-reduced-motion`, drops its animation loop when
   scrolled out of view, and has its own phone layout below 860px.
+
+## Mobile layout invariants
+
+`tools/mobile-audit.js` checks the four properties the layout has to keep. Serve
+`dist/`, paste the file into the console, then:
+
+```js
+window.__audit()                      // one viewport, at rest
+```
+
+It reports horizontal overflow, text-on-text collisions, decorative layers that
+escape a clipping ancestor, and the tap-target / type-size floors. Three details in
+it matter, because each one changed the answer:
+
+- **Line boxes, not bounding boxes.** An inline element that wraps has a union box
+  spanning the whole column, which appears to overlap its neighbours while the
+  rendered text never touches. Comparing `getClientRects()` removed a false positive
+  that had survived three rounds of review.
+- **Effective opacity.** `opacity` does not inherit into `getComputedStyle`, so a
+  leaf inside a panel faded to zero still reports `1`. Several chapters reveal panels
+  at disjoint scroll ranges; without walking the ancestor chain the audit reports
+  collisions between things that are never on screen together. This alone took the
+  count from 14 to 0.
+- **Fixed ancestors are skipped.** The floating nav crossing scrolling content is the
+  point of a floating nav, not a defect.
+
+Sweep the whole document rather than sampling at rest — panels that never coexist
+when parked can still meet mid-scroll:
+
+```js
+for (let y = 0; y <= document.body.scrollHeight; y += innerHeight * 0.7) {
+  scrollTo(0, y); dispatchEvent(new Event('scroll'));
+  await new Promise(r => requestAnimationFrame(r));
+  const a = window.__audit();
+  if (a.textCollisions) console.log(y, a.collisionSample);
+}
+```
+
+`scrollTo` alone does not fire scroll events in some embedded browsers, which is why
+the event is dispatched by hand.

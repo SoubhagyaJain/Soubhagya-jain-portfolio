@@ -206,7 +206,74 @@ const css = [
   `html,body{margin:0;padding:0;background:#0a0c0d}
 #dc-root{min-height:100%}
 img{max-width:100%}
-:focus-visible{outline:2px solid rgba(226,178,116,.75);outline-offset:3px}`,
+:focus-visible{outline:2px solid rgba(226,178,116,.75);outline-offset:3px}
+
+/* ── Layering ──────────────────────────────────────────────────────────────
+   Three page-level bands, named once so no chapter has to invent a number:
+
+     --z-bg       the fixed photograph and its scrims
+     --z-content  every chapter, in document order
+     --z-overlay  the floating nav and anything that must clear a chapter
+
+   The larger values you will see inside a stage (100-500 in the Education and
+   Beyond Terminal graphs) are not chrome layering: they are per-frame depth
+   sorting for a projected 3D scene, written by that artboard's own camera. They
+   are scoped inside a single stage that itself sits in --z-content, so they can
+   never reorder anything against the page. Leaving them alone is deliberate —
+   flattening them would break the depth read. */
+:root{--z-bg:0;--z-content:10;--z-overlay:20}
+
+/* ── No horizontal scroll, structurally ─────────────────────────────────────
+   The page may not exceed the viewport, whatever a chapter does inside itself. */
+html,body{max-width:100%;overflow-x:hidden}
+#dc-root{max-width:100vw}
+
+@media (max-width: 768px){
+  /* Tap targets. The design's chrome is deliberately fine — 9-11px mono set on
+     small pills — so rather than inflate it, give each control an invisible
+     44x44 hit area centred on the glyph. Appearance is untouched; only the
+     region that answers a thumb grows.
+
+     No !important, on purpose: a control the artboard positions absolutely keeps
+     its inline position, so this cannot dislodge anything. */
+  #dc-root a,#dc-root button{position:relative}
+  #dc-root a::after,#dc-root button::after{
+    content:"";position:absolute;left:50%;top:50%;
+    width:max(100%,44px);height:max(100%,44px);
+    transform:translate(-50%,-50%);
+  }
+
+  /* Stage nodes are the exception. Education projects 19 of them and Beyond
+     Terminal 6, placed by a camera and often sitting closer together than 44px;
+     padding their hit areas would let neighbours swallow each other's taps and
+     would change which node reads as nearest. They are parts of a diagram, not
+     page controls, and the chapter is legible without tapping them. */
+  #dc-root [data-ref="nodeRef"] a::after,
+  #dc-root [data-ref="nodeRef"] button::after{content:none}
+
+  /* Form fields cannot carry a pseudo-element, so they grow for real. */
+  #dc-root input,#dc-root textarea{min-height:44px}
+
+  /* The hero's social pill clips to a rounded capsule, so a 44px hit area inside
+     it is cut back to the capsule's own 32px. The capsule itself has to grow —
+     it is content-height driven, so padding on the links does it, and the pill
+     follows. This is the one place the mobile fix is visible rather than
+     invisible: the capsule sits ~12px taller. */
+  #dc-root [data-social-pill] a{padding-block:15px !important}
+
+  /* Motion budget: nothing decorative may travel far enough to leave its stage. */
+  #dc-root [data-reveal],
+  #dc-root [data-reveal2]{will-change:transform,opacity}
+}
+
+@media (prefers-reduced-motion: reduce){
+  /* The artboards each honour this in their own logic; this is the backstop for
+     anything driven purely by CSS. */
+  #dc-root *,#dc-root *::before,#dc-root *::after{
+    animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important;
+  }
+}`,
   ...helmetStyles,
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
