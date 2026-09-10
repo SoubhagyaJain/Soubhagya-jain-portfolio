@@ -15,6 +15,21 @@
   html, body { margin: 0; padding: 0; }
   body { -webkit-font-smoothing: antialiased; }
   a { color: #f2ece0; text-decoration: none; }
+  /* The caption sits over the diagram with nothing behind it. On a wide screen the
+     pipeline is nowhere near it, so that reads as floating text; on a phone the stage
+     fills the viewport and the two collide, and the caption is the half that has to stay
+     readable. Give it a ground that fades upward, so it reads as the frame's lower band
+     rather than as a panel dropped on top. */
+  @media (max-width: 860px) {
+    [data-ap-caption] {
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      padding: 46px clamp(18px, 5vw, 28px) clamp(16px, 3vh, 26px) !important;
+      background: linear-gradient(180deg, rgba(6,10,14,0) 0%, rgba(6,10,14,0.72) 42%, rgba(6,10,14,0.94) 100%);
+    }
+    [data-ap-caption] > div:first-child { min-width: 0; }
+  }
   a:hover { color: #ffffff; }
   @keyframes tick { 0%, 100% { opacity: .35 } 50% { opacity: .9 } }
 </style>
@@ -168,7 +183,7 @@
         </div>
       </div>
 
-      <div style="position: absolute; left: clamp(20px, 4vw, 54px); bottom: clamp(20px, 4vh, 44px); right: clamp(20px, 4vw, 54px); display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; pointer-events: none">
+      <div data-ap-caption style="position: absolute; left: clamp(20px, 4vw, 54px); bottom: clamp(20px, 4vh, 44px); right: clamp(20px, 4vw, 54px); display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; pointer-events: none">
         <div style="display: flex; flex-direction: column; gap: 8px">
           <div ref="{{ stageRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(242,236,224,0.78); transition: opacity .5s ease">Request enters the gateway</div>
           <div ref="{{ statusRef }}" style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 13px; line-height: 1.5; color: rgba(242,236,224,0.52); max-width: 46ch">Scroll to move the camera through the pipeline.</div>
@@ -297,6 +312,7 @@ class Component extends DCLogic {
     this.syncBreak = () => {
       this.small = window.matchMedia("(max-width: 860px)").matches;
       if (this.scrollRef.current) this.scrollRef.current.style.height = this.small ? "420vh" : "660vh";
+      if (this.fitNarrow) this.fitNarrow();
     };
     window.addEventListener("resize", this.syncBreak);
     this.syncBreak();
@@ -320,11 +336,31 @@ class Component extends DCLogic {
     });
     this.byId = (id) => this.edges.find(e => e.el.id === id);
 
+    // Where each stage sits horizontally. The stops are authored with a vertical focus
+    // only, which is all a wide screen needs - the whole 1200px stage fits. A phone shows
+    // about 375px of it, so the camera has to track sideways too or the branches are
+    // simply cut off the edge. Each stop takes the mean x of the nodes level with it,
+    // weighted so a node right on the line counts for more than one at the edge of the
+    // window, and falls back to the spine when a stop has nothing beside it.
+    this.stageX = null;   // filled once the nodes exist, in measure()
+
+    this.buildStageX = () => {
+      this.stageX = this.stages.map(([, y]) => {
+        let wsum = 0, xsum = 0;
+        this.nodes.forEach(n => {
+          const w = Math.max(0, 1 - Math.abs(n.y - y) / 190);
+          if (w > 0) { wsum += w; xsum += n.x * w; }
+        });
+        return wsum > 0.001 ? xsum / wsum : 600;
+      });
+    };
+
     this.nodes = [...cam.querySelectorAll("[data-node]")].map(el => {
       el.style.opacity = "0";
       el.style.transition = "opacity .9s cubic-bezier(.2,.7,.2,1), filter .9s ease, box-shadow .6s ease";
       el.style.filter = "blur(6px)";
-      return { el, y: parseFloat(el.dataset.y) || 0, base: el.style.transform, shown: false };
+      return { el, y: parseFloat(el.dataset.y) || 0, x: parseFloat(el.style.left) || 600,
+               base: el.style.transform, shown: false };
     });
 
     // ── stage script: each caption explains what the system is doing here
@@ -342,6 +378,49 @@ class Component extends DCLogic {
       [0.87, 1470, "Verified on the second pass",  "The refined answer clears all four dimensions and is released with its citations."],
       [1.00, 880,  "The full system",              "Telemetry runs beneath the whole path — async, non-blocking, and queryable after the fact."]
     ];
+    // after the table, not before it: buildStageX reads both this.nodes and this.stages
+    this.buildStageX();
+
+    // Reveal latches upward, so by the middle of the chapter all eighteen nodes are on
+    // screen together and the full 975px of stage has to fit at once - which is why
+    // panning the camera alone could never solve this. The two furthest right sit 460px
+    // out from the spine and are the whole difference between fitting and not. They
+    // annotate the flow rather than carry it ("weak evidence dropped", "vision fallback
+    // when text is insufficient"), so on a phone they stand down, and any edge that
+    // reached out to them goes with them rather than being left hanging in the air.
+    this.fitNarrow = () => {
+      const off = this.small;
+      this.nodes.forEach(n => {
+        if (n.x <= 1000) return;
+        n.el.style.display = off ? "none" : "";
+      });
+      this.edges.forEach(e => {
+        if (e.reach === undefined) { const b = e.el.getBBox(); e.reach = b.x + b.width; }
+        if (e.reach <= 1005) return;
+        e.el.style.display = off ? "none" : "";
+      });
+
+      // The bounds the camera actually has to keep on screen. Nodes are placed by their
+      // centre and drawn with translate(-50%), so the box runs half a node either side of
+      // the authored left. Measured after the stand-down above, so it reflects what is
+      // really being drawn rather than the 1200px the stage could hold.
+      let lo = 1e9, hi = -1e9;
+      this.nodes.forEach(n => {
+        if (n.el.style.display === "none") return;
+        const w = n.el.offsetWidth || 0;
+        lo = Math.min(lo, n.el.offsetLeft - w / 2);
+        hi = Math.max(hi, n.el.offsetLeft + w / 2);
+      });
+      // Padded, because this is a flat measurement of a stage that is tilted and whose
+      // nodes each carry a translateZ of up to 44px: under the perspective every one
+      // lands a little wider than its layout box. The pad is carried in the bounds
+      // themselves so the scale and the pan clamp both see the same, honest width -
+      // putting the allowance in only one of the two left the left branch clipped while
+      // the right looked perfect.
+      const pad = (hi - lo) * 0.045;
+      this.contentX = (lo < hi) ? [lo - pad, hi + pad] : null;
+    };
+    this.fitNarrow();
 
     // ── ambient signals: real traffic along the real edges
     const spec = [
@@ -476,16 +555,49 @@ class Component extends DCLogic {
 
     const vw = this.vw || window.innerWidth, vh = this.vh || window.innerHeight;
     const fit = Math.min(vw / 1300, vh / 1820); // whole stage, telemetry row included
-    const near = Math.min(1, Math.max(0.46, Math.min(vw / 1460, vh / 980)));
+    // The floor stops the diagram shrinking to nothing on a narrow screen. On a phone it
+    // is derived rather than guessed: the drawing measures its own width in fitNarrow, so
+    // the floor is simply the scale at which that width fits the frame, bounded so it can
+    // never collapse to unreadable. A fixed number here was wrong by about 23px - close
+    // enough to look deliberate, and far enough to clip the two outer branches.
+    let floor = this.small ? 0.435 : 0.46;
+    if (this.small && this.contentX) {
+      const need = (vw - 22) / Math.max(1, this.contentX[1] - this.contentX[0]);
+      floor = Math.max(0.34, Math.min(0.46, need));
+    }
+    const near = Math.min(1, Math.max(floor, Math.min(vw / 1460, vh / 980)));
     const pull = ease(cl((p - 0.9) / 0.1));
     const scale = lerp(near, fit, pull);
     const rx = lerp(this.small ? 4 : 13, 1.5, ease(cl(p / 0.3))) * (1 - pull * 0.6);
     this.mouse.x += (this.mouse.tx - this.mouse.x) * 0.04;
     this.mouse.y += (this.mouse.ty - this.mouse.y) * 0.04;
     const dy = (880 - focus) + lerp(0, 0, pull);
+
+    // Sideways tracking, phones only. A wide screen fits the whole 1200px stage, so it
+    // stays centred and nothing moves; a phone sees a third of it, so the camera follows
+    // the branch the reader is actually being told about instead of letting it fall off
+    // the edge. The pan is clamped to the overflow that actually exists, so it never
+    // swings further than it has to, and it eases out with the same pull that pulls back
+    // to the whole diagram at the end.
+    let dx = 0;
+    if (this.small && this.stageX && this.contentX) {
+      const fx = lerp(this.stageX[i], this.stageX[i + 1], k);
+      // A node at stage x lands at (x - 600 + dx) * scale from the frame centre, so the
+      // pan that keeps each edge of the content inside the frame solves directly. Clamping
+      // against the stage's own 1200px instead - which is what this did first - let the
+      // camera swing about 90px further than the drawing goes, and walked the left branch
+      // straight off the screen while the right-hand side still looked fine.
+      const half = vw * 0.5 - 10;
+      const lo = 600 - this.contentX[0] - half / Math.max(scale, 0.0001);
+      const hi = 600 - this.contentX[1] + half / Math.max(scale, 0.0001);
+      const want = 600 - fx;
+      // when the drawing is wider than the frame there is no pan that shows all of it,
+      // so sit in the middle of the two limits rather than favouring one edge
+      dx = (lo > hi) ? (lo + hi) * 0.5 : Math.max(lo, Math.min(hi, want));
+    }
     const cam = this.camRef.current;
     if (cam) {
-      cam.style.transform = "rotateX(" + (rx - this.mouse.y * 1.1).toFixed(3) + "deg) rotateY(" + (this.mouse.x * 1.6).toFixed(3) + "deg) scale(" + scale.toFixed(4) + ") translate3d(" + (-this.mouse.x * 10).toFixed(2) + "px," + (dy * (1 - pull)).toFixed(2) + "px,0)";
+      cam.style.transform = "rotateX(" + (rx - this.mouse.y * 1.1).toFixed(3) + "deg) rotateY(" + (this.mouse.x * 1.6).toFixed(3) + "deg) scale(" + scale.toFixed(4) + ") translate3d(" + (-this.mouse.x * 10 + dx * (1 - pull)).toFixed(2) + "px," + (dy * (1 - pull)).toFixed(2) + "px,0)";
     }
 
     // assembly: structure draws in just ahead of the camera

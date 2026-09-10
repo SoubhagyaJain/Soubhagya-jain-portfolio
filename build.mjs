@@ -26,6 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, rmSy
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
+import { createHash } from "node:crypto";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, "design");
@@ -328,6 +329,13 @@ const favicon = thumb
   ? `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(thumb[1].trim())}">`
   : "";
 
+/* Content stamps on the two generated assets. Both keep fixed filenames, so a browser
+   that has seen the site before will go on running the copy it already holds - the
+   markup changes, the code does not, and the mismatch surfaces as behaviour nobody can
+   reproduce. Eight hex characters of the file's own hash makes the URL change exactly
+   when the bytes do, and stay identical when they do not. */
+const stamp = (text) => createHash("sha256").update(text).digest("hex").slice(0, 8);
+
 const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -343,11 +351,11 @@ ${favicon}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=${stamp(css)}">
 </head>
 <body>
 <div id="dc-root" data-dc-component="${escapeAttr(ENTRY)}">${body}</div>
-<script src="app.js" defer></script>
+<script src="app.js?v=${stamp(app)}" defer></script>
 </body>
 </html>
 `;
