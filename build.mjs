@@ -25,6 +25,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, rmSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, "design");
@@ -340,6 +341,32 @@ ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
 </body>
 </html>
 `;
+
+/* ── the check a bundler owes you ─────────────────────────────────────────────
+   Every artboard's logic is concatenated into one file, so a syntax error in any one
+   of them takes down all ten: the page loads, the markup is there, and nothing runs.
+   Parsing here turns that into a failed build instead of a silently dead site. */
+try {
+  new Script(app, { filename: "app.js" });
+} catch (e) {
+  // Far and away the most common cause in this project, and the one whose native error
+  // message is least helpful: the WebGL artboards keep their GLSL in JS template
+  // literals, so a backtick inside a shader comment closes the string early and the
+  // failure surfaces from a line that reads like prose. Point at the likely culprits
+  // rather than making the next person bisect a 250 KB bundle.
+  const suspects = [];
+  for (const [name, part] of parts) {
+    part.js.split("\n").forEach((line, i) => {
+      if (/^\s*\/\/.*`/.test(line)) suspects.push(`    ${name}:${i + 1}  ${line.trim()}`);
+    });
+  }
+  throw new Error(
+    `generated app.js does not parse — ${e.message}` +
+    (suspects.length
+      ? `\n\n  a backtick in one of these comments may be closing a template literal early:\n${suspects.join("\n")}\n`
+      : "")
+  );
+}
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(join(OUT, "assets"), { recursive: true });
