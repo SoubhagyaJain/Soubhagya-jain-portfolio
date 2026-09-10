@@ -124,7 +124,7 @@ var dc = (function () {
         inst.componentDidMount();
         mounted.push(inst);
       } catch (e) {
-        console.error('[dc] "' + name + '" failed while mounting — the rest of the page is unaffected.', e);
+        console.error('[dc] "' + name + '" failed while mounting — the rest of the page is unaffected.' + String(e && e.stack || e));
       }
     });
 
