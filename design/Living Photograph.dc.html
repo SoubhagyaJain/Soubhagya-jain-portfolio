@@ -59,7 +59,7 @@
     [data-mobile-nav-pill] {
       box-sizing: border-box !important;
       display: grid !important;
-      grid-template-columns: minmax(0, 1fr) 44px auto !important;
+      grid-template-columns: minmax(0, 1fr) auto auto !important;
       grid-template-rows: 44px 44px !important;
       column-gap: 6px !important;
       row-gap: 4px !important;
@@ -95,18 +95,18 @@
       font-size: 10px !important;
       letter-spacing: .12em !important;
     }
-    [data-nav-night] {
+    /* Three segments need more room than the old single toggle. Each keeps a 44px tall
+       tap target while the pill stays 44px overall, so the row height is unchanged. */
+    [data-theme-switch] {
       grid-column: 2;
       grid-row: 1;
-      justify-content: center;
-      width: 44px;
-      min-width: 44px;
       height: 44px;
       min-height: 44px;
       margin-left: 0 !important;
-      padding: 0 !important;
+      box-sizing: border-box;
     }
-    [data-nav-night] [data-night-label] { display: none; }
+    [data-theme-switch] button { width: 34px !important; height: 38px !important; font-size: 13px !important; }
+    [data-theme-lens] { width: 34px !important; }
     [data-nav-status] {
       grid-column: 3;
       grid-row: 1;
@@ -158,6 +158,10 @@
         <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-night-portrait.jpg">
         <img data-hero-cover="night" src="assets/plate-night-wide.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); opacity: 0; transition: opacity 1.2s ease">
       </picture>
+      <picture>
+        <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-storm-portrait.jpg">
+        <img data-hero-cover="storm" src="assets/plate-storm-wide.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); opacity: 0; transition: opacity 1.2s ease">
+      </picture>
     </div>
     <canvas ref="{{ canvasRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.6s ease-in-out"></canvas>
 
@@ -202,10 +206,12 @@
           <a href="#contact" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Contact</a>
         </div>
 
-        <button type="button" ref="{{ nightRef }}" data-nav-night aria-label="Toggle day and night" style="position: relative; z-index: 2; display: flex; align-items: center; gap: 7px; margin-left: clamp(4px, 0.8vw, 10px); padding: 7px 11px; border: 0; border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset; cursor: pointer; transition: background .45s ease" style-hover="background: rgba(255,255,255,0.13)">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle data-sun="1" cx="6" cy="6" r="2.6" fill="rgba(255,255,255,0.95)"></circle><g data-sun="1" stroke="rgba(255,255,255,0.75)" stroke-width="0.9" stroke-linecap="round"><path d="M6 0.6v1.5M6 9.9v1.5M0.6 6h1.5M9.9 6h1.5M2.2 2.2l1 1M8.8 8.8l1 1M9.8 2.2l-1 1M3.2 8.8l-1 1"></path></g></svg>
-          <span data-night-label="1" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.88); white-space: nowrap">Day</span>
-        </button>
+        <div ref="{{ themeRef }}" data-theme-switch role="group" aria-label="Scene weather" style="position: relative; z-index: 2; display: flex; align-items: center; gap: 1px; margin-left: clamp(4px, 0.8vw, 10px); padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset">
+          <div data-theme-lens style="position: absolute; left: 3px; top: 3px; bottom: 3px; width: 30px; border-radius: 999px; background: rgba(255,255,255,0.17); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset; transition: transform .62s cubic-bezier(.2,.7,.2,1), background .9s ease; pointer-events: none"></div>
+          <button type="button" data-theme="day" aria-label="Daylight" title="Daylight" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9728;</button>
+          <button type="button" data-theme="dark" aria-label="Night" title="Night" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9790;</button>
+          <button type="button" data-theme="storm" aria-label="Storm" title="Storm" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9889;</button>
+        </div>
         <div data-nav-status style="position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-left: clamp(4px, 0.8vw, 12px); padding: 7px clamp(10px, 1vw, 14px); border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset">
           <span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(246,231,199,0.95); box-shadow: 0 0 7px 2px rgba(246,231,199,0.4); flex: 0 0 auto"></span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.88); white-space: nowrap">Available</span>
@@ -404,10 +410,30 @@ const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`
 
 const FRAG = `
 precision highp float;
-uniform sampler2D uTex;
-uniform sampler2D uTexN;
+uniform sampler2D uTex;    // day
+uniform sampler2D uTexN;   // night
+uniform sampler2D uTexS;   // storm
 uniform vec2 uRes, uMouse;
-uniform float uT, uWind, uWater, uDrift, uGlint, uHaze, uScroll, uIntro, uQ, uGust, uLife, uNight;
+uniform float uT, uWind, uWater, uDrift, uGlint, uHaze, uScroll, uIntro, uQ, uGust, uLife;
+
+// Three plates of one place, and a transition that can run between any two of them.
+// uWFrom and uWTo are one-hot (day, night, storm) either side of the running change and
+// uMix is its progress; the shader sweeps that progress across the frame and blends. The
+// weights always sum to 1, so no intermediate frame is brighter or darker than both of
+// its endpoints - which a naive pair of crossfades cannot promise, and which matters most
+// going storm -> night, where both ends are dark and a day plate must never surface
+// between them.
+uniform float uMix;
+uniform vec3 uWFrom, uWTo;
+// Frame-level maxima, used only to branch. They are the same for every pixel, so the GPU
+// takes these branches coherently, and a theme that is not involved costs nothing at all.
+uniform float uNightW, uStormW;
+// 1 when the visitor has asked for reduced motion. Time is already frozen in that case,
+// but lightning must be switched off explicitly rather than left to whatever the frozen
+// timestamp happens to land on: a strike is the one thing here that could matter to a
+// photosensitive reader, and "it happens to be dark at t=6" is not an accessibility
+// guarantee.
+uniform float uStill;
 
 // The plate comes in two cuts: a landscape panorama stored rotated 90deg CCW, and an
 // upright portrait composition for phones — a cover fit of the panorama into a tall
@@ -417,11 +443,14 @@ uniform float uT, uWind, uWater, uDrift, uGlint, uHaze, uScroll, uIntro, uQ, uGu
 // gNight because the day and night portrait cuts frame the sea slightly differently.
 uniform float TEX_ASPECT;   // scene aspect, width / height
 uniform float HZ;           // horizon height in scene space
-uniform float uRot;         // 1 = plate stored rotated, 0 = already upright
+uniform vec3 uRot;          // per plate: 1 = stored rotated 90deg CCW, 0 = already upright
 
-// How much of night this pixel has taken. uNight is the global progress; this is
-// that progress swept across the frame, set once at the top of main().
-float gNight;
+// This pixel's plate weights, swept, set once at the top of main(). The named scalars are
+// what the rest of the shader actually asks about: gNight drives the moon, the stars and
+// the cold grade; gStorm drives the weather; gLit is "the town has its lamps on", which is
+// true of night and storm alike and is the one thing they share.
+vec3 gW;
+float gNight, gStorm, gLit;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
 float vnoise(vec2 p){
@@ -434,6 +463,19 @@ float fbm(vec2 p){
   float a = 0.5, s = 0.0;
   for (int i = 0; i < 4; i++){ s += a * vnoise(p); p *= 2.03; a *= 0.5; }
   return s;
+}
+// One sheet of falling rain. Screen space on purpose: rain is between the camera and the
+// scene, so it must not parallax with the plate. cols sets how many drops across, len
+// how many down (so a bigger len is a shorter dash), and the pair of smoothsteps taper
+// each dash at both ends rather than leaving it a hard tick.
+float rainLayer(vec2 rp, float ca, float cols, float len, float speed, float slant, float t, float seed){
+  vec2 p = vec2(rp.x * ca, rp.y);
+  p.x += p.y * slant;                       // the whole sheet leans with the wind
+  vec2 g = vec2(p.x * cols, p.y * len - t * speed);
+  vec2 cell = floor(g), f = fract(g);
+  float on = step(0.90, hash(cell + seed));
+  return on * smoothstep(0.30, 0.0, abs(f.x - 0.5))
+            * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.42, f.y);
 }
 vec2 flightPath(float seed, float t, float ar){
   float h1 = hash(vec2(seed, 3.1)), h2 = hash(vec2(seed, 7.7)), h3 = hash(vec2(seed, 11.3));
@@ -463,12 +505,23 @@ float butterfly(vec2 uv, float seed, float t, float ar, out float body){
   body = smoothstep(1.0, 0.5, length(vec2(lp.x / 0.11, lp.y / 0.62)));
   return max(wings, body);
 }
-vec4 photo(vec2 uv){
+// Storage orientation is a property of the file, not of the scene: the landscape cuts are
+// kept rotated 90deg CCW while the portrait cuts are upright, and a newly added plate
+// should not have to be re-exported to match its neighbours. So each plate carries its own
+// flag and the scene aspect stays shared.
+vec2 plateUV(vec2 uv, float rot){
   vec2 up = clamp(uv, 0.002, 0.998);
-  vec2 s = uRot > 0.5 ? vec2(clamp(1.0 - uv.y, 0.002, 0.998), up.x) : up;
-  vec4 day = texture2D(uTex, s);
-  if (uNight < 0.001) return day;
-  return mix(day, texture2D(uTexN, s), gNight);
+  return rot > 0.5 ? vec2(clamp(1.0 - uv.y, 0.002, 0.998), up.x) : up;
+}
+vec4 photo(vec2 uv){
+  // One texture fetch at rest, two inside the terminator of a running transition. gW is
+  // one-hot whenever nothing is changing, so this is actually cheaper than the two plates
+  // the day/night version sampled unconditionally.
+  vec3 c = vec3(0.0);
+  if (gW.x > 0.0005) c += texture2D(uTex,  plateUV(uv, uRot.x)).rgb * gW.x;
+  if (gW.y > 0.0005) c += texture2D(uTexN, plateUV(uv, uRot.y)).rgb * gW.y;
+  if (gW.z > 0.0005) c += texture2D(uTexS, plateUV(uv, uRot.z)).rgb * gW.z;
+  return vec4(c, 1.0);
 }
 float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
 
@@ -485,11 +538,15 @@ void main(){
   // Dusk sweeps, it does not cross-fade. Night advances from the far side of the sky
   // and the last light clings around the sun before the moon takes over, so the toggle
   // reads as the hour turning rather than two photographs dissolving into each other.
-  // At uNight 0 and 1 every pixel is fully day or fully night; the gradient only
-  // exists in between, which is why the endpoints stay exactly as authored.
+  // At uMix 0 and 1 every pixel is fully one plate; the gradient only exists in between,
+  // which is why the endpoints stay exactly as authored.
   float lead = clamp(distance(uv, vec2(0.66, 0.125)) / 1.15, 0.0, 1.0);
   float band = 0.42;   // width of the terminator, in units of the transition
-  gNight = smoothstep(0.0, 1.0, clamp(uNight * (1.0 + band) - (1.0 - lead) * band, 0.0, 1.0));
+  float gMix = smoothstep(0.0, 1.0, clamp(uMix * (1.0 + band) - (1.0 - lead) * band, 0.0, 1.0));
+  gW = mix(uWFrom, uWTo, gMix);
+  gNight = gW.y;
+  gStorm = gW.z;
+  gLit = clamp(gNight + gStorm, 0.0, 1.0);
 
   // ---- rough depth from the plate itself: sky far, water mid, path + foliage near
   vec3 pre = photo(uv).rgb;
@@ -505,7 +562,14 @@ void main(){
   vec2 float2 = vec2(sin(t * 0.037) * 0.6 + sin(t * 0.0131 + 2.1) * 0.4,
                      sin(t * 0.029 + 1.3) * 0.5 + sin(t * 0.0092) * 0.5) * 0.0048 * uDrift;
   vec2 look = uMouse * vec2(0.0075, 0.0052) * (0.30 + 1.05 * depth);
-  vec2 base = 0.5 + (uv - 0.5) / (zoom * (1.0 + 0.16 * sc * depth)) + float2 * (0.4 + 0.9 * depth) + look;
+  // The rig is heavy, but it is not bolted down. A fifth of a degree of roll - about
+  // three pixels of travel at the corner of a 1080p frame, nothing at the centre - on
+  // periods that share no common factor with the float above, so the camera never
+  // returns to a pose it has already held.
+  float roll = (sin(t * 0.0143) * 0.6 + sin(t * 0.0067 + 2.4) * 0.4) * 0.0035 * uDrift;
+  vec2 cen = uv - 0.5;
+  cen = vec2(cen.x * cos(roll) - cen.y * sin(roll), cen.x * sin(roll) + cen.y * cos(roll));
+  vec2 base = 0.5 + cen / (zoom * (1.0 + 0.16 * sc * depth)) + float2 * (0.4 + 0.9 * depth) + look;
   base.y += sc * 0.012 * depth + sc * 0.052; // less sky, more world as we go deeper
 
   // ---- classify from the plate
@@ -520,8 +584,36 @@ void main(){
   float grass = foliage * smoothstep(0.58, 0.80, base.y);
   float canopy = foliage * smoothstep(0.46, 0.22, base.y);
 
+  // ---- lightning ------------------------------------------------------------------
+  // A strike is a scheduled event, not an oscillator. Time is cut into windows; a window
+  // either has a strike or does not (about two in three do), and the strike sits at a
+  // random offset inside it, so the gaps between flashes run from under a second to
+  // nearly twenty and never fall into a rhythm. The envelope is a real one: a near
+  // instant rise, a flicker while the channel re-strikes, an exponential decay, then a
+  // weaker return stroke a tenth of a second later.
+  float lwin = 5.7;
+  float lidx = floor(t / lwin);
+  float lrnd = hash(vec2(lidx, 7.7));
+  float lhas = step(0.34, hash(vec2(lidx, 3.1)));
+  float lts = (fract(t / lwin) - (0.12 + 0.62 * lrnd)) * lwin;     // seconds since the strike
+  float flash = 0.0;
+  if (lts > 0.0 && lhas > 0.5 && uStill < 0.5) {
+    // The flicker is deliberately slow. Real lightning is one to three distinguishable
+    // strokes, not a strobe, and anything up around 6-7Hz at this amplitude starts to sit
+    // in the band that WCAG's general flash threshold exists to keep content out of.
+    // ~3Hz, shallow, over a third of a second, reads as a strike and stays well clear.
+    flash  = exp(-lts * 3.4) * (0.74 + 0.26 * sin(lts * 19.0 + lrnd * 20.0));
+    float lts2 = lts - (0.08 + 0.07 * lrnd);
+    if (lts2 > 0.0) flash += exp(-lts2 * 5.2) * 0.5;
+  }
+  flash = clamp(flash, 0.0, 0.90) * gStorm;
+  // where the channel is, so the light has a direction and the near side of the bench,
+  // the bicycle and the wet stone brighten more than the far side
+  vec2 lpos = vec2(0.16 + 0.62 * hash(vec2(lidx, 11.9)), 0.09);
+
   // ---- one weather for the whole scene: gusts that swell and fall
-  float gust = uGust;
+  // Storm doubles the gust and lifts its floor: the air never fully rests in a squall.
+  float gust = uGust * (1.0 + 1.05 * gStorm) + 0.35 * gStorm;
   // a single wind vector every plant reacts to, plus a gust front that crosses the frame
   vec2 windDir = normalize(vec2(0.94, -0.34));
   float front = sin((base.x * 1.6 + base.y * 0.5) * 3.14159 - t * 0.42) * 0.5 + 0.5;
@@ -542,14 +634,24 @@ void main(){
   float wd = smoothstep(HZ, 0.78, base.y);
   float swell = sin(base.y * 150.0 + base.x * 6.0 - t * 1.1 + fbm(base * vec2(5.0, 14.0) + t * 0.05) * 6.28);
   float chop = sin(base.y * 470.0 - t * 2.5 + fbm(base * vec2(22.0, 58.0) - t * 0.15) * 9.0);
-  float wamp = uWater * (0.00020 + 0.00110 * wd * wd);
+  float wamp = uWater * (0.00020 + 0.00110 * wd * wd) * (1.0 + 1.15 * gStorm);
   off.y += water * (swell * wamp + chop * wamp * 0.35);
   off.x += water * (fbm(base * vec2(7.0, 20.0) + vec2(-t * 0.04, t * 0.07)) - 0.5) * wamp * 1.5;
   // sets of small waves marching shoreward: each set slows and stretches as it nears the beach
   float shoreT = smoothstep(HZ + 0.02, 0.72, base.y);
   float setPhase = base.y * 46.0 - t * 0.62 + fbm(base * vec2(3.0, 8.0)) * 2.2;
   float crest = pow(max(sin(setPhase) * 0.5 + 0.5, 0.0), 3.0);
-  off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * gNight);
+  off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * gNight + 1.30 * gStorm);
+
+  // Heat coming off the far shore at midday. The band is the one the town actually stands
+  // in - measured off the plate, HZ+0.08 to HZ+0.20 - and water is subtracted out, because
+  // a bay is cooler than the air above it and returns no shimmer. Finer and quicker than
+  // anything the swell does, and gone with the sun: night air over water is stable.
+  float shimmerBand = smoothstep(HZ + 0.02, HZ + 0.08, base.y) * smoothstep(HZ + 0.24, HZ + 0.16, base.y);
+  float shimmer = (fbm(base * vec2(34.0, 96.0) + vec2(0.0, -t * 0.55)) - 0.5)
+                * shimmerBand * (1.0 - water) * (1.0 - gNight) * uHaze;
+  off.y += shimmer * 0.00075;
+  off.x += shimmer * 0.00030;
 
   // ---- foliage as volume: three depth shells, each branch on its own pivot
   float branch = fbm(base * 3.1 + 11.0);           // which branch this pixel belongs to
@@ -611,13 +713,17 @@ void main(){
 
   // ---- afternoon sun on the water: sheen, glitter, slow surface shading
   vec2 sun = mix(vec2(0.663, 0.127), vec2(0.657, 0.121), gNight) + uMouse * 0.022;
-  vec3 lightTint = mix(vec3(1.0, 0.965, 0.90), vec3(0.86, 0.92, 1.0), gNight);
-  float sunPath = exp(-pow(abs(fuv.x - sun.x) * 1.5, 1.6)) * smoothstep(HZ - 0.01, HZ + 0.10, fuv.y);
+  vec3 lightTint = mix(mix(vec3(1.0, 0.965, 0.90), vec3(0.86, 0.92, 1.0), gNight),
+                       vec3(0.78, 0.85, 0.96), gStorm);
+  // An overcast sky has no light source to make a path on the water, so the column that
+  // the sun and the moon both cast simply is not there. Everything keyed to sunPath -
+  // the glitter lane, the pollen, the gap light through the canopy - leaves with it.
+  float sunPath = exp(-pow(abs(fuv.x - sun.x) * 1.5, 1.6)) * smoothstep(HZ - 0.01, HZ + 0.10, fuv.y) * (1.0 - gStorm);
   if (detail > 0.01) {
     float lit = smoothstep(0.34, 0.72, luma(col));
     vec2 gp = vec2(fuv.x * 235.0, fuv.y * 880.0) + vec2(sin(fuv.y * 38.0) * 2.0, -t * 7.5);
     float glit = pow(vnoise(gp), 12.0) + pow(vnoise(gp * 0.5 + vec2(t * 0.55, -t * 2.8)), 16.0) * 1.35;
-    if (uNight > 0.01) {
+    if (uNightW > 0.001) {
       // moonlight breaks into short horizontal ripples that flare and die along one column
       vec2 mp = vec2(fuv.x * 62.0, fuv.y * 620.0) + vec2(sin(fuv.y * 120.0 + t * 0.6) * 0.7, -t * 3.4);
       float streak = pow(vnoise(mp), 6.0) * pow(vnoise(mp * vec2(0.35, 1.8) + vec2(-t * 0.2, t * 1.1)), 3.0);
@@ -629,10 +735,17 @@ void main(){
       glit = mix(glit, streak * 5.2 * column * stretch, gNight);
     }
     float sheen = pow(max(vnoise(fuv * vec2(28.0, 115.0) + vec2(-t * 0.05, -t * 0.33)), 0.0), 3.0);
-    col += water * uGlint * glit * (0.5 + 1.4 * sunPath) * lit * lightTint * 0.80 * detail;
+    col += water * uGlint * glit * (0.5 + 1.4 * sunPath) * lit * lightTint * 0.80 * detail * (1.0 - 0.80 * gStorm);
+    // What replaces it: foam. Not a lane but the whole sea at once, breaking where the
+    // swell is steepest, because in a squall the light is coming from everywhere at once.
+    if (uStormW > 0.001) {
+      float foam = pow(vnoise(fuv * vec2(120.0, 330.0) + vec2(-t * 0.35, -t * 1.85)), 5.0);
+      float steep = smoothstep(HZ + 0.01, 0.74, fuv.y);
+      col += water * foam * steep * vec3(0.36, 0.42, 0.48) * 0.85 * gStorm * uGlint * detail;
+    }
     col += water * uGlint * sheen * sunPath * 0.085 * mix(vec3(1.0, 0.97, 0.93), vec3(0.88, 0.93, 1.0), gNight) * detail;
     col += water * (fbm(fuv * vec2(9.0, 25.0) + vec2(t * 0.03, -t * 0.06)) - 0.5) * 0.028 * vec3(0.85, 0.95, 1.0) * detail;
-    if (uNight > 0.01) {
+    if (uNightW > 0.001) {
       // wave crests catching the moon as they roll in, brightest on the near side of each set
       float sT = smoothstep(HZ + 0.015, 0.74, fuv.y);
       float ph2 = fuv.y * 46.0 - t * 0.62 + fbm(fuv * vec2(3.0, 8.0)) * 2.2;
@@ -691,7 +804,7 @@ void main(){
   }
 
   // ---- butterflies working the flowers: pale wings, real wingbeat, no glow
-  if (uQ > 0.5 && detail > 0.3 && uNight > 0.02 && uLife > 0.01) {
+  if (uQ > 0.5 && detail > 0.3 && uNightW > 0.001 && uLife > 0.01) {
     // fireflies: slow drifting motes that pulse on and off over the meadow
     for (int G = 0; G < 5; G++) {
       float sd = float(G) * 7.13 + 2.7;
@@ -703,7 +816,7 @@ void main(){
       col += smoothstep(0.022, 0.0, d) * pulse * vec3(0.6, 0.55, 0.24) * 0.16 * gNight * uLife * detail;
     }
   }
-  if (uQ > 0.5 && detail > 0.3 && uLife > 0.01 && uNight < 0.98) {
+  if (uQ > 0.5 && detail > 0.3 && uLife > 0.01 && (uNightW < 0.999 || uStormW < 0.999)) {
     for (int B = 0; B < 3; B++) {
       float seed = float(B) * 4.37 + 1.1;
       float body = 0.0;
@@ -731,13 +844,58 @@ void main(){
   // ---- aerial perspective: mountains hazier than the coastline
   vec3 haze = mix(vec3(0.762, 0.845, 0.905), vec3(0.108, 0.148, 0.225), gNight);
   float aer = smoothstep(HZ + 0.105, HZ - 0.03, fuv.y) * 0.38 + smoothstep(HZ - 0.025, HZ - 0.125, fuv.y) * 0.22;
-  // night haze is not flat: banks of it slide along the ridgeline
+  // Haze is never flat, and it does not hold still because the sun is up. Night gets deep
+  // banks sliding along the ridgeline; day gets a thinner, faster sheet - the same air at
+  // a different density - on its own period, so the two never beat against each other.
   float hazeRoll = 0.78 + 0.42 * fbm(vec2(fuv.x * 2.2 - t * 0.012, fuv.y * 5.0 + t * 0.006));
-  aer *= mix(1.0, hazeRoll, gNight);
+  float dayRoll  = 0.90 + 0.20 * fbm(vec2(fuv.x * 3.1 - t * 0.019, fuv.y * 7.0 - t * 0.004));
+  aer *= mix(dayRoll, hazeRoll, gNight);
   col = mix(col, haze, clamp(aer, 0.0, 0.60) * uHaze);
-  float occl = uNight > 0.01 ? mix(1.0, 0.42 + 0.58 * fbm(vec2(t * 0.013, 5.2)), gNight) : 1.0;
-  col += exp(-abs(fuv.x - sun.x) * 1.1) * smoothstep(HZ + 0.05, HZ - 0.05, fuv.y) * mix(vec3(0.05, 0.042, 0.028), vec3(0.022, 0.028, 0.045) * occl, gNight);
-  if (uNight > 0.01) {
+  // Cloud crossing the light source. The moon is small and its halo can be all but put
+  // out, so the night walk is deep; the sun is never fully covered, so the day walk is a
+  // shallow, slower version of the same thing. Day drives an exposure breath rather than
+  // a halo - see the grade - because that is what a covered sun actually does to a frame.
+  float dayOccl = 0.88 + 0.12 * fbm(vec2(t * 0.0075, 12.7));
+  float occl = mix(dayOccl, 0.42 + 0.58 * fbm(vec2(t * 0.013, 5.2)), gNight);
+  col += exp(-abs(fuv.x - sun.x) * 1.1) * smoothstep(HZ + 0.05, HZ - 0.05, fuv.y) * mix(vec3(0.05, 0.042, 0.028) * dayOccl, vec3(0.022, 0.028, 0.045) * occl, gNight);
+
+  if ((uNightW < 0.999 || uStormW < 0.999) && detail > 0.01) {
+    // Daylight cloud lighting. This is the night branch's deck read for brightness rather
+    // than for silhouette: a cloud's body shades the sky it covers and its rim lights up,
+    // and both strengthen as it carries into the sun's quarter of the sky. Nothing is
+    // painted in - the plate's own clouds are lit - so it cannot invent a cloud where the
+    // photograph has none. Bright and white is cloud; bright and blue is sky, hence the
+    // saturation gate.
+    float cy = smoothstep(HZ + 0.02, -0.05, fuv.y);
+    vec2 cuv = vec2(fuv.x * 1.5 - t * 0.0062, fuv.y * 3.0 - t * 0.0016);
+    float dens = fbm(cuv * 2.0 + fbm(cuv * 4.0) * 0.6);
+    float csat = max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b);
+    float cloudHere = cy * smoothstep(0.55, 0.80, luma(col)) * (1.0 - smoothstep(0.10, 0.26, csat)) * (1.0 - gNight);
+    float cbody = smoothstep(0.44, 0.76, dens);
+    float crim  = smoothstep(0.38, 0.54, dens) - smoothstep(0.54, 0.72, dens);
+    float toSun = exp(-length((fuv - sun) * vec2(0.55, 0.95)) * 1.9);
+    col *= 1.0 - cloudHere * cbody * 0.055 * uHaze * detail;
+    col += cloudHere * crim * (0.10 + 0.9 * toSun) * vec3(0.055, 0.052, 0.045) * uHaze * detail;
+
+    // Crepuscular rays. Sampled in the angle around the sun so they fan from it rather
+    // than sliding across as bars; held off the disc itself, because a ray needs distance
+    // before it separates from the glare; gone by the horizon. They ride the same
+    // occlusion as the exposure, since a ray only exists while something is edging the
+    // light - a clear sun casts no visible shafts.
+    //
+    // Behind uQ: this is another fbm on every pixel of the sky, and it is the most
+    // dispensable thing in the frame. The cloud lighting above stays, because the night
+    // branch already runs that same deck on a phone and parity costs nothing new.
+    if (uQ > 0.5) {
+      vec2 rd = fuv - sun;
+      float rlen = length(rd);
+      float ray = smoothstep(0.52, 0.86, fbm(vec2(atan(rd.y, rd.x) * 3.6, rlen * 1.2 - t * 0.010)));
+      float reach = smoothstep(0.03, 0.30, rlen) * exp(-rlen * 1.5);
+      col += ray * reach * smoothstep(HZ + 0.03, HZ - 0.10, fuv.y) * (1.0 - gNight)
+           * (1.0 - dayOccl * 0.6) * vec3(0.052, 0.046, 0.034) * uHaze * detail;
+    }
+  }
+  if (uNightW > 0.001) {
     // volumetric cloud deck: soft banks drifting across the moon, lit brightest at their edges
     float cy = smoothstep(HZ + 0.02, -0.05, fuv.y);
     vec2 cuv = vec2(fuv.x * 1.7 - t * 0.0085, fuv.y * 3.4 - t * 0.0022);
@@ -757,24 +915,128 @@ void main(){
   }
 
   // ---- grade: warm light, cool shade, soft vignette, dither against sky banding
-  if (uNight > 0.01) {
+  if (uNightW > 0.001 || uStormW > 0.001) {
     // the town along the shore: warm lamps flickering just enough to feel inhabited
     float warm = smoothstep(0.06, 0.22, col.r - col.b) * smoothstep(0.2, 0.55, luma(col));
     float lampBand = smoothstep(HZ + 0.02, HZ + 0.13, fuv.y) * smoothstep(0.62, 0.42, fuv.y);
     // each lamp keeps its own slow phase, so the shore twinkles rather than flashing together
     float cellId = vnoise(floor(fuv * vec2(240.0, 420.0)) * 0.37);
-    float slow = 0.90 + 0.10 * sin(t * (0.5 + 0.9 * cellId) + cellId * 32.0);
+    // Two periods per lamp, both long: the shorter runs 10-30s, the longer 38-114s, and
+    // cellId decorrelates them window to window. Anything faster reads as a blink, which
+    // is the one thing a distant inhabited shore must never do.
+    float slow = 0.90 + 0.07 * sin(t * (0.21 + 0.42 * cellId) + cellId * 32.0)
+                      + 0.04 * sin(t * (0.055 + 0.11 * cellId) + cellId * 7.0);
     float air = 0.94 + 0.06 * vnoise(fuv * vec2(180.0, 320.0) + vec2(t * 0.30, t * 0.10));
-    float flick = slow * air;
-    col += warm * lampBand * flick * vec3(0.19, 0.115, 0.032) * gNight;
-    // the halation each lamp throws into the humid air over the bay
-    col += warm * lampBand * flick * vec3(0.055, 0.032, 0.010) * gNight * smoothstep(0.3, 0.85, luma(col));
+    // Rain between here and the shore chops the lamps up far faster than air alone does,
+    // so in a storm they smear and stutter rather than twinkling.
+    float thru = 1.0 - 0.42 * gStorm * vnoise(fuv * vec2(85.0, 34.0) + vec2(0.0, -t * 3.1));
+    float flick = slow * air * thru;
+    // gLit, not gNight: a town has its lamps on in a squall at four in the afternoon.
+    col += warm * lampBand * flick * vec3(0.19, 0.115, 0.032) * gLit;
+    // the halation each lamp throws into the humid air over the bay - heavier in rain
+    col += warm * lampBand * flick * vec3(0.055, 0.032, 0.010) * gLit * smoothstep(0.3, 0.85, luma(col)) * (1.0 + 0.9 * gStorm);
+
+    // One car working its way along the coast road. The road only exists where the town
+    // does - the right-hand shore, x 0.77 to 0.98 measured off the plate - so the run is
+    // confined there and gated on (1 - water): a headlight that would fall on open bay is
+    // simply not drawn. It climbs slightly as it goes, because the road is receding. Two
+    // pixels of warm light and a faint halation, a minute to cross, fading in and out well
+    // inside its own run so it is never seen to start or stop. Dim enough that finding it
+    // is a reward for looking rather than a demand to look.
+    float carT = fract(t / 61.0);
+    vec2 carP = vec2(0.77 + 0.21 * carT, HZ + 0.145 - carT * 0.022 + sin(carT * 7.0) * 0.004);
+    float carFade = smoothstep(0.0, 0.18, carT) * smoothstep(1.0, 0.82, carT) * gLit * uLife * (1.0 - water);
+    float carD = length((fuv - carP) * vec2(1.0, 2.4));
+    col += smoothstep(0.0030, 0.0, carD) * carFade * vec3(0.26, 0.19, 0.09);
+    col += smoothstep(0.0120, 0.0, carD) * carFade * vec3(0.045, 0.030, 0.012);
     // stars, only in the clear upper sky, and only where the plate is already dark
     float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ, 0.02, fuv.y);
     float star = pow(vnoise(fuv * vec2(420.0, 740.0)), 26.0);
     float tw = 0.6 + 0.4 * sin(t * 1.6 + vnoise(fuv * 300.0) * 40.0);
     col += clearSky * star * tw * vec3(0.9, 0.94, 1.0) * 0.85 * gNight;
   }
+
+  // ---- the storm ------------------------------------------------------------------
+  if (uStormW > 0.001) {
+    float ground = smoothstep(0.70, 1.0, fuv.y) * (1.0 - smoothstep(0.02, 0.09, green));
+    float skyB = smoothstep(HZ + 0.06, -0.05, fuv.y);
+    // normalised strike intensity, independent of how much storm is currently mixed in,
+    // so a flash mid-transition does not also fade
+    float fN = clamp(flash / max(gStorm, 0.001), 0.0, 1.0);
+
+    // Wet stone. The path holds a film of water, so it returns the sky and the lamps as a
+    // slow shifting sheen, and the rain landing on it stipples that sheen continuously.
+    float sheenW = fbm(fuv * vec2(22.0, 60.0) + vec2(t * 0.05, -t * 0.11));
+    col += ground * (sheenW - 0.5) * 0.075 * vec3(0.80, 0.88, 1.0) * gStorm;
+    if (detail > 0.2) {
+      float splash = pow(vnoise(fuv * vec2(170.0, 300.0) + vec2(t * 0.7, t * 2.6)), 20.0);
+      col += ground * splash * vec3(0.55, 0.62, 0.72) * 0.85 * gStorm * detail;
+    }
+
+    // The strike lights the frame from where the channel is. The sky takes it first and
+    // hardest, then the wet ground and the sea throw back what reaches them - which is
+    // why a flash reads as depth rather than as the brightness slider moving.
+    // Restraint lives in these four numbers. This plate is an afternoon squall, not a
+    // night scene, so the sky already sits near the top of the range: an ambient lift big
+    // enough to "look like lightning" simply clips the whole frame to white, which is the
+    // cheap version of this effect. Measured, the earlier values put 93% of the sky above
+    // 228. The channel is what should blaze; the ambient is only what tells you the light
+    // came from somewhere.
+    float lfall = exp(-length((fuv - lpos) * vec2(0.62, 1.05)) * 1.15);
+    col += flash * (0.030 + 0.14 * lfall) * mix(vec3(0.55, 0.63, 0.82), vec3(0.80, 0.86, 1.0), skyB);
+    col += flash * ground * lfall * vec3(0.30, 0.34, 0.42) * 0.40;
+    col += flash * water * (0.40 + 0.60 * lfall) * vec3(0.22, 0.27, 0.36) * 0.45;
+
+    // The plate has its channels painted in. Left alone they would sit there permanently,
+    // which is the one thing a bolt never does. So they are held down to a third of their
+    // painted brightness and only allowed to blaze while a strike is actually firing -
+    // which turns the photograph's least animatable feature into the thing that fires.
+    // Both numbers here are measured off the plate, not guessed. The painted channels run
+    // from the top of the frame all the way down to the horizon (uv.y 0 to 0.404 on the
+    // wide cut), so the vertical gate has to cover the whole sky band and only fall away
+    // below the waterline - an earlier version decayed by uv.y 0.28 and so masked almost
+    // nothing. The luma window sits between the 99th and 99.9th percentile of the sky,
+    // which selects the channels and their immediate glow while leaving lit cloud alone.
+    float bolt = smoothstep(0.72, 0.92, luma(col)) * smoothstep(HZ + 0.04, HZ - 0.06, fuv.y);
+    col = mix(col, col * 0.34, bolt * gStorm * (1.0 - fN));
+    col += bolt * fN * vec3(0.55, 0.62, 0.80) * 0.85 * gStorm;
+
+    // Thunder. Not sound, obviously - the light that arrives with it. A slow, shallow
+    // swell in overall exposure a second or two after the flash, under two per cent, felt
+    // as the room changing rather than seen as the picture brightening.
+    float rts = lts - (0.85 + 1.5 * lrnd);
+    if (rts > 0.0 && lhas > 0.5) col *= 1.0 + exp(-rts * 1.5) * (0.5 + 0.5 * sin(rts * 6.5)) * 0.020 * gStorm;
+
+    // Grade: cold, and a little of the colour washed out of it, the way heavy overcast
+    // actually reads. Applied last so the plate's own contrast survives underneath.
+    float sg = luma(col);
+    col = mix(col, mix(col, vec3(sg), 0.20) * vec3(0.93, 0.975, 1.06), gStorm * 0.85);
+
+    // ---- rain, in front of all of it --------------------------------------------
+    // Three sheets at three depths. The far sheet is fine, slow and nearly upright; the
+    // near sheet is coarse, quick and leans hardest, because it is closest to the camera
+    // and the wind. Rain reads against dark ground and vanishes against bright, hence the
+    // 'against' term - and it lights up in a strike, which is the moment you actually see
+    // how hard it is coming down.
+    vec2 rp = vec2(frag.x, 1.0 - frag.y);
+    float rain = rainLayer(rp, ca, 320.0, 92.0, 22.0, 0.10, t, 0.0) * 0.30
+               + rainLayer(rp, ca, 190.0, 56.0, 34.0, 0.15, t, 17.0) * 0.42;
+    if (uQ > 0.5) rain += rainLayer(rp, ca, 96.0, 27.0, 52.0, 0.21, t, 41.0) * 0.34;
+    float against = 1.0 - smoothstep(0.30, 0.75, luma(col));
+    col += rain * vec3(0.62, 0.70, 0.80) * (0.30 + 0.70 * against) * (1.0 + 2.4 * fN) * gStorm * detail;
+  }
+  // Exposure breath. dayOccl is the share of the sun currently reaching the scene; when a
+  // bank edges it the whole frame loses a little light and cools slightly, the way a real
+  // exposure does when the key drops. The travel is under 3% and takes minutes to cycle,
+  // so it is felt as weather rather than seen as an animation. Night has the halo instead.
+  float expoK = clamp((dayOccl - 0.88) / 0.12, 0.0, 1.0);
+  // Centred on 1.0, not below it. expoK is an fbm, so it averages ~0.5; a 0.978 base
+  // would have made the mean 0.991 and quietly graded the whole daylight plate a per
+  // cent dark. 0.987 puts the mean back on the authored exposure and lets it breathe
+  // +/-1.3% either side of it.
+  col *= mix(0.987 + 0.026 * expoK, 1.0, gNight);
+  col = mix(col, col * vec3(1.010, 1.000, 0.984), (1.0 - gNight) * expoK * 0.6);
+
   float ll = luma(col);
   col = mix(col, col * mix(vec3(1.042, 1.010, 0.960), vec3(0.99, 1.005, 1.045), gNight), smoothstep(0.35, 0.95, ll));
   col = mix(col, col * mix(vec3(0.958, 0.986, 1.042), vec3(0.92, 0.965, 1.06), gNight), smoothstep(0.34, 0.02, ll));
@@ -802,12 +1064,18 @@ class Component extends DCLogic {
     this.lensRef = React.createRef();
     this.sheenRef = React.createRef();
     this.veilRef = React.createRef();
-    this.nightRef = React.createRef();
+    this.themeRef = React.createRef();
     this.tipRef = React.createRef();
     this.mouse = { x: 0, y: 0 };
-    this.nightMix = 0;
-    this.duskFrom = 0;
-    this.state = { night: false };
+    this.mvel = { x: 0, y: 0 };
+    // Plate weights (day, night, storm). wCur is the frame-level blend and is what a new
+    // transition starts from, so switching theme mid-change continues from wherever the
+    // picture actually is rather than snapping back to a plate.
+    this.wCur = [0, 1, 0];
+    this.wFrom = [0, 1, 0];
+    this.wTo = [0, 1, 0];
+    this.mixK = 1;
+    this.state = { theme: "dark" };
     this.target = { x: 0, y: 0 };
     this.scroll = 0;
   }
@@ -816,7 +1084,7 @@ class Component extends DCLogic {
     return {
       canvasRef: this.canvasRef, copyRef: this.copyRef, dimRef: this.dimRef,
       navRef: this.navRef, pillRef: this.pillRef, lensRef: this.lensRef, sheenRef: this.sheenRef,
-      veilRef: this.veilRef, tipRef: this.tipRef, nightRef: this.nightRef
+      veilRef: this.veilRef, tipRef: this.tipRef, themeRef: this.themeRef
     };
   }
 
@@ -923,59 +1191,113 @@ class Component extends DCLogic {
     tick();
   }
 
-  initNight() {
-    const btn = this.nightRef.current;
-    if (!btn) return;
-    const label = btn.querySelector("[data-night-label]");
-    const sun = [...btn.querySelectorAll("[data-sun]")];
-    const moonPaint = (on) => {
-      if (label) label.textContent = on ? "Night" : "Day";
-      // the glyph itself becomes a crescent: the sun's rays retract and the disc goes off-centre
-      sun.forEach((el) => {
-        if (el.tagName.toLowerCase() === "g") el.style.opacity = on ? "0" : "1";
-        else {
-          el.setAttribute("r", on ? "3.4" : "2.6");
-          el.setAttribute("cx", on ? "7.2" : "6");
-        }
-      });
-      if (this.moonBite) this.moonBite.style.opacity = on ? "1" : "0";
-      btn.style.background = on ? "rgba(180,205,255,0.16)" : "rgba(255,255,255,0.07)";
-      // the page chrome follows the sky
-      const veil = this.veilRef.current, dim = this.dimRef.current;
-      if (veil) veil.style.background = on
-        ? "radial-gradient(128% 95% at 50% 6%, rgba(5,10,20,0) 26%, rgba(5,10,20,0.68) 100%)"
-        : "radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%)";
-      if (dim) dim.style.background = on
-        ? "linear-gradient(180deg, rgba(4,7,14,0.46) 0%, rgba(4,7,14,0.78) 100%)"
-        : "linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%)";
-      document.querySelectorAll('[data-hero-cover="day"]').forEach(el => { el.style.opacity = on ? "0" : "1"; });
-      document.querySelectorAll('[data-hero-cover="night"]').forEach(el => { el.style.opacity = on ? "1" : "0"; });
+  // ── theme ─────────────────────────────────────────────────────────────────
+  // Three plates of one place, and a change between any two of them is a weather event
+  // rather than a swap: the weights cross over a fixed 2.6s while the shader sweeps that
+  // crossing across the frame, and the page chrome travels with it.
+  initTheme() {
+    const box = this.themeRef.current;
+    if (!box) return;
+    const ORDER = ["day", "dark", "storm"];
+    const ONEHOT = { day: [1, 0, 0], dark: [0, 1, 0], storm: [0, 0, 1] };
+    const btns = [...box.querySelectorAll("[data-theme]")];
+    const lens = box.querySelector("[data-theme-lens]");
+
+    // Scrims per theme. Storm asks for the least: its plate is already dark and the type
+    // sits over cloud rather than over open sky, so the usual veil would only muddy it.
+    const CHROME = {
+      day: {
+        veil: "radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%)",
+        dim: "linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%)",
+        lens: "rgba(255,255,255,0.17)"
+      },
+      dark: {
+        veil: "radial-gradient(128% 95% at 50% 6%, rgba(5,10,20,0) 26%, rgba(5,10,20,0.68) 100%)",
+        dim: "linear-gradient(180deg, rgba(4,7,14,0.46) 0%, rgba(4,7,14,0.78) 100%)",
+        lens: "rgba(180,205,255,0.20)"
+      },
+      storm: {
+        veil: "radial-gradient(128% 95% at 50% 6%, rgba(6,12,20,0) 30%, rgba(6,12,20,0.56) 100%)",
+        dim: "linear-gradient(180deg, rgba(5,9,15,0.38) 0%, rgba(5,9,15,0.74) 100%)",
+        lens: "rgba(196,214,246,0.22)"
+      }
     };
-    this.paintPlateLayers = moonPaint;
-    // a second disc masks the first into a crescent when night is on
-    const svg = btn.querySelector("svg");
-    if (svg) {
-      const bite = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      bite.setAttribute("cx", "4.2");
-      bite.setAttribute("cy", "4.4");
-      bite.setAttribute("r", "3.2");
-      bite.setAttribute("fill", "rgba(12,22,34,1)");
-      bite.style.opacity = "0";
-      bite.style.transition = "opacity .5s ease";
-      svg.appendChild(bite);
-      this.moonBite = bite;
-    }
 
-    let saved = null;
-    try { saved = localStorage.getItem("lp-night"); } catch (e) { saved = null; }
-    if (saved !== "0") { this.setState({ night: true }); moonPaint(true); }
+    // measured rather than assumed: the segments are wider on a phone
+    const step = () => (btns.length > 1
+      ? btns[1].getBoundingClientRect().left - btns[0].getBoundingClientRect().left
+      : 31);
 
-    btn.addEventListener("click", () => {
-      const on = !this.state.night;
-      this.setState({ night: on });
-      moonPaint(on);
-      try { localStorage.setItem("lp-night", on ? "1" : "0"); } catch (e) {}
-    });
+    const placeLens = (name) => {
+      if (!lens) return;
+      const w = btns[0] ? btns[0].getBoundingClientRect().width : 30;
+      lens.style.width = w.toFixed(1) + "px";
+      lens.style.transform = "translateX(" + (ORDER.indexOf(name) * step()).toFixed(1) + "px)";
+    };
+
+    const paint = (name) => {
+      const c = CHROME[name] || CHROME.dark;
+      const veil = this.veilRef.current, dim = this.dimRef.current;
+      if (veil) veil.style.background = c.veil;
+      if (dim) dim.style.background = c.dim;
+      if (lens) lens.style.background = c.lens;
+      placeLens(name);
+      btns.forEach((b) => {
+        const on = b.dataset.theme === name;
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.style.color = on ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.72)";
+      });
+      // The flat plates under the canvas follow too, so a browser with no WebGL — or one
+      // still waiting on a texture — answers the switcher with the right photograph.
+      ORDER.forEach((k) => {
+        const sel = k === "day" ? "day" : (k === "dark" ? "night" : "storm");
+        document.querySelectorAll('[data-hero-cover="' + sel + '"]').forEach((el) => {
+          el.style.opacity = k === name ? "1" : "0";
+        });
+      });
+    };
+    this.repaintTheme = () => paint(this.state.theme);
+
+    this.setTheme = (name) => {
+      if (!ONEHOT[name] || name === this.state.theme) return;
+      if (name === "storm" && this.stormBroken) return;
+      this.wFrom = this.wCur.slice();
+      this.wTo = ONEHOT[name].slice();
+      this.mixK = 0;
+      this.mixAt = performance.now();
+      this.setState({ theme: name });
+      paint(name);
+      try { localStorage.setItem("lp-theme", name); } catch (e) {}
+    };
+
+    // A storm plate that never arrives should cost the visitor a button, not a broken
+    // hero: the control retires itself and the other two keep working.
+    this.retireStorm = () => {
+      this.stormBroken = true;
+      const b = btns.find((x) => x.dataset.theme === "storm");
+      if (b) { b.disabled = true; b.style.display = "none"; }
+      if (this.state.theme === "storm") { this.state.theme = "dark"; this.wCur = [0, 1, 0]; this.wFrom = [0, 1, 0]; this.wTo = [0, 1, 0]; this.mixK = 1; paint("dark"); }
+      else paint(this.state.theme);
+    };
+
+    let start = "dark";
+    try {
+      const saved = localStorage.getItem("lp-theme");
+      if (saved && ONEHOT[saved]) start = saved;
+      else if (localStorage.getItem("lp-night") === "0") start = "day";   // migrate the old key
+    } catch (e) {}
+    this.setState({ theme: start });
+    this.wCur = ONEHOT[start].slice();
+    this.wFrom = this.wCur.slice();
+    this.wTo = this.wCur.slice();
+    this.mixK = 1;
+    paint(start);
+    // the segments have their final width only after layout and after a resize
+    setTimeout(() => placeLens(this.state.theme), 60);
+    this.onThemeResize = () => placeLens(this.state.theme);
+    window.addEventListener("resize", this.onThemeResize);
+
+    btns.forEach((b) => b.addEventListener("click", () => this.setTheme(b.dataset.theme)));
   }
 
   // ── scroll choreography ───────────────────────────────────────────────────
@@ -1257,7 +1579,19 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    this.small = window.matchMedia("(max-width: 820px)").matches;
+
+    // `small` is not a fact about the device, it is a fact about the current window, and
+    // the draw loop re-reads it every frame - for uQ, the pixel ratio, the frame budget
+    // and the park threshold. Latching it at mount meant a window that opened narrow and
+    // was then maximised stayed in phone quality for the rest of the visit: rendering
+    // below CSS resolution, no depth of field, parked early. Keep it current, the same
+    // way the plate cut already is. Everything downstream picks the change up on the very
+    // next frame, because none of it caches.
+    this.smallQuery = window.matchMedia("(max-width: 820px)");
+    this.small = this.smallQuery.matches;
+    this.onSmall = (e) => { this.small = e.matches; };
+    if (this.smallQuery.addEventListener) this.smallQuery.addEventListener("change", this.onSmall);
+    else this.smallQuery.addListener(this.onSmall);
 
     // the primary CTA: its trace completes and the arrow steps forward
     const heroCta = document.querySelector("[data-hero-cta]");
@@ -1306,7 +1640,6 @@ class Component extends DCLogic {
       if (veil) veil.style.opacity = (cl(y / (vh * 1.25)) * 0.25).toFixed(3);
       const dim = this.dimRef.current;
       if (dim) dim.style.opacity = (deep * 0.20).toFixed(3);
-      if (this.paintPlateLayers) this.paintPlateLayers(this.state.night);
       this.navScroll(cl(y / (vh * 0.55)));
       if (this.navSpy) this.navSpy();
     };
@@ -1314,7 +1647,7 @@ class Component extends DCLogic {
     window.addEventListener("scroll", this.onScroll, { passive: true });
     this.initNav();
     this.initWork();
-    this.initNight();
+    this.initTheme();
     this.onScroll();
 
     const canvas = this.canvasRef.current;
@@ -1344,26 +1677,40 @@ class Component extends DCLogic {
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
     const u = {};
-    ["uTex", "uTexN", "uRes", "uMouse", "uT", "uWind", "uWater", "uDrift", "uGlint", "uHaze", "uScroll", "uIntro", "uQ", "uGust", "uLife", "uNight", "TEX_ASPECT", "HZ", "uRot"].forEach(n => { u[n] = gl.getUniformLocation(prog, n); });
+    ["uTex", "uTexN", "uTexS", "uRes", "uMouse", "uT", "uWind", "uWater", "uDrift", "uGlint", "uHaze",
+     "uScroll", "uIntro", "uQ", "uGust", "uLife", "uMix", "uWFrom", "uWTo", "uNightW", "uStormW", "uStill",
+     "TEX_ASPECT", "HZ", "uRot"].forEach(n => { u[n] = gl.getUniformLocation(prog, n); });
 
     // Two cuts of the same place. The panorama is stored rotated and framed for a wide
     // screen; cover-fitting it into a phone's portrait viewport keeps only ~26% of its
     // width, which loses the bay, the bench and the bicycle entirely. Phones therefore
     // get an upright portrait cut, with its own horizon — measured off each plate, and
-    // different between the day and night versions, so it is interpolated by nightMix.
+    // different for every plate, so it is interpolated across the current plate weights.
     const res = window.__resources || {};
     const CUTS = {
       wide: {
         day: res.dayPlate || this.props.plate || "assets/plate-day-wide.jpg",
         night: res.nightPlate || this.props.nightPlate || "assets/plate-night-wide.jpg",
-        // the wide night cut frames more sky than the day one, so the sea meets the
-        // sky lower down; HZ already interpolates between the two by nightMix
-        aspect: 2133 / 1200, hzDay: 0.415, hzNight: 0.43, rot: 1
+        storm: this.props.stormPlate || "assets/plate-storm-wide.jpg",
+        // Each cut frames the sea slightly differently, so each carries its own horizon
+        // and HZ interpolates across whichever plates are currently mixed. Every value here
+        // was measured off the plate itself by finding the strongest horizontal luminance
+        // edge in the open-sea band, a detector calibrated against the two day cuts to
+        // within 0.007. If a new plate's sea ever looks like it starts too high or too low
+        // - whitecaps climbing into the sky, or the town band sitting in the water - this
+        // is the number to nudge, in steps of about 0.01.
+        //
+        // rot is per plate, not per cut: the day and night panoramas are stored rotated
+        // 90deg CCW, and the storm plate is stored upright, so a newly exported plate
+        // never has to be rotated to match its neighbours. The scene aspect is shared,
+        // because storage orientation and scene shape are different facts.
+        aspect: 2133 / 1200, hzDay: 0.415, hzNight: 0.43, hzStorm: 0.407, rot: [1, 1, 0]
       },
       tall: {
         day: this.props.platePortrait || "assets/plate-day-portrait.jpg",
         night: this.props.nightPlatePortrait || "assets/plate-night-portrait.jpg",
-        aspect: 941 / 1672, hzDay: 0.441, hzNight: 0.503, rot: 0
+        storm: this.props.stormPlatePortrait || "assets/plate-storm-portrait.jpg",
+        aspect: 941 / 1672, hzDay: 0.441, hzNight: 0.503, hzStorm: 0.445, rot: [0, 0, 0]
       }
     };
     // must match the <source media> and the @media rule in the helmet exactly, or the
@@ -1397,6 +1744,19 @@ class Component extends DCLogic {
     imgN.decoding = "async";
     imgN.src = this.cut.night;
 
+    const texS = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, texS);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([16, 20, 28]));
+    const imgS = new Image();
+    imgS.decoding = "async";
+    imgS.addEventListener("error", () => { if (this.retireStorm) this.retireStorm(); });
+    imgS.src = this.cut.storm;
+
     // Rotating the phone changes which cut is right. Re-point both textures and clear
     // the uploaded flags so the draw loop re-uploads them; the canvas fades back in on
     // its own once the new day plate lands.
@@ -1406,9 +1766,12 @@ class Component extends DCLogic {
       this.cut = next;
       this.uploaded = false;
       this.uploadedN = false;
+      this.uploadedS = false;
+      this.revealed = false;
       canvas.style.opacity = "0";
       img.src = next.day;
       imgN.src = next.night;
+      imgS.src = next.storm;
     };
     if (tallQuery.addEventListener) tallQuery.addEventListener("change", this.onCut);
     else tallQuery.addListener(this.onCut);
@@ -1443,40 +1806,73 @@ class Component extends DCLogic {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, imgN);
         this.uploadedN = true;
       }
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, texS);
+      if (!this.uploadedS && imgS.complete && imgS.naturalWidth > 1) {
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, imgS);
+        this.uploadedS = true;
+      }
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, tex);
       if (!this.uploaded && img.complete && img.naturalWidth > 1) {
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
         this.uploaded = true;
-        canvas.style.opacity = "1"; // crossfade from the flat photograph into the living one
       }
       const p = this.props;
-      const elapsed = (performance.now() - this.t0) / 1000;
+      const nowMs = performance.now();
+      const elapsed = (nowMs - this.t0) / 1000;
       const still = this.reduced;
-      this.mouse.x += (this.target.x - this.mouse.x) * 0.022;
-      this.mouse.y += (this.target.y - this.mouse.y) * 0.022;
+
+      // A spring, not an exponential ease. A lerp approaches asymptotically and stops the
+      // instant the pointer does, which reads as the camera being glued to the cursor;
+      // something with mass carries a little past the stop and settles back. Damping ratio
+      // is ~0.73 — enough overshoot to feel weighted, not enough to bounce — and it takes
+      // about a second to come to rest. dt is clamped so a backgrounded tab cannot
+      // integrate one enormous step and fling the camera on return.
+      const dt = Math.min(0.05, (nowMs - (this.mAt || nowMs)) / 1000);
+      this.mAt = nowMs;
+      const K = 26, C = 7.4;
+      this.mvel.x += (K * (this.target.x - this.mouse.x) - C * this.mvel.x) * dt;
+      this.mvel.y += (K * (this.target.y - this.mouse.y) - C * this.mvel.y) * dt;
+      this.mouse.x += this.mvel.x * dt;
+      this.mouse.y += this.mvel.y * dt;
       gl.uniform1i(u.uTex, 0);
       gl.uniform1i(u.uTexN, 1);
-      // Dusk on a real clock. The old ease moved a fixed fraction per frame, so it ran
-      // at whatever rate the display happened to have and never quite arrived; this is
-      // a fixed 2.6s with an ease at both ends, identical at 30, 60 or 120Hz. The
-      // sweep in the shader needs the full travel to read, so it is unhurried.
-      const want = this.state.night ? 1 : 0;
-      if (this.duskTo !== want) {
-        this.duskTo = want;
-        this.duskFrom = this.nightMix;
-        this.duskAt = performance.now();
-      }
-      const kd = Math.min(1, (performance.now() - (this.duskAt || 0)) / 2600);
-      const ease = kd * kd * (3 - 2 * kd);
-      this.nightMix = this.duskFrom + (want - this.duskFrom) * ease;
-      if (kd >= 1) this.nightMix = want;
-      gl.uniform1f(u.uNight, this.uploadedN ? this.nightMix : 0);
+      gl.uniform1i(u.uTexS, 2);
+      // Weather on a real clock: a fixed 2.6s with an ease at both ends, identical at 30,
+      // 60 or 120Hz. The sweep in the shader needs the full travel to read, so it is
+      // unhurried. Carrying weights as a triple is what lets any theme reach any other -
+      // and lets a change that is interrupted halfway continue from where the picture
+      // actually is, rather than snapping back to a plate first.
+      const ready = [this.uploaded, this.uploadedN, this.uploadedS];
+      // Never blend toward a plate that has not landed: it would show as flat grey. Hold
+      // the transition at its start instead, and let it run the moment the file arrives.
+      const targetReady = this.wTo.every((w, i) => w < 0.001 || ready[i]);
+      if (!targetReady) this.mixAt = nowMs;
+      const kd = Math.min(1, (nowMs - (this.mixAt || 0)) / 2600);
+      this.mixK = kd * kd * (3 - 2 * kd);
+      for (let i = 0; i < 3; i++) this.wCur[i] = this.wFrom[i] + (this.wTo[i] - this.wFrom[i]) * this.mixK;
+
+      gl.uniform1f(u.uMix, this.mixK);
+      gl.uniform3f(u.uWFrom, this.wFrom[0], this.wFrom[1], this.wFrom[2]);
+      gl.uniform3f(u.uWTo, this.wTo[0], this.wTo[1], this.wTo[2]);
+      // frame-level maxima: the shader branches on these, so whole features cost nothing
+      // when the theme they belong to is not on screen
+      gl.uniform1f(u.uNightW, Math.max(this.wFrom[1], this.wTo[1]));
+      gl.uniform1f(u.uStormW, Math.max(this.wFrom[2], this.wTo[2]));
       gl.uniform1f(u.TEX_ASPECT, this.cut.aspect);
-      gl.uniform1f(u.uRot, this.cut.rot);
-      // the sea meets the sky at a different height in the day and night cuts, so the
-      // horizon crossfades along with the plates rather than jumping at dusk
-      gl.uniform1f(u.HZ, this.cut.hzDay + (this.cut.hzNight - this.cut.hzDay) * this.nightMix);
+      gl.uniform3f(u.uRot, this.cut.rot[0], this.cut.rot[1], this.cut.rot[2]);
+      // the sea meets the sky at a different height in each cut, so the horizon travels
+      // with the plates rather than jumping when the weather turns
+      const cut = this.cut;
+      gl.uniform1f(u.HZ, cut.hzDay * this.wCur[0] + cut.hzNight * this.wCur[1] + cut.hzStorm * this.wCur[2]);
+
+      // Reveal the living scene only once the plate the visitor is actually looking at is
+      // on the GPU. The flat photograph underneath is already showing the right theme.
+      if (!this.revealed && this.wCur.every((w, i) => w < 0.001 || ready[i])) {
+        this.revealed = true;
+        canvas.style.opacity = "1";
+      }
       gl.uniform2f(u.uRes, w, h);
       gl.uniform2f(u.uMouse, still ? 0 : this.mouse.x, still ? 0 : this.mouse.y);
       gl.uniform1f(u.uT, still ? 6.0 : elapsed);
@@ -1488,6 +1884,7 @@ class Component extends DCLogic {
       gl.uniform1f(u.uScroll, this.scroll);
       gl.uniform1f(u.uIntro, still ? 1 : Math.min(1, elapsed / 9));
       gl.uniform1f(u.uQ, this.small ? 0 : 1);
+      gl.uniform1f(u.uStill, still ? 1 : 0);
       gl.uniform1f(u.uLife, p.wildlife ?? 1);
       // one wind gust value per frame instead of a noise walk per pixel
       const g = elapsed * 0.085;
@@ -1514,8 +1911,8 @@ class Component extends DCLogic {
       // backdrop still reads as the photograph, it has simply stopped breathing.
       // Phones park earlier because they can least afford it. Never park mid-dusk.
       const parkAt = this.small ? 0.72 : 1;
-      const settled = Math.abs((this.state.night ? 1 : 0) - this.nightMix) < 0.002;
-      if (this.scroll >= parkAt && settled && this.uploaded) {
+      const settled = this.mixK >= 0.999;
+      if (this.scroll >= parkAt && settled && this.revealed) {
         if (this.parked) return;
         this.parked = true;          // fall through once, so we park on a fresh frame
       } else if (this.parked) {
@@ -1538,11 +1935,16 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() {
+    if (this.smallQuery) {
+      if (this.smallQuery.removeEventListener) this.smallQuery.removeEventListener("change", this.onSmall);
+      else this.smallQuery.removeListener(this.onSmall);
+    }
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.navRaf);
     window.removeEventListener("pointermove", this.onNavMove);
     window.removeEventListener("pointermove", this.onPortrait);
     window.removeEventListener("resize", this.onNavResize);
+    window.removeEventListener("resize", this.onThemeResize);
     window.removeEventListener("scroll", this.onScroll);
     window.removeEventListener("pointermove", this.onMove);
     window.removeEventListener("pointerleave", this.onLeave);
