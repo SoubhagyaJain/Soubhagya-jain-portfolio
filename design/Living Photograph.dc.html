@@ -168,7 +168,7 @@
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(6,12,18,0.62) 0%, rgba(6,12,18,0.3) 30%, rgba(6,12,18,0.04) 58%, rgba(6,12,18,0) 70%)"></div>
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(5,9,12,0.4) 0%, rgba(5,9,12,0) 38%)"></div>
     <div ref="{{ veilRef }}" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%); opacity: 0"></div>
-    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%); opacity: 0"></div>
+    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%); opacity: 0"></div>
   </div>
 
   <div style="position: relative; z-index: 2; overflow: clip">
@@ -1208,17 +1208,17 @@ class Component extends DCLogic {
     const CHROME = {
       day: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%)",
-        dim: "linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%)",
+        dim: "linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%)",
         lens: "rgba(255,255,255,0.17)"
       },
       dark: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(5,10,20,0) 26%, rgba(5,10,20,0.68) 100%)",
-        dim: "linear-gradient(180deg, rgba(4,7,14,0.46) 0%, rgba(4,7,14,0.78) 100%)",
+        dim: "linear-gradient(180deg, rgba(4,7,14,0.74) 0%, rgba(4,7,14,0.88) 100%)",
         lens: "rgba(180,205,255,0.20)"
       },
       storm: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(6,12,20,0) 30%, rgba(6,12,20,0.56) 100%)",
-        dim: "linear-gradient(180deg, rgba(5,9,15,0.38) 0%, rgba(5,9,15,0.74) 100%)",
+        dim: "linear-gradient(180deg, rgba(5,9,15,0.72) 0%, rgba(5,9,15,0.88) 100%)",
         lens: "rgba(196,214,246,0.22)"
       }
     };
@@ -1627,7 +1627,14 @@ class Component extends DCLogic {
       const y = this.scrollY === undefined ? window.scrollY : this.scrollY;
       const cl = (v) => Math.min(1, Math.max(0, v));
       const cine = cl(y / (vh * 2.0));   // camera keeps moving deeper, then holds
-      const deep = cl((y - vh * 0.55) / (vh * 2.3));
+      // How far the photograph has sunk behind the chapters. It used to creep to a fifth
+      // of its strength over nearly three viewports, which left every chapter competing
+      // with a lit photograph for the reader's eye - the Aperture pipeline in particular
+      // is dim pills on no panel of their own, and they were being read against moonlit
+      // water. The photograph is the page's ground, and a ground has to recede: it sinks
+      // as the hero leaves and is fully a texture by the time the first chapter is under
+      // the reader. It is never removed, so the world still continues behind the page.
+      const deep = cl((y - vh * 0.5) / (vh * 0.85));
       this.scroll = cine;
       const copy = this.copyRef.current;
       if (copy) {
@@ -1639,7 +1646,7 @@ class Component extends DCLogic {
       const veil = this.veilRef.current;
       if (veil) veil.style.opacity = (cl(y / (vh * 1.25)) * 0.25).toFixed(3);
       const dim = this.dimRef.current;
-      if (dim) dim.style.opacity = (deep * 0.20).toFixed(3);
+      if (dim) dim.style.opacity = deep.toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
       if (this.navSpy) this.navSpy();
     };
