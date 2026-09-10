@@ -477,6 +477,60 @@ float rainLayer(vec2 rp, float ca, float cols, float len, float speed, float sla
   return on * smoothstep(0.30, 0.0, abs(f.x - 0.5))
             * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.42, f.y);
 }
+// One layer of stars. Points, not thresholded noise: smoothing gives soft blobs all of
+// one size, and a real sky is overwhelmingly faint stars with a handful of bright ones.
+// Each cell carries at most one star, kept well inside its own cell so nothing clips at
+// the seam, and it carries its own magnitude, colour temperature and scintillation.
+//
+// airmass is how much atmosphere the line of sight crosses - 1 straight up, climbing
+// steeply toward the horizon. It is what decides how hard a star twinkles, because the
+// twinkling is air moving in front of the star rather than anything the star is doing.
+vec3 starLayer(vec2 uv, float density, float seed, float airmass, float tt){
+  // square cells: uv.x spans the scene's whole width, so the aspect has to come back in
+  vec2 g = uv * vec2(density * TEX_ASPECT, density);
+  vec2 cell = floor(g), f = fract(g);
+  float h = hash(cell + seed);
+  if (h < 0.62) return vec3(0.0);                     // most of the sky holds nothing
+  vec2 pos = vec2(hash(cell + seed + 3.7), hash(cell + seed + 8.1)) * 0.46 + 0.27;
+  float d2 = dot(f - pos, f - pos);
+
+  // magnitude, skewed hard toward the faint end the way a real star count is
+  float m = pow(hash(cell + seed + 12.3), 3.4);
+
+  // A point source through a lens: a tight core, and on the brightest a small airy bloom.
+  //
+  // The width is set in scene units and converted back through the cell size, so both
+  // layers draw the same size star no matter how dense their grid is. That matters more
+  // than it sounds: a fixed coefficient made the cores about half a pixel wide, and a
+  // sub-pixel point aliases hard as the camera drifts - the star crawls between pixel
+  // centres and flickers from sampling rather than from air. That reads as noise, and it
+  // was swamping the scintillation underneath it. A core a little over a pixel across is
+  // sampled properly, and is also what a real lens does to a star.
+  float K = 5.25e5 / (density * density);
+  float core = exp(-d2 * K * (1.0 - 0.45 * m));
+  float bloom = exp(-d2 * K * 0.10) * m * m * 0.30;
+
+  // colour temperature, hot blue-white through white to a cool amber
+  vec3 tint = mix(vec3(1.06, 0.93, 0.78), vec3(0.80, 0.89, 1.08),
+                  smoothstep(0.20, 0.80, hash(cell + seed + 19.7)));
+
+  // Three incommensurate rates, so the flicker never settles into a beat, scaled by
+  // airmass: a star at the zenith is nearly steady, one low over the sea works hard.
+  float ph = h * 41.0;
+  float sc = sin(tt * 8.5 + ph) * 0.50 + sin(tt * 14.2 + ph * 1.7) * 0.31 + sin(tt * 23.0 + ph * 2.9) * 0.19;
+  // The three sines rarely peak together, so the sum sits near +/-0.45 of its nominal
+  // range: the coefficients have to carry that, or the star modulates a few per cent and
+  // reads as static. A point source this small is nowhere near the area a flash threshold
+  // is concerned with, so it can be allowed to actually twinkle.
+  float tw = clamp(1.0 + sc * (0.20 + 0.45 * (airmass - 1.0)), 0.10, 2.2);
+
+  // Low stars flash colour as well as brightness: the same refraction that makes the
+  // twinkle disperses them, so red and blue arrive out of step.
+  vec3 disp = mix(vec3(1.0), vec3(1.0 + sc * 0.17, 1.0, 1.0 - sc * 0.17),
+                  clamp(airmass - 1.0, 0.0, 1.0) * 0.55);
+
+  return (core * (0.30 + 0.95 * m) + bloom) * tw * tint * disp;
+}
 vec2 flightPath(float seed, float t, float ar){
   float h1 = hash(vec2(seed, 3.1)), h2 = hash(vec2(seed, 7.7)), h3 = hash(vec2(seed, 11.3));
   vec2 home = vec2(0.10 + 0.78 * h1, 0.60 + 0.30 * h2);
@@ -853,6 +907,7 @@ void main(){
   }
 
   // ---- aerial perspective: mountains hazier than the coastline
+  float nightCloud = 0.0;    // set by the cloud deck below; the stars read it back
   vec3 haze = mix(vec3(0.762, 0.845, 0.905), vec3(0.108, 0.148, 0.225), gNight);
   float aer = smoothstep(HZ + 0.105, HZ - 0.03, fuv.y) * 0.38 + smoothstep(HZ - 0.025, HZ - 0.125, fuv.y) * 0.22;
   // Haze is never flat, and it does not hold still because the sun is up. Night gets deep
@@ -908,10 +963,14 @@ void main(){
   }
   if (uNightW > 0.001) {
     // volumetric cloud deck: soft banks drifting across the moon, lit brightest at their edges
+    // (its thickness is kept, because whatever is behind a cloud cannot be seen through it)
     float cy = smoothstep(HZ + 0.02, -0.05, fuv.y);
     vec2 cuv = vec2(fuv.x * 1.7 - t * 0.0085, fuv.y * 3.4 - t * 0.0022);
     float dens = fbm(cuv * 2.0 + fbm(cuv * 4.0) * 0.6);
     float body = smoothstep(0.46, 0.78, dens) * cy;
+    // A wider threshold than the visible body: thin cloud you can barely see still puts
+    // out the stars behind it, which is most of what a hazy night sky is doing.
+    nightCloud = clamp(smoothstep(0.32, 0.66, dens) * cy, 0.0, 1.0);
     float edge = smoothstep(0.40, 0.56, dens) - smoothstep(0.56, 0.74, dens);
     float nearMoon = exp(-length((fuv - sun) * vec2(0.85, 1.25)) * 2.6);
     // the cloud dims the sky it covers, and its rim burns where the moon is behind it
@@ -961,10 +1020,27 @@ void main(){
     col += smoothstep(0.0030, 0.0, carD) * carFade * vec3(0.26, 0.19, 0.09);
     col += smoothstep(0.0120, 0.0, carD) * carFade * vec3(0.045, 0.030, 0.012);
     // stars, only in the clear upper sky, and only where the plate is already dark
-    float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ, 0.02, fuv.y);
-    float star = pow(vnoise(fuv * vec2(420.0, 740.0)), 26.0);
-    float tw = 0.6 + 0.4 * sin(t * 1.6 + vnoise(fuv * 300.0) * 40.0);
-    col += clearSky * star * tw * vec3(0.9, 0.94, 1.0) * 0.85 * gNight;
+    // Haze is not spread evenly up the sky - it is banked in the last stretch above the
+    // horizon. Ramping star brightness across the whole sky, as this did, emptied the
+    // interesting half: the low sky is exactly where the air is thick enough to make a
+    // star work, so it should hold stars and let them flicker, not lose them.
+    float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ - 0.005, HZ - 0.26, fuv.y);
+    if (clearSky > 0.003 && gNight > 0.002) {
+      // Altitude, then airmass. The real relation is near 1/cos(zenith), which runs away
+      // at the horizon; this is that shape with a floor, which is honest enough given the
+      // bottom of the sky is haze in the plate anyway.
+      float alt = clamp((HZ - fuv.y) / max(HZ, 0.001), 0.0, 1.0);
+      float airmass = 1.0 / max(0.16 + 0.84 * alt, 0.16);
+      // Two layers: a sparse bright one and a dense faint one. Together they give the
+      // magnitude spread that makes a sky look deep rather than sprinkled.
+      vec3 sky = starLayer(fuv, 68.0, 0.0, airmass, t)
+               + starLayer(fuv, 131.0, 31.0, airmass, t) * 0.52;
+      // A little extinction on top, but only a little: clearSky above already carries the
+      // haze gradient, and stacking the two put the low sky at about three per cent and
+      // left nothing down there to twinkle.
+      float extinct = mix(1.0, 0.72, clamp((airmass - 1.0) / 3.2, 0.0, 1.0));
+      col += sky * clearSky * extinct * (1.0 - nightCloud) * 0.95 * gNight;
+    }
   }
 
   // ---- the storm ------------------------------------------------------------------
