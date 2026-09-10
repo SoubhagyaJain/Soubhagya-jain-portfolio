@@ -168,7 +168,7 @@
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(6,12,18,0.62) 0%, rgba(6,12,18,0.3) 30%, rgba(6,12,18,0.04) 58%, rgba(6,12,18,0) 70%)"></div>
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(5,9,12,0.4) 0%, rgba(5,9,12,0) 38%)"></div>
     <div ref="{{ veilRef }}" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%); opacity: 0"></div>
-    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%); opacity: 0"></div>
+    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%); opacity: 0"></div>
   </div>
 
   <div style="position: relative; z-index: 2; overflow: clip">
@@ -477,6 +477,60 @@ float rainLayer(vec2 rp, float ca, float cols, float len, float speed, float sla
   return on * smoothstep(0.30, 0.0, abs(f.x - 0.5))
             * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.42, f.y);
 }
+// One layer of stars. Points, not thresholded noise: smoothing gives soft blobs all of
+// one size, and a real sky is overwhelmingly faint stars with a handful of bright ones.
+// Each cell carries at most one star, kept well inside its own cell so nothing clips at
+// the seam, and it carries its own magnitude, colour temperature and scintillation.
+//
+// airmass is how much atmosphere the line of sight crosses - 1 straight up, climbing
+// steeply toward the horizon. It is what decides how hard a star twinkles, because the
+// twinkling is air moving in front of the star rather than anything the star is doing.
+vec3 starLayer(vec2 uv, float density, float seed, float airmass, float tt){
+  // square cells: uv.x spans the scene's whole width, so the aspect has to come back in
+  vec2 g = uv * vec2(density * TEX_ASPECT, density);
+  vec2 cell = floor(g), f = fract(g);
+  float h = hash(cell + seed);
+  if (h < 0.62) return vec3(0.0);                     // most of the sky holds nothing
+  vec2 pos = vec2(hash(cell + seed + 3.7), hash(cell + seed + 8.1)) * 0.46 + 0.27;
+  float d2 = dot(f - pos, f - pos);
+
+  // magnitude, skewed hard toward the faint end the way a real star count is
+  float m = pow(hash(cell + seed + 12.3), 3.4);
+
+  // A point source through a lens: a tight core, and on the brightest a small airy bloom.
+  //
+  // The width is set in scene units and converted back through the cell size, so both
+  // layers draw the same size star no matter how dense their grid is. That matters more
+  // than it sounds: a fixed coefficient made the cores about half a pixel wide, and a
+  // sub-pixel point aliases hard as the camera drifts - the star crawls between pixel
+  // centres and flickers from sampling rather than from air. That reads as noise, and it
+  // was swamping the scintillation underneath it. A core a little over a pixel across is
+  // sampled properly, and is also what a real lens does to a star.
+  float K = 5.25e5 / (density * density);
+  float core = exp(-d2 * K * (1.0 - 0.45 * m));
+  float bloom = exp(-d2 * K * 0.10) * m * m * 0.30;
+
+  // colour temperature, hot blue-white through white to a cool amber
+  vec3 tint = mix(vec3(1.06, 0.93, 0.78), vec3(0.80, 0.89, 1.08),
+                  smoothstep(0.20, 0.80, hash(cell + seed + 19.7)));
+
+  // Three incommensurate rates, so the flicker never settles into a beat, scaled by
+  // airmass: a star at the zenith is nearly steady, one low over the sea works hard.
+  float ph = h * 41.0;
+  float sc = sin(tt * 8.5 + ph) * 0.50 + sin(tt * 14.2 + ph * 1.7) * 0.31 + sin(tt * 23.0 + ph * 2.9) * 0.19;
+  // The three sines rarely peak together, so the sum sits near +/-0.45 of its nominal
+  // range: the coefficients have to carry that, or the star modulates a few per cent and
+  // reads as static. A point source this small is nowhere near the area a flash threshold
+  // is concerned with, so it can be allowed to actually twinkle.
+  float tw = clamp(1.0 + sc * (0.20 + 0.45 * (airmass - 1.0)), 0.10, 2.2);
+
+  // Low stars flash colour as well as brightness: the same refraction that makes the
+  // twinkle disperses them, so red and blue arrive out of step.
+  vec3 disp = mix(vec3(1.0), vec3(1.0 + sc * 0.17, 1.0, 1.0 - sc * 0.17),
+                  clamp(airmass - 1.0, 0.0, 1.0) * 0.55);
+
+  return (core * (0.30 + 0.95 * m) + bloom) * tw * tint * disp;
+}
 vec2 flightPath(float seed, float t, float ar){
   float h1 = hash(vec2(seed, 3.1)), h2 = hash(vec2(seed, 7.7)), h3 = hash(vec2(seed, 11.3));
   vec2 home = vec2(0.10 + 0.78 * h1, 0.60 + 0.30 * h2);
@@ -632,7 +686,12 @@ void main(){
 
   // water: swell travelling toward the shore, fine chop, both bigger up close
   float wd = smoothstep(HZ, 0.78, base.y);
-  float swell = sin(base.y * 150.0 + base.x * 6.0 - t * 1.1 + fbm(base * vec2(5.0, 14.0) + t * 0.05) * 6.28);
+  float swellPh = base.y * 150.0 + base.x * 6.0 - t * 1.1 + fbm(base * vec2(5.0, 14.0) + t * 0.05) * 6.28;
+  float swell = sin(swellPh);
+  // A calm sea is close to a sine. A storm sea is not: the crest sharpens and the trough
+  // flattens out, because the water at the top is moving faster than the form beneath it.
+  // A second harmonic does exactly that, and only in storm.
+  swell += gStorm * 0.45 * sin(2.0 * swellPh);
   float chop = sin(base.y * 470.0 - t * 2.5 + fbm(base * vec2(22.0, 58.0) - t * 0.15) * 9.0);
   float wamp = uWater * (0.00020 + 0.00110 * wd * wd) * (1.0 + 1.15 * gStorm);
   off.y += water * (swell * wamp + chop * wamp * 0.35);
@@ -642,6 +701,12 @@ void main(){
   float setPhase = base.y * 46.0 - t * 0.62 + fbm(base * vec2(3.0, 8.0)) * 2.2;
   float crest = pow(max(sin(setPhase) * 0.5 + 0.5, 0.0), 3.0);
   off.y += water * crest * shoreT * uWater * 0.00085 * (0.45 + 0.55 * gNight + 1.30 * gStorm);
+
+  // The long swell underneath everything. In a storm the whole surface is heaving on a
+  // period far longer than any wave you can pick out, so the sea lifts and drops as one
+  // body rather than only rippling. Slow enough that it is felt in the horizon rather
+  // than seen as a wave.
+  off.y += water * gStorm * uWater * (sin(base.y * 7.0 - t * 0.29) * 0.6 + sin(base.y * 4.0 - t * 0.17 + 1.9) * 0.4) * 0.0019 * wd;
 
   // Heat coming off the far shore at midday. The band is the one the town actually stands
   // in - measured off the plate, HZ+0.08 to HZ+0.20 - and water is subtracted out, because
@@ -842,6 +907,7 @@ void main(){
   }
 
   // ---- aerial perspective: mountains hazier than the coastline
+  float nightCloud = 0.0;    // set by the cloud deck below; the stars read it back
   vec3 haze = mix(vec3(0.762, 0.845, 0.905), vec3(0.108, 0.148, 0.225), gNight);
   float aer = smoothstep(HZ + 0.105, HZ - 0.03, fuv.y) * 0.38 + smoothstep(HZ - 0.025, HZ - 0.125, fuv.y) * 0.22;
   // Haze is never flat, and it does not hold still because the sun is up. Night gets deep
@@ -897,10 +963,14 @@ void main(){
   }
   if (uNightW > 0.001) {
     // volumetric cloud deck: soft banks drifting across the moon, lit brightest at their edges
+    // (its thickness is kept, because whatever is behind a cloud cannot be seen through it)
     float cy = smoothstep(HZ + 0.02, -0.05, fuv.y);
     vec2 cuv = vec2(fuv.x * 1.7 - t * 0.0085, fuv.y * 3.4 - t * 0.0022);
     float dens = fbm(cuv * 2.0 + fbm(cuv * 4.0) * 0.6);
     float body = smoothstep(0.46, 0.78, dens) * cy;
+    // A wider threshold than the visible body: thin cloud you can barely see still puts
+    // out the stars behind it, which is most of what a hazy night sky is doing.
+    nightCloud = clamp(smoothstep(0.32, 0.66, dens) * cy, 0.0, 1.0);
     float edge = smoothstep(0.40, 0.56, dens) - smoothstep(0.56, 0.74, dens);
     float nearMoon = exp(-length((fuv - sun) * vec2(0.85, 1.25)) * 2.6);
     // the cloud dims the sky it covers, and its rim burns where the moon is behind it
@@ -950,10 +1020,27 @@ void main(){
     col += smoothstep(0.0030, 0.0, carD) * carFade * vec3(0.26, 0.19, 0.09);
     col += smoothstep(0.0120, 0.0, carD) * carFade * vec3(0.045, 0.030, 0.012);
     // stars, only in the clear upper sky, and only where the plate is already dark
-    float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ, 0.02, fuv.y);
-    float star = pow(vnoise(fuv * vec2(420.0, 740.0)), 26.0);
-    float tw = 0.6 + 0.4 * sin(t * 1.6 + vnoise(fuv * 300.0) * 40.0);
-    col += clearSky * star * tw * vec3(0.9, 0.94, 1.0) * 0.85 * gNight;
+    // Haze is not spread evenly up the sky - it is banked in the last stretch above the
+    // horizon. Ramping star brightness across the whole sky, as this did, emptied the
+    // interesting half: the low sky is exactly where the air is thick enough to make a
+    // star work, so it should hold stars and let them flicker, not lose them.
+    float clearSky = above * smoothstep(0.24, 0.06, luma(col)) * smoothstep(HZ - 0.005, HZ - 0.26, fuv.y);
+    if (clearSky > 0.003 && gNight > 0.002) {
+      // Altitude, then airmass. The real relation is near 1/cos(zenith), which runs away
+      // at the horizon; this is that shape with a floor, which is honest enough given the
+      // bottom of the sky is haze in the plate anyway.
+      float alt = clamp((HZ - fuv.y) / max(HZ, 0.001), 0.0, 1.0);
+      float airmass = 1.0 / max(0.16 + 0.84 * alt, 0.16);
+      // Two layers: a sparse bright one and a dense faint one. Together they give the
+      // magnitude spread that makes a sky look deep rather than sprinkled.
+      vec3 sky = starLayer(fuv, 68.0, 0.0, airmass, t)
+               + starLayer(fuv, 131.0, 31.0, airmass, t) * 0.52;
+      // A little extinction on top, but only a little: clearSky above already carries the
+      // haze gradient, and stacking the two put the low sky at about three per cent and
+      // left nothing down there to twinkle.
+      float extinct = mix(1.0, 0.72, clamp((airmass - 1.0) / 3.2, 0.0, 1.0));
+      col += sky * clearSky * extinct * (1.0 - nightCloud) * 0.95 * gNight;
+    }
   }
 
   // ---- the storm ------------------------------------------------------------------
@@ -963,6 +1050,69 @@ void main(){
     // normalised strike intensity, independent of how much storm is currently mixed in,
     // so a flash mid-transition does not also fade
     float fN = clamp(flash / max(gStorm, 0.001), 0.0, 1.0);
+
+    // ---- a sea with weather in it ---------------------------------------------
+    // The plate has its swell and its whitecaps painted in already; what a photograph
+    // cannot do is let them travel. All of this lights the plate's own water rather than
+    // drawing a new sea over the top of it.
+    //
+    // The mask is deliberately not the blue-keyed one the rest of the shader uses. That
+    // keys on blueness, and foam is white - so it fades out exactly where the breaking is,
+    // which is the one place a storm sea needs to be readable.
+    float seaS = smoothstep(HZ - 0.010, HZ + 0.030, fuv.y) * smoothstep(0.84, 0.66, fuv.y)
+               * (1.0 - smoothstep(0.02, 0.09, green));
+    // Everything below is water, and water is perhaps a third of the frame. The sea band
+    // is one contiguous stripe, so this branch is coherent across a warp and the sky and
+    // the foreground pay nothing for it at all.
+    if (seaS > 0.002) {
+    float nearS = smoothstep(HZ, 0.76, fuv.y);     // 0 at the horizon, 1 in close
+
+    // Perspective. A sea seen from a bluff has its wavelength crushed toward the horizon
+    // and stretched out in close, and phase has to be built from that or the whole bay
+    // reads as evenly spaced stripes rather than as water going away from you. For a flat
+    // plane, distance runs as 1/(y - horizon), and integrating a frequency that falls off
+    // as its square gives exactly this - so the waves stay one coherent train while their
+    // spacing on screen changes. Time is added rather than subtracted so a crest travels
+    // toward the shore, which is the direction the sets are actually going.
+    float persp = 1.0 / max(fuv.y - HZ + 0.090, 0.030);
+
+    // Three trains, not one. A storm sea is confused: the swell the weather system sent,
+    // a shorter wind sea riding on top of it, and a cross set at an angle to both. Where
+    // they happen to agree you get a peak bigger than any of them on its own, and the
+    // surface stops reading as corrugated and starts reading as unpredictable.
+    float confused = sin(persp * 3.1 + t * 0.74) * 0.46
+                   + sin(persp * 5.4 + fuv.x * 13.0 + t * 1.21) * 0.28
+                   + sin(persp * 1.9 - fuv.x * 8.0 + t * 0.44) * 0.34;
+    col += seaS * confused * nearS * vec3(0.030, 0.036, 0.042) * gStorm * detail;
+
+    // Breaking, and the foam it leaves behind. Foam is not part of the crest: it is left
+    // in the water when the crest topples and then takes a second or two to die. So the
+    // lip is narrow and the trail behind it is long, and the trail is measured from the
+    // moment of breaking rather than from the wave's own phase - which is what stops foam
+    // blinking on and off with the wave that made it.
+    // vnoise, not fbm: this only has to stop the sets arriving as one straight rank, and
+    // a single low-frequency octave does that for a quarter of the cost.
+    float setP = persp * 4.0 + t * 0.80 + vnoise(fuv * vec2(3.0, 7.0)) * 2.6;
+    float lip = pow(max(sin(setP), 0.0), 16.0);
+    float since = fract((setP - 1.5708) / 6.28318);        // 0 the instant it breaks
+    float breaks = smoothstep(0.14, 0.70, nearS);
+    col += seaS * lip * breaks * vec3(0.44, 0.50, 0.57) * 1.00 * gStorm * detail;
+    col += seaS * exp(-since * 4.2) * breaks * vec3(0.19, 0.23, 0.28) * 0.58 * gStorm * detail;
+
+    // Wind dragging the foam out into lines along its own direction. In a photograph this
+    // is the clearest single sign that a sea is being blown rather than merely rolling.
+    // Broad, not hairline: streaks lie along the wind, so they are wide across the frame
+    // and only loosely separated up it, and they take the same perspective as the sets.
+    float lanes = smoothstep(0.54, 0.86, fbm(vec2(fuv.x * 18.0 + fuv.y * 5.0 - t * 0.34, persp * 2.6)));
+    col += seaS * lanes * nearS * vec3(0.15, 0.18, 0.21) * 0.52 * gStorm * detail;
+
+    if (uQ > 0.5 && detail > 0.3) {
+      // Spindrift: torn off the crest and carried downwind, so it exists only where a
+      // wave is actually breaking and always leans the same way the rain does.
+      float mote = pow(vnoise(fuv * vec2(150.0, 320.0) + vec2(t * 1.9, -t * 0.35)), 22.0);
+      col += seaS * mote * lip * breaks * vec3(0.55, 0.60, 0.66) * 2.0 * gStorm * detail;
+    }
+    }
 
     // Wet stone. The path holds a film of water, so it returns the sky and the lamps as a
     // slow shifting sheen, and the rain landing on it stipples that sheen continuously.
@@ -1208,17 +1358,17 @@ class Component extends DCLogic {
     const CHROME = {
       day: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%)",
-        dim: "linear-gradient(180deg, rgba(6,11,16,0.42) 0%, rgba(6,11,16,0.72) 100%)",
+        dim: "linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%)",
         lens: "rgba(255,255,255,0.17)"
       },
       dark: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(5,10,20,0) 26%, rgba(5,10,20,0.68) 100%)",
-        dim: "linear-gradient(180deg, rgba(4,7,14,0.46) 0%, rgba(4,7,14,0.78) 100%)",
+        dim: "linear-gradient(180deg, rgba(4,7,14,0.74) 0%, rgba(4,7,14,0.88) 100%)",
         lens: "rgba(180,205,255,0.20)"
       },
       storm: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(6,12,20,0) 30%, rgba(6,12,20,0.56) 100%)",
-        dim: "linear-gradient(180deg, rgba(5,9,15,0.38) 0%, rgba(5,9,15,0.74) 100%)",
+        dim: "linear-gradient(180deg, rgba(5,9,15,0.72) 0%, rgba(5,9,15,0.88) 100%)",
         lens: "rgba(196,214,246,0.22)"
       }
     };
@@ -1627,7 +1777,14 @@ class Component extends DCLogic {
       const y = this.scrollY === undefined ? window.scrollY : this.scrollY;
       const cl = (v) => Math.min(1, Math.max(0, v));
       const cine = cl(y / (vh * 2.0));   // camera keeps moving deeper, then holds
-      const deep = cl((y - vh * 0.55) / (vh * 2.3));
+      // How far the photograph has sunk behind the chapters. It used to creep to a fifth
+      // of its strength over nearly three viewports, which left every chapter competing
+      // with a lit photograph for the reader's eye - the Aperture pipeline in particular
+      // is dim pills on no panel of their own, and they were being read against moonlit
+      // water. The photograph is the page's ground, and a ground has to recede: it sinks
+      // as the hero leaves and is fully a texture by the time the first chapter is under
+      // the reader. It is never removed, so the world still continues behind the page.
+      const deep = cl((y - vh * 0.5) / (vh * 0.85));
       this.scroll = cine;
       const copy = this.copyRef.current;
       if (copy) {
@@ -1639,7 +1796,7 @@ class Component extends DCLogic {
       const veil = this.veilRef.current;
       if (veil) veil.style.opacity = (cl(y / (vh * 1.25)) * 0.25).toFixed(3);
       const dim = this.dimRef.current;
-      if (dim) dim.style.opacity = (deep * 0.20).toFixed(3);
+      if (dim) dim.style.opacity = deep.toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
       if (this.navSpy) this.navSpy();
     };
