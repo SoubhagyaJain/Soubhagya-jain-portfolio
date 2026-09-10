@@ -225,8 +225,18 @@ img{max-width:100%}
 :root{--z-bg:0;--z-content:10;--z-overlay:20}
 
 /* ── No horizontal scroll, structurally ─────────────────────────────────────
-   The page may not exceed the viewport, whatever a chapter does inside itself. */
-html,body{max-width:100%;overflow-x:hidden}
+   The page may not exceed the viewport, whatever a chapter does inside itself.
+
+   clip, not hidden, and the distinction is not cosmetic. overflow-x:hidden forces the
+   other axis to compute to auto, which makes body a scroll container -- one that never
+   actually scrolls, because the viewport does. Every position:sticky on the page then
+   sticks to that box instead of to the viewport and simply scrolls away with it, which
+   is what stopped both pinned chapters (Direction and the Aperture pipeline) from ever
+   pinning: they played their entire scroll sequence off-screen above the reader.
+
+   clip creates no scroll container, so sticky keeps the viewport as its scrollport, and
+   it forbids scrolling in that axis more firmly than hidden does. */
+html,body{max-width:100%;overflow-x:clip}
 #dc-root{max-width:100vw}
 
 @media (max-width: 768px){
