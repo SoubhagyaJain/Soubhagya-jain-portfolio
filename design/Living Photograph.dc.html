@@ -1685,12 +1685,17 @@ class Component extends DCLogic {
       lastY = y;
       if (v > H * 0.55) { skip = 2; }
       if (skip > 0) { skip--; return; }
-      layers.forEach(L => {
-        const r = L.el.getBoundingClientRect();
+      // Read every position first, then write every transform. Interleaving the two made
+      // each read after a write force a style recalculation — once per layer, per frame —
+      // which is the kind of cost that shows up as a scroll that never quite settles.
+      const rects = layers.map(L => L.el.getBoundingClientRect());
+      layers.forEach((L, i) => {
+        const r = rects[i];
         if (r.bottom < -200 || r.top > H + 200) return;
         // -1 .. 1 across the viewport, so each layer's travel is centred on its own passage
         const p = ((r.top + r.height / 2) / H - 0.5) * 2;
-        L.el.style.transform = "translate3d(0," + (p * L.rate * amp).toFixed(1) + "px,0)";
+        const v = "translate3d(0," + (p * L.rate * amp).toFixed(1) + "px,0)";
+        if (L.v !== v) { L.v = v; L.el.style.transform = v; }
       });
     };
     let queued = false;
@@ -1831,6 +1836,8 @@ class Component extends DCLogic {
       const vh = Math.max(1, window.innerHeight);
       const y = this.scrollY === undefined ? window.scrollY : this.scrollY;
       const cl = (v) => Math.min(1, Math.max(0, v));
+      // the spy reads section positions, so it runs before this frame writes anything
+      if (this.navSpy) this.navSpy();
       const cine = cl(y / (vh * 2.0));   // camera keeps moving deeper, then holds
       // How far the photograph has sunk behind the chapters. It used to creep to a fifth
       // of its strength over nearly three viewports, which left every chapter competing
@@ -1865,10 +1872,18 @@ class Component extends DCLogic {
       const DIM_CAP = { day: 0.66, dark: 0.5, storm: 0.52 };
       if (dim) dim.style.opacity = (deep * (DIM_CAP[this.state.theme] || 0.5)).toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
-      if (this.navSpy) this.navSpy();
     };
 
     window.addEventListener("scroll", this.onScroll, { passive: true });
+    if ("IntersectionObserver" in window) {
+      const pinned = ["aperture-pipeline", "direction"].map((id) => document.getElementById(id)).filter(Boolean);
+      const on = new Set();
+      this.pinIO = new IntersectionObserver((entries) => {
+        entries.forEach((en) => { en.isIntersecting ? on.add(en.target) : on.delete(en.target); });
+        this.stageBusy = on.size > 0;
+      }, { rootMargin: "-10% 0px -10% 0px" });
+      pinned.forEach((el) => this.pinIO.observe(el));
+    }
     this.initNav();
     this.initWork();
     this.initTheme();
@@ -2139,7 +2154,10 @@ class Component extends DCLogic {
       const ground = 1 - (this.deep === undefined ? 0 : this.deep);
       const rainy = this.wCur[2] > 0.02;
       const fast = ground > 0.02 || rainy;
-      const budget = (fast ? 16 : 33) * (this.small ? 1.4 : 1);
+      // While a pinned diagram (the Aperture pipeline, Direction) fills the screen, the
+      // scene is mostly under its shading and the diagram needs the frame time, so the
+      // ground keeps moving at a slower rate rather than competing with it.
+      const budget = this.stageBusy ? (rainy ? 33 : 40) * (this.small ? 1.3 : 1) : (fast ? 16 : 33) * (this.small ? 1.4 : 1);
       if (now - last < budget) return;
       last = now;
       draw();

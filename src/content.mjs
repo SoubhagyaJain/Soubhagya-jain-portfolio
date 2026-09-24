@@ -19,6 +19,7 @@
 
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
+import { plate } from "./plates.mjs";
 
 export const SITE = "https://soubhagya-jain-portfolio.vercel.app";
 export const AUTHOR = "Soubhagya Jain";
@@ -367,6 +368,7 @@ export function loadContent(root, { drafts = false } = {}) {
       kind: "linkedin", id, date, url: data.url || "", draft: truthy(data.draft),
       html: markdown(body, { breaks: true, hashtags: true, media }),
       slides, doc, deckTitle: data.slides_title || "",
+      domain: domainOf(data.category) || DOMAINS[0],
       images: list(data.image || data.images).map(media),
       excerpt: clip(plain(body).replace(/#\w+/g, "").trim(), 150),
       href: `/blog/linkedin#${id}`, source: `content/linkedin/${f}`
@@ -432,6 +434,34 @@ export function loadContent(root, { drafts = false } = {}) {
 
 /* ── the home page's Writing chapter ─────────────────────────────────────── */
 
+// The first sentence of a post, for the typographic thumbnail of a text-only post.
+const opening = (t) => clip((t.split(/(?<=[.?!:\u201d])\s/)[0] || t).trim(), 72);
+
+/**
+ * Every entry gets a thumbnail, made from what it actually is — never a stock image:
+ * a carousel shows its cover slide with the next pages stacked behind it (and peeks at
+ * slide two on hover); a post or article with a picture shows that picture; a text post
+ * shows its own opening line, set as a pull quote; an article without a cover shows its
+ * domain's drawn plate; a PDF shows as a page with its title on it.
+ */
+function thumb(p) {
+  const badge = (t) => `<span class="w-badge">${t}</span>`;
+  if (p.kind === "linkedin" && p.slides.length) {
+    const [a, b] = p.slides;
+    return `<span class="w-thumb w-deck" aria-hidden="true"><span class="pg pg2"></span><span class="pg pg1"></span><span class="w-frame"><img class="s1" src="${esc(a.src)}" alt="" loading="lazy" decoding="async">${b ? `<img class="s2" src="${esc(b.src)}" alt="" loading="lazy" decoding="async">` : ""}</span>${badge(`${p.slides.length} slides`)}</span>`;
+  }
+  const img = p.kind === "linkedin" ? p.images[0] : p.cover;
+  if (img) return `<span class="w-thumb" aria-hidden="true"><span class="w-frame"><img src="${esc(img)}" alt="" loading="lazy" decoding="async"></span>${badge(p.kind === "linkedin" ? "LinkedIn" : esc(p.type.label))}</span>`;
+  if (p.kind === "linkedin") {
+    return `<span class="w-thumb w-quote dark" aria-hidden="true"><span class="w-frame">${plate(p.domain.slug, p.id, { zoom: [1.3, 1.7] })}<span class="q">&#8220;${esc(opening(p.excerpt))}&#8221;</span></span>${badge("LinkedIn")}</span>`;
+  }
+  return `<span class="w-thumb dark" aria-hidden="true"><span class="w-frame">${plate(p.domain.slug, p.slug, { zoom: [1.25, 1.7] })}</span>${badge(esc(p.type.label))}</span>`;
+}
+
+function paper(n) {
+  return `<span class="w-thumb w-paper" aria-hidden="true"><span class="w-frame"><span class="pp-top">PDF${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span><span class="pp-title">${esc(n.title)}</span><span class="pp-lines"></span></span></span>`;
+}
+
 /**
  * Markup for the chapter on the home page: the latest three of each, pointing at the
  * full pages. It uses the page's own reveal hook (data-reveal2), so it arrives the way
@@ -439,9 +469,9 @@ export function loadContent(root, { drafts = false } = {}) {
  */
 export function homeWriting({ posts, notes }) {
   const row = (p) => p.kind === "article"
-    ? `<li><a href="${p.href}"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; ${esc(p.domain.name)} &#183; ${esc(p.type.label)}</span><span class="w-title">${esc(p.title)}</span></a></li>`
-    : `<li><a href="${p.href}"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; LinkedIn</span><span class="w-text">${esc(p.excerpt)}</span></a></li>`;
-  const doc = (n) => `<li><a href="${n.href}" download="${esc(n.download)}"><span class="w-meta">PDF &#183; ${n.size}${n.date ? ` &#183; <time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}</span><span class="w-title">${esc(n.title)} <span class="w-dl" aria-hidden="true">&#8595;</span></span></a></li>`;
+    ? `<li><a href="${p.href}">${thumb(p)}<span class="w-body"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; ${esc(p.domain.name)} &#183; ${esc(p.type.label)}</span><span class="w-title">${esc(p.title)}</span><span class="w-go">${esc(p.type.cta)} <span aria-hidden="true">&#8594;</span></span></span></a></li>`
+    : `<li><a href="${p.href}">${thumb(p)}<span class="w-body"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; LinkedIn${p.slides.length ? " &#183; Carousel" : ""}</span><span class="w-text">${esc(p.excerpt)}</span><span class="w-go">Read the post <span aria-hidden="true">&#8594;</span></span></span></a></li>`;
+  const doc = (n) => `<li><a href="${n.href}" download="${esc(n.download)}">${paper(n)}<span class="w-body"><span class="w-meta">PDF &#183; ${n.size}${n.date ? ` &#183; <time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}</span><span class="w-title">${esc(n.title)}</span><span class="w-go">Download <span aria-hidden="true">&#8595;</span></span></span></a></li>`;
 
   return `<div class="w-cols">
       <div id="writing-blog" class="w-col" data-reveal2="1">

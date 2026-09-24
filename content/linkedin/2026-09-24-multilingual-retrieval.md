@@ -1,6 +1,7 @@
 ---
 date: 2026-09-24
 url: https://lnkd.in/p/dsSdJRVk
+category: RAG & Retrieval
 slides: images/multilingual-retrieval
 slides_title: Why does multilingual RAG miss answers in another language?
 document: files/multilingual-retrieval-carousel.pdf

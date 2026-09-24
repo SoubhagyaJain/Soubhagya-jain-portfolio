@@ -157,8 +157,8 @@
           <div data-node="1" data-y="1125" data-z="26" style="position: absolute; left: 790px; top: 1125px; transform: translate(-50%, -50%) translateZ(26px); padding: 11px 15px; border-radius: 10px; background: linear-gradient(180deg, #1e252c, #141a20); box-shadow: 0 1px 0 rgba(255,255,255,0.09) inset, 0 0 0 1px rgba(214,230,236,0.11), 0 22px 34px -26px rgba(0,0,0,0.95); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(244,240,230,0.94); white-space: nowrap">Context Assembly</div>
           <div data-node="1" data-y="1240" data-z="30" style="position: absolute; left: 790px; top: 1240px; transform: translate(-50%, -50%) translateZ(30px); display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border-radius: 11px; background: linear-gradient(180deg, #212931, #151b21); box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 0 0 1px rgba(214,230,236,0.13), 0 24px 36px -26px rgba(0,0,0,0.95); white-space: nowrap"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,240,230,0.96)">LLM Streaming</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; color: rgba(242,236,224,0.5)">token by token</span></div>
 
-          <div data-node="1" data-y="1385" data-z="44" ref="{{ verifyRef }}" style="position: absolute; left: 790px; top: 1385px; width: 226px; transform: translate(-50%, -50%) translateZ(44px); overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 13px; background: linear-gradient(180deg, rgba(38,46,54,0.92), rgba(18,24,30,0.94)); backdrop-filter: blur(8px) saturate(1.1); -webkit-backdrop-filter: blur(8px) saturate(1.1); box-shadow: 0 1px 0 rgba(255,255,255,0.14) inset, 0 0 0 1px rgba(214,230,236,0.16), 0 30px 46px -30px rgba(0,0,0,0.95)">
-            <div ref="{{ scanRef }}" style="position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, rgba(242,236,224,0), rgba(242,236,224,0.85), rgba(242,236,224,0)); opacity: 0; pointer-events: none"></div>
+          <div data-node="1" data-y="1385" data-z="44" ref="{{ verifyRef }}" style="position: absolute; left: 790px; top: 1385px; width: 226px; transform: translate(-50%, -50%) translateZ(44px); overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 13px; background: linear-gradient(180deg, rgba(38,46,54,0.92), rgba(18,24,30,0.94)); box-shadow: 0 1px 0 rgba(255,255,255,0.14) inset, 0 0 0 1px rgba(214,230,236,0.16), 0 30px 46px -30px rgba(0,0,0,0.95)">
+            <div ref="{{ scanRef }}" style="position: absolute; left: 0; right: 0; top: 10%; height: 1px; will-change: transform; background: linear-gradient(90deg, rgba(242,236,224,0), rgba(242,236,224,0.85), rgba(242,236,224,0)); opacity: 0; pointer-events: none"></div>
             <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,240,230,0.96)">4D Grounding Verifier<span ref="{{ vStateRef }}" style="font-size: 8.5px; letter-spacing: .16em; color: rgba(127,159,181,0.9)">idle</span></div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px">
               <div data-dim="0" style="display: flex; flex-direction: column; gap: 5px"><div style="height: 2px; border-radius: 2px; background: rgba(214,230,236,0.16)"></div><span style="font-family: 'IBM Plex Mono', monospace; font-size: 7.5px; letter-spacing: .1em; text-transform: uppercase; color: rgba(242,236,224,0.5)">support</span></div>
@@ -357,8 +357,10 @@ class Component extends DCLogic {
 
     this.nodes = [...cam.querySelectorAll("[data-node]")].map(el => {
       el.style.opacity = "0";
-      el.style.transition = "opacity .9s cubic-bezier(.2,.7,.2,1), filter .9s ease, box-shadow .6s ease";
-      el.style.filter = "blur(6px)";
+      // Opacity only. These used to arrive out of a blur(), and animate their highlight
+      // shadow, both of which repaint the node on every step while the reader scrolls -
+      // inside a 3D layer the camera is also moving. Opacity stays on the compositor.
+      el.style.transition = "opacity .9s cubic-bezier(.2,.7,.2,1)";
       return { el, y: parseFloat(el.dataset.y) || 0, x: parseFloat(el.style.left) || 600,
                base: el.style.transform, shown: false };
     });
@@ -459,6 +461,7 @@ class Component extends DCLogic {
       this.hero = d;
     }
     this.dims = [...(this.verifyRef.current ? this.verifyRef.current.querySelectorAll("[data-dim] > div") : [])];
+    this.verifyH = this.verifyRef.current ? this.verifyRef.current.offsetHeight : 150;
 
     // offsetHeight and innerWidth/Height only change on resize, but reading them inside
     // the scroll handler forced a layout on every scroll event — immediately after the
@@ -619,7 +622,6 @@ class Component extends DCLogic {
       if (n.q !== q) {
         n.q = q;
         n.el.style.opacity = String(q);
-        n.el.style.filter = q > 0.995 ? "none" : "blur(" + ((1 - q) * 6).toFixed(2) + "px)";
       }
       // active stage highlight, held to a whisper — written only when it changes
       const act = Math.round(cl(1 - Math.abs(n.y - focus) / 190) * 8) / 8;
@@ -680,7 +682,7 @@ class Component extends DCLogic {
     } else if (s < 0.30) {                       // first inspection
       const u = (s - 0.12) / 0.18;
       this.put(hero, "opacity", String(Math.round((1 - u) * 50) / 50));
-      this.put(scan, "opacity", "0.9"); this.put(scan, "top", (10 + u * 62).toFixed(1) + "%");
+      this.put(scan, "opacity", "0.9"); this.put(scan, "transform", "translate3d(0," + (u * 0.62 * (this.verifyH || 150)).toFixed(1) + "px,0)");
       setDims(Math.floor(u * 4.6), true);
       this.say(vst, "checking", "rgba(242,236,224,0.9)");
     } else if (s < 0.36) {                       // one dimension fails
@@ -706,7 +708,7 @@ class Component extends DCLogic {
     } else if (s < 0.90) {                       // second inspection passes
       const u = (s - 0.78) / 0.12;
       this.put(hero, "opacity", String(Math.round((1 - u) * 50) / 50));
-      this.put(scan, "opacity", "0.9"); this.put(scan, "top", (10 + u * 62).toFixed(1) + "%");
+      this.put(scan, "opacity", "0.9"); this.put(scan, "transform", "translate3d(0," + (u * 0.62 * (this.verifyH || 150)).toFixed(1) + "px,0)");
       setDims(Math.floor(u * 4.6));
       this.say(vst, "grounded", "rgba(242,236,224,0.95)");
     } else {                                     // released with citations
