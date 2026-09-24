@@ -117,6 +117,17 @@ function inline(raw, opt) {
   let s = raw;
 
   s = s.replace(/`([^`\n]+)`/g, (_, c) => keep(`<code>${esc(c)}</code>`));
+  // $…$ is maths only where the article opts in, and only when it hugs its content
+  // (so "$5 and $10" stays money)
+  if (opt.math) s = s.replace(/(^|[^\\$\w])\$(?=\S)([^$\n]+?)(?<=\S)\$(?![\d$])/g, (_, pre, tex) => pre + keep(`<span class="math" data-tex>${esc(tex)}</span>`));
+  // [^id] — a note, numbered by first mention
+  if (opt.fn) s = s.replace(/\[\^([\w-]+)\]/g, (_, id) => {
+    let n = opt.fn.order.indexOf(id) + 1;
+    if (!n) n = opt.fn.order.push(id);
+    const ref = `fnref-${id}${opt.fn.refs[id] ? "-" + (opt.fn.refs[id] + 1) : ""}`;
+    opt.fn.refs[id] = (opt.fn.refs[id] || 0) + 1;
+    return keep(`<sup class="fn" id="${ref}"><a href="#fn-${id}" data-fn="${esc(id)}" aria-label="Note ${n}">${n}</a></sup>`);
+  });
   s = s.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"([^"]*)")?\s*\)/g,
     (_, alt, src) => keep(`<img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">`));
   s = s.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g,
@@ -141,8 +152,39 @@ const CALLOUTS = {
   failure: "Failure mode", "failure-mode": "Failure mode",
   benchmark: "Benchmark", measurement: "Benchmark",
   tradeoff: "Engineering trade-off", "trade-off": "Engineering trade-off",
-  changed: "What changed my mind", "what-changed": "What changed my mind", "changed-my-mind": "What changed my mind"
+  changed: "What changed my mind", "what-changed": "What changed my mind", "changed-my-mind": "What changed my mind",
+  // structured blocks: rendered as a stat strip, a numbered list and a spec sheet
+  results: "Key results", result: "Key results",
+  takeaways: "Key takeaways", tldr: "Key takeaways", summary: "Key takeaways",
+  setup: "Setup", environment: "Setup",
+  question: "Open question", "open-question": "Open question"
 };
+const STRUCTURED = { "key-results": "results", "key-takeaways": "takeaways", "setup": "setup" };
+
+/* `- **2.53 s → 0.56 s** — prompt evaluation` as a stat; `- GPU: RTX 4050` as a spec row */
+function structured(kind, lines, opt) {
+  const items = lines.map((l) => /^\s*[-*+]\s+(.*)$/.exec(l)).filter(Boolean).map((m) => m[1]);
+  const rest = lines.filter((l) => !/^\s*[-*+]\s+/.test(l)).join("\n").trim();
+  const tail = rest ? markdown(rest, { ...opt, anchors: false }) : "";
+  if (kind === "results") {
+    const cells = items.map((t) => {
+      const m = /^\*\*(.+?)\*\*\s*(?:[—–:-]\s*)?(.*)$/.exec(t);
+      return m ? `<div class="stat"><dd>${inline(m[1], opt)}</dd><dt>${inline(m[2], opt)}</dt></div>` : `<div class="stat"><dd>${inline(t, opt)}</dd></div>`;
+    });
+    return `<dl class="stats" data-n="${cells.length}">${cells.join("")}</dl>${tail}`;
+  }
+  if (kind === "setup") {
+    const rows = items.map((t) => {
+      const m = /^([^:]{1,40}):\s+(.*)$/.exec(t);
+      return `<div class="row">${m ? `<dt>${inline(m[1], opt)}</dt><dd>${inline(m[2], opt)}</dd>` : `<dt></dt><dd>${inline(t, opt)}</dd>`}</div>`;
+    });
+    return `<dl class="spec">${rows.join("")}</dl>${tail}`;
+  }
+  return `<ol class="takeaways">${items.map((t) => `<li>${inline(t, opt)}</li>`).join("")}</ol>${tail}`;
+}
+
+// a column whose every filled cell is a number (with its unit) reads right-aligned
+const NUMERIC = /^[−\-+~≈×x]?\s*[\d.,]+\s*(%|ms|µs|us|s|x|×|k|K|M|B|GB|MB|KB|tok\/s|req\/s|pp|°C)?\s*(→\s*[\d.,]+\s*(%|ms|s|x|×)?)?$/;
 
 const splitRow = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
 const isTableSep = (l) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(l);
@@ -152,14 +194,35 @@ const isTableSep = (l) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.te
  * LinkedIn post is written: short lines on purpose, not paragraphs that happened to wrap.
  */
 export function markdown(text, opt = {}) {
-  opt = { media: (s) => s, link: (s) => s, breaks: false, hashtags: false, anchors: false, ids: new Set(), ...opt };
+  opt = { media: (s) => s, link: (s) => s, breaks: false, hashtags: false, anchors: false, math: false, ids: new Set(), counts: {}, ...opt };
+  // notes are gathered once, at the top level, and every nested block shares them
+  const top = opt.notes && !opt.fn;
+  if (top) {
+    opt.fn = { defs: {}, order: [], refs: {} };
+    text = text.replace(/^\[\^([\w-]+)\]:\s+(.*(?:\n(?: {2,}|\t).*)*)/gm, (_, id, body) => { opt.fn.defs[id] = body.replace(/\n\s+/g, " "); return ""; });
+  }
+  const html = blocks(text, opt);
+  if (!top || !opt.fn.order.length) return html;
+  const items = opt.fn.order.map((id) => {
+    const back = Array.from({ length: opt.fn.refs[id] || 1 }, (_, k) => `<a class="fn-back" href="#fnref-${id}${k ? "-" + (k + 1) : ""}" aria-label="Back to the text">↩</a>`).join(" ");
+    return `<li id="fn-${id}">${opt.fn.defs[id] ? inline(opt.fn.defs[id], { ...opt, fn: null }) : "<em>Missing note.</em>"} ${back}</li>`;
+  });
+  if (opt.toc) opt.toc.push({ id: "notes", level: 2, text: "Notes & references", plain: true });
+  return `${html}\n<section class="footnotes" aria-labelledby="notes"><h2 id="notes" class="plain">Notes &amp; references</h2><ol>${items.join("")}</ol></section>`;
+}
+
+const groupRuns = (html) => html
+  .replace(/(?:<div class="case">[\s\S]*?<\/ul><\/div>\n?){2,}/g, (m) => `<div class="cases">${m}</div>\n`)
+  .replace(/(?:<p class="metric">[\s\S]*?<\/p>\n?){2,}/g, (m) => `<div class="metrics">${m}</div>\n`);
+
+function blocks(text, opt) {
   const lines = text.replace(/\t/g, "    ").split(/\r?\n/);
   const out = [];
   let i = 0;
 
   const isBlockStart = (l, next) =>
     /^```/.test(l) || /^#{1,4}\s/.test(l) || /^>\s?/.test(l) || /^\s{0,3}([-*+]|\d+[.)])\s+/.test(l) ||
-    /^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(l) || (l.includes("|") && next !== undefined && isTableSep(next));
+    /^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(l) || (l.includes("|") && next !== undefined && isTableSep(next)) || (opt.math && /^\s*\$\$/.test(l));
 
   while (i < lines.length) {
     const line = lines[i];
@@ -167,13 +230,39 @@ export function markdown(text, opt = {}) {
     if (!line.trim()) { i++; continue; }
 
     let m;
-    if ((m = /^```\s*([\w+-]*)/.exec(line))) {
+    if ((m = /^```\s*([\w+-]*)(?:\s+title="([^"]*)")?/.exec(line))) {
       const body = [];
       i++;
       while (i < lines.length && !/^```\s*$/.test(lines[i])) body.push(lines[i++]);
       i++;
       const lang = m[1] ? ` data-lang="${esc(m[1])}"` : "";
-      out.push(`<pre${lang}><code>${esc(body.join("\n"))}</code></pre>`);
+      if (opt.anchors) {
+        const label = [m[2] && `<span class="cb-file">${esc(m[2])}</span>`, m[1] && `<span class="cb-lang">${esc(m[1])}</span>`].filter(Boolean).join("");
+        out.push(`<div class="codeblock"><div class="cb-bar">${label}<button type="button" class="cb-copy" data-copy hidden>Copy</button></div><pre${lang}><code>${esc(body.join("\n"))}</code></pre></div>`);
+      } else out.push(`<pre${lang}><code>${esc(body.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    // $$ … $$ — display maths, on its own lines or on one
+    if (opt.math && /^\s*\$\$/.test(line)) {
+      let tex = line.replace(/^\s*\$\$/, "");
+      if (/\$\$\s*$/.test(tex)) tex = tex.replace(/\$\$\s*$/, "");
+      else {
+        i++;
+        const body = [tex];
+        while (i < lines.length && !/\$\$\s*$/.test(lines[i])) body.push(lines[i++]);
+        if (i < lines.length) body.push(lines[i].replace(/\$\$\s*$/, ""));
+        tex = body.join("\n");
+      }
+      i++;
+      out.push(`<div class="math-block"><span class="math" data-tex data-display>${esc(tex.trim())}</span></div>`);
+      continue;
+    }
+
+    // Table: caption — the line directly above a table names it
+    if (opt.anchors && (m = /^Table:\s+(.*)$/.exec(line)) && i + 2 < lines.length && lines[i + 1].includes("|") && isTableSep(lines[i + 2])) {
+      opt.pendingCaption = m[1];
+      i++;
       continue;
     }
 
@@ -183,6 +272,7 @@ export function markdown(text, opt = {}) {
       while (opt.ids.has(id)) id = `${slugify(m[2])}-${n++}`;
       opt.ids.add(id);
       const anchor = opt.anchors && level < 4 ? `<a class="anchor" href="#${id}" aria-label="Link to this section">#</a>` : "";
+      if (opt.toc && level < 4) opt.toc.push({ id, level, text: inline(m[2], { ...opt, fn: null }).replace(/<[^>]+>/g, "") });
       out.push(`<h${level} id="${id}">${inline(m[2], opt)}${anchor}</h${level}>`);
       i++;
       continue;
@@ -196,9 +286,22 @@ export function markdown(text, opt = {}) {
       i += 2;
       const rows = [];
       while (i < lines.length && lines[i].includes("|") && lines[i].trim()) rows.push(splitRow(lines[i++]));
-      const cell = (tag, c, k) => `<${tag}${align[k] ? ` style="text-align:${align[k]}"` : ""}>${inline(c, opt)}</${tag}>`;
-      out.push(`<div class="table"><table><thead><tr>${head.map((c, k) => cell("th", c, k)).join("")}</tr></thead><tbody>${
-        rows.map((r) => `<tr>${head.map((_, k) => cell("td", r[k] || "", k)).join("")}</tr>`).join("")}</tbody></table></div>`);
+      const numeric = head.map((_, k) => {
+        const vals = rows.map((r) => (r[k] || "").replace(/[*_`]/g, "").trim()).filter(Boolean);
+        return vals.length > 0 && vals.every((v) => NUMERIC.test(v));
+      });
+      const cell = (tag, c, k) => {
+        const a = align[k] || (numeric[k] ? "right" : "");
+        return `<${tag}${numeric[k] ? ' class="num"' : ""}${a ? ` style="text-align:${a}"` : ""}>${inline(c, opt)}</${tag}>`;
+      };
+      const tbl = `<table><thead><tr>${head.map((c, k) => cell("th", c, k)).join("")}</tr></thead><tbody>${
+        rows.map((r) => `<tr>${head.map((_, k) => cell("td", r[k] || "", k)).join("")}</tr>`).join("")}</tbody></table>`;
+      const wide = head.length > 5 ? ' data-wide' : "";
+      if (opt.anchors) {
+        opt.counts.table = (opt.counts.table || 0) + 1;
+        const cap = opt.pendingCaption; opt.pendingCaption = null;
+        out.push(`<figure class="table"${wide}>${cap ? `<figcaption><span class="fig-n">Table ${opt.counts.table}</span>${inline(cap, opt)}</figcaption>` : ""}<div class="table-scroll" tabindex="0">${tbl}</div></figure>`);
+      } else out.push(`<div class="table"><div class="table-scroll">${tbl}</div></div>`);
       continue;
     }
 
@@ -209,7 +312,8 @@ export function markdown(text, opt = {}) {
       if (c && CALLOUTS[c[1].toLowerCase()]) {
         const kind = CALLOUTS[c[1].toLowerCase()];
         const k = slugify(kind);
-        out.push(`<aside class="callout" data-kind="${k}"><div class="c-label">${esc(kind)}${c[2] ? `<span>${inline(c[2], opt)}</span>` : ""}</div>${markdown(body.slice(1).join("\n"), { ...opt, anchors: false })}</aside>`);
+        const inner = STRUCTURED[k] ? structured(STRUCTURED[k], body.slice(1), opt) : markdown(body.slice(1).join("\n"), { ...opt, anchors: false });
+        out.push(`<aside class="callout" data-kind="${k}"><div class="c-label">${esc(kind)}${c[2] ? `<span>${inline(c[2], opt)}</span>` : ""}</div>${inner}</aside>`);
       } else {
         out.push(`<blockquote>${markdown(body.join("\n"), { ...opt, anchors: false })}</blockquote>`);
       }
@@ -235,18 +339,68 @@ export function markdown(text, opt = {}) {
     }
 
     // an image on a line of its own is a figure, and its alt text is the caption
-    if ((m = /^!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"([^"]*)")?\s*\)\s*$/.exec(line))) {
-      const cap = m[3] || m[1];
-      out.push(`<figure><img src="${esc(opt.media(m[2]))}" alt="${esc(m[1])}" loading="lazy" decoding="async">${cap ? `<figcaption>${inline(cap, opt)}</figcaption>` : ""}</figure>`);
+    // …with {wide}, {full} or {narrow} after it to set its width (wide by default); two
+    // or more images on one line sit side by side
+    const IMG = /!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"([^"]*)")?\s*\)/g;
+    if (/^\s*(!\[[^\]]*\]\([^)]*\)\s*)+(\{(wide|full|narrow)\})?\s*$/.test(line)) {
+      const size = (/\{(wide|full|narrow)\}\s*$/.exec(line) || [])[1] || "wide";
+      const imgs = [...line.matchAll(IMG)];
+      const num = () => { opt.counts.figure = (opt.counts.figure || 0) + 1; return `<span class="fig-n">Figure ${opt.counts.figure}</span>`; };
+      if (imgs.length === 1) {
+        const [, alt, src, title] = imgs[0];
+        const cap = title || alt;
+        out.push(`<figure data-size="${size}"><img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">${cap ? `<figcaption>${opt.anchors ? num() : ""}${inline(cap, opt)}</figcaption>` : ""}</figure>`);
+      } else {
+        out.push(`<figure class="gallery" data-size="${size}" style="--n:${imgs.length}">${imgs.map(([, alt, src, title]) =>
+          `<div><img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">${title || alt ? `<figcaption>${opt.anchors ? num() : ""}${inline(title || alt, opt)}</figcaption>` : ""}</div>`).join("")}</figure>`);
+      }
       i++;
       continue;
     }
 
     const para = [];
     while (i < lines.length && lines[i].trim() && !(para.length && isBlockStart(lines[i], lines[i + 1]))) para.push(lines[i++]);
+    if (opt.breaks) { out.push(postShape(para, opt)); continue; }
     out.push(`<p>${inline(para.join("\n"), opt).replace(/\n/g, opt.breaks ? "<br>" : " ")}</p>`);
   }
-  return out.join("\n");
+  return opt.breaks ? groupRuns(out.join("\n")) : out.join("\n");
+}
+
+/* A LinkedIn post is written in short lines whose shape carries structure: a column of
+   "→" lines is a list, "Query ↓ Embedding ↓ …" is a pipeline, "•" lines are bullets, and
+   a line that is bold throughout is the line the post turns on. Read that shape back
+   into markup, so the post can be scanned on a page the way it was meant to be read. */
+function postShape(para, opt) {
+  let L = para.map((l) => l.trim());
+  // one bold span wrapped around several lines is bold on every line
+  let bold = false;
+  if (L.length > 1 && /^\*\*/.test(L[0]) && /\*\*$/.test(L[L.length - 1]) && !L.join("\n").slice(2, -2).includes("**")) {
+    L = L.map((l, k) => l.replace(k === 0 ? /^\*\*/ : /^$/, "").replace(k === L.length - 1 ? /\*\*$/ : /^$/, ""));
+    bold = true;
+  }
+  const txt = (l) => bold ? `<strong>${inline(l, opt)}</strong>` : inline(l, opt);
+  const ARROW = /^(→|->|—>)\s*/, BULLET = /^[•·▪◦]\s*/;
+  // a pipeline: steps separated by lone ↓ lines
+  if (L.length >= 5 && L.length % 2 === 1 && L.every((l, k) => (k % 2 ? /^[↓⬇]$/.test(l) : !/^[↓⬇]$/.test(l)))) {
+    return `<ol class="flow">${L.filter((_, k) => !(k % 2)).map((l) => `<li>${txt(l)}</li>`).join("")}</ol>`;
+  }
+  if (L.every((l) => BULLET.test(l))) return `<ul class="bullets">${L.map((l) => `<li>${txt(l.replace(BULLET, ""))}</li>`).join("")}</ul>`;
+  if (L.every((l) => ARROW.test(l))) return `<ul class="arrows">${L.map((l) => `<li>${txt(l.replace(ARROW, ""))}</li>`).join("")}</ul>`;
+  // a head line and the arrows under it — a small case: "Recall@20 low → …"
+  if (L.length >= 2 && !ARROW.test(L[0]) && L.slice(1).every((l) => ARROW.test(l))) {
+    return `<div class="case"><p class="case-h">${txt(L[0])}</p><ul class="arrows">${L.slice(1).map((l) => `<li>${txt(l.replace(ARROW, ""))}</li>`).join("")}</ul></div>`;
+  }
+  // "label:" over a bold value — a measurement
+  if (L.length === 2 && /:$/.test(L[0]) && /^\*\*[^*]+\*\*$/.test(L[1])) {
+    return `<p class="metric"><span class="m-l">${txt(L[0].replace(/:$/, ""))}</span><span class="m-v">${txt(L[1].slice(2, -2))}</span></p>`;
+  }
+  if (bold) return `<p class="pull">${L.map((l) => inline(l, opt)).join("<br>")}</p>`;
+  const joined = para.join("\n");
+  // bold from end to end: the post's turning line
+  if (/^\*\*[^*][\s\S]*\*\*$/.test(joined.trim()) && !/\*\*[\s\S]*\*\*[\s\S]*\*\*/.test(joined.trim().slice(2, -2))) {
+    return `<p class="pull">${inline(joined.trim().slice(2, -2), opt).replace(/\n/g, "<br>")}</p>`;
+  }
+  return `<p>${inline(joined, opt).replace(/\n/g, "<br>")}</p>`;
 }
 
 export const plain = (md) => md
@@ -329,7 +483,11 @@ export function loadContent(root, { drafts = false } = {}) {
       start: parseInt(data.start, 10) || 0,
       cover: data.cover ? media(data.cover) : "",
       coverAlt: data.cover_alt || "",
-      html: markdown(body, { media, anchors: true }),
+      ...(() => {
+        const toc = [];
+        const math = truthy(data.math) || /^\s*\$\$/m.test(body);
+        return { html: markdown(body, { media, anchors: true, notes: true, math, toc }), toc, math };
+      })(),
       minutes: Math.max(1, Math.round(words / 230)),
       href: `/blog/${slug}`, source: `content/blog/${f}`
     });
@@ -368,6 +526,9 @@ export function loadContent(root, { drafts = false } = {}) {
       kind: "linkedin", id, date, url: data.url || "", draft: truthy(data.draft),
       html: markdown(body, { breaks: true, hashtags: true, media }),
       slides, doc, deckTitle: data.slides_title || "",
+      // a heading for the page: the post's own title if it has one, else its carousel's
+      title: data.title || data.slides_title || "",
+      minutes: Math.max(1, Math.round(plain(body).split(" ").length / 230)),
       domain: domainOf(data.category) || DOMAINS[0],
       images: list(data.image || data.images).map(media),
       excerpt: clip(plain(body).replace(/#\w+/g, "").trim(), 150),

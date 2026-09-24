@@ -231,14 +231,44 @@ function LinkedInDeck(p) {
   </figure>`;
 }
 
-function LinkedInPost(p) {
-  return `<article class="li" id="${p.id}" data-rv>
-  <div class="li-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time><span>LinkedIn</span>${p.draft ? '<span class="am-draft">Draft</span>' : ""}</div>
-  <div class="li-text">${p.html}</div>
-  ${p.images.length ? `<div class="li-shots">${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
-  ${p.slides.length ? LinkedInDeck(p) : p.doc ? `<div class="deck-bar">${DocLinks(p.doc)}</div>` : ""}
-  ${p.url ? `<a class="li-go" href="${esc(p.url)}" rel="noopener">View on LinkedIn <span aria-hidden="true">&#8599;</span></a>` : ""}
+/* A post in full, as a notebook entry: a rail that keeps the entry's facts in view
+   while it is read, and the post itself at reading size with its carousel wide. */
+function LinkedInEntry(p, n) {
+  const facts = [["Source", "LinkedIn"], ["Topic", `<a href="/blog/topic/${p.domain.slug}">${esc(p.domain.name)}</a>`], ["Length", `${p.minutes} min read`]];
+  if (p.slides.length) facts.push(["Carousel", `${p.slides.length} slides`]);
+  return `<article class="li" id="${p.id}" aria-labelledby="${p.id}-t" data-rv>
+  <aside class="li-rail"><div class="li-rail-in">
+    <span class="li-n">${String(n).padStart(2, "0")}</span>
+    <time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time>
+    ${p.draft ? '<span class="am-draft">Draft</span>' : ""}
+    <dl>${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
+    <div class="li-acts">
+      ${p.url ? `<a href="${esc(p.url)}" rel="noopener">View on LinkedIn <span aria-hidden="true">&#8599;</span></a>` : ""}
+      ${p.doc ? `<a href="${esc(p.doc.href)}" target="_blank" rel="noopener">Open the PDF <span aria-hidden="true">&#8599;</span></a><a href="${esc(p.doc.href)}" download="${esc(p.doc.name)}">Download PDF <span aria-hidden="true">&#8595;</span></a>` : ""}
+    </div>
+  </div></aside>
+  <div class="li-main">
+    <h2 class="li-title" id="${p.id}-t">${p.title ? esc(p.title) : `Posted ${fmtDate(p.date)}`}</h2>
+    <div class="li-text">${p.html}</div>
+    ${p.images.length ? `<div class="li-shots">${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
+    ${p.slides.length ? LinkedInDeck(p) : ""}
+  </div>
 </article>`;
+}
+
+/* On the journal's front page a post is introduced, not reprinted: its title, its
+   opening, the carousel's cover, and a way into the whole thing. */
+function LinkedInTeaser(p) {
+  const cover = p.slides[0];
+  return `<a class="lt" href="${p.href}" data-rv>
+  ${cover ? `<span class="lt-cover"><img src="${esc(cover.src)}" alt="" loading="lazy" decoding="async"><span class="lt-count">${p.slides.length} slides</span></span>` : ""}
+  <span class="lt-body">
+    <span class="lt-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time><span>${esc(p.domain.name)}</span><span>${p.minutes} min</span></span>
+    <span class="lt-title">${p.title ? esc(p.title) : "A note from LinkedIn"}</span>
+    <span class="lt-text">${esc(p.excerpt)}</span>
+    <span class="lt-go">Read the note ${arrow}</span>
+  </span>
+</a>`;
 }
 
 /* ── the page shell ──────────────────────────────────────────────────────── */
@@ -361,7 +391,7 @@ function BlogPage(content, ctx) {
   if (shorts.length) {
     parts.push(`<section class="wrap sec" aria-labelledby="shorts">
   ${SectionHead({ id: "shorts", eyebrow: "First posted on LinkedIn", title: "Shorter notes", aside: shorts.length > 4 ? `<a class="more" href="/blog/linkedin">All ${shorts.length} posts ${arrow}</a>` : "" })}
-  <div class="${shorts.length === 1 ? "li-col" : "li-grid"}">${shorts.slice(0, 4).map(LinkedInPost).join("\n")}</div>
+  <div class="lt-list">${shorts.slice(0, 4).map(LinkedInTeaser).join("\n")}</div>
 </section>`);
   }
   return parts.join("\n");
@@ -383,21 +413,47 @@ function TopicPage(d, content) {
 
 /* ── ArticleLayout ───────────────────────────────────────────────────────── */
 
+function Contents(p) {
+  const h2 = p.toc.filter((t) => t.level === 2);
+  if (h2.length < 2) return { rail: "", inline: "" };
+  let n = 0;
+  const items = p.toc.map((t) => {
+    const num = t.level === 2 && !t.plain ? String(++n).padStart(2, "0") : "";
+    return `<li class="l${t.level}"><a href="#${t.id}" data-toc="${t.id}"><span class="n">${num}</span><span class="t">${esc(t.text)}</span></a></li>`;
+  }).join("");
+  return {
+    rail: `<nav class="toc" aria-label="Contents"><div class="toc-in"><div class="toc-h">Contents</div><ol>${items}</ol><div class="toc-read"><span data-read-left>${p.minutes} min read</span></div></div></nav>`,
+    inline: `<details class="toc-m"><summary>Contents <span>${h2.length} sections &#183; ${p.minutes} min</span></summary><ol>${items}</ol></details>`
+  };
+}
+
 function ArticleLayout(p, articles) {
   const i = articles.indexOf(p);
   const newer = articles[i - 1], older = articles[i + 1];
   const related = articles.filter((x) => x !== p && x.domain === p.domain).slice(0, 2);
-  return `<article class="post" aria-labelledby="post-title">
-  <header class="post-head">
-    <a class="back" href="/blog"><span aria-hidden="true">&#8592;</span> Engineering Journal</a>
-    ${ArticleMetadata(p, { link: true })}
-    <h1 id="post-title" data-split>${esc(p.title)}</h1>
-    ${p.summary ? `<p class="post-abstract">${esc(p.summary)}</p>` : ""}
-    <div class="byline">By <a href="/">${AUTHOR}</a> &#183; <time datetime="${isoDate(p.date)}">${fmtMonth(p.date)}</time></div>
-  </header>
-  <figure class="post-cover"><div class="pc-vis dark">${Visual(p, { eager: true, zoom: [1, 1.2] })}</div>${p.cover && p.coverAlt ? `<figcaption>${esc(p.coverAlt)}</figcaption>` : ""}</figure>
-  <div class="prose">
+  const toc = Contents(p);
+  const facts = [
+    `<time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time>`,
+    `${p.minutes} min read`,
+    `<a href="/blog/topic/${p.domain.slug}">${esc(p.domain.name)}</a>`,
+    esc(p.type.label)
+  ];
+  return `<div class="read-progress" aria-hidden="true"><span></span></div>
+<article class="post" aria-labelledby="post-title">
+  <div class="post-grid">
+    <header class="post-head">
+      <a class="back" href="/blog"><span aria-hidden="true">&#8592;</span> Engineering Journal</a>
+      <div class="post-facts">${facts.map((f) => `<span>${f}</span>`).join("")}${p.draft ? '<span class="am-draft">Draft</span>' : ""}</div>
+      <h1 id="post-title" data-split>${esc(p.title)}</h1>
+      ${p.summary ? `<p class="post-abstract">${esc(p.summary)}</p>` : ""}
+      <div class="byline">By <a href="/">${AUTHOR}</a>${p.tags.length ? ` <span class="tags">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</span>` : ""}</div>
+    </header>
+    <figure class="post-cover"><div class="pc-vis dark">${Visual(p, { eager: true, zoom: [1, 1.2] })}</div>${p.cover && p.coverAlt ? `<figcaption>${esc(p.coverAlt)}</figcaption>` : ""}</figure>
+    ${toc.rail}
+    <div class="prose"${p.math ? " data-math" : ""}>
+${toc.inline}
 ${p.html}
+    </div>
   </div>
   <footer class="post-foot">
     <div class="pf-row">
@@ -424,7 +480,7 @@ function LinkedInPage(content) {
     <h1>Shorter notes</h1>
     <p>Everything I have posted on LinkedIn, kept here in full, newest first.</p>
   </header>
-  <section class="wrap sec"><div class="li-col">${shorts.length ? shorts.map(LinkedInPost).join("\n") : `<p class="empty">Nothing posted yet.</p>`}</div></section>`;
+  <section class="li-list" aria-label="Posts">${shorts.length ? shorts.map((p, k) => LinkedInEntry(p, shorts.length - k)).join("\n") : `<p class="empty wrap">Nothing posted yet.</p>`}</section>`;
 }
 
 function NotesPage(content) {
