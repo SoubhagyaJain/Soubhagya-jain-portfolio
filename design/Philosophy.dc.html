@@ -284,16 +284,27 @@ class Component extends DCLogic {
     });
 
     // staggered reveal: question first, then the paragraph, then the failures surface one by one
-    this.onScroll = () => {
+    // Once per frame, only while it can matter, and a write only when something is
+    // actually revealed. It used to measure the section and re-write every revealed
+    // line's style on every scroll event, anywhere on the page, forever; each write
+    // left style dirty, so the next measurement anywhere forced a full recalculation.
+    const revs = root.querySelectorAll ? [...root.querySelectorAll("[data-ph-rev]")] : [];
+    let pending = revs.length, queued = false;
+    const reveal = () => {
+      queued = false;
+      if (!pending) return;
       const r = host.getBoundingClientRect();
       const vh = window.innerHeight;
+      if (r.top > vh * 1.2 || r.bottom < -vh * 0.2) return;
       const p = Math.min(1, Math.max(0, (vh * 0.9 - r.top) / (r.height * 0.7 + vh * 0.3)));
-      const revs = root.querySelectorAll ? root.querySelectorAll("[data-ph-rev]") : [];
       revs.forEach((el) => {
+        if (el._on) return;
         const i = parseInt(el.dataset.phRev, 10) || 0;
-        if (p > 0.03 + i * 0.045) { el.style.opacity = "1"; el.style.transform = "none"; }
+        if (p > 0.03 + i * 0.045) { el._on = true; pending--; el.style.opacity = "1"; el.style.transform = "none"; }
       });
+      if (!pending) window.removeEventListener("scroll", this.onScroll);
     };
+    this.onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(reveal); } };
     window.addEventListener("scroll", this.onScroll, { passive: true });
     this.onScroll();
 

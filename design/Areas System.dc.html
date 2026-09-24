@@ -271,7 +271,7 @@ class Component extends DCLogic {
       const revs = host.parentElement ? host.parentElement.querySelectorAll("[data-area-rev]") : [];
       revs.forEach((el) => {
         const i = parseInt(el.dataset.areaRev, 10) || 0;
-        if (p > 0.06 + i * 0.045) { el.style.opacity = "1"; el.style.transform = "none"; }
+        if (p > 0.06 + i * 0.045) { if (!el._on) { el._on = true; el.style.opacity = "1"; el.style.transform = "none"; } }
       });
       this.assembled = p > 0.4;
       // exit: the system reduces to one travelling signal
