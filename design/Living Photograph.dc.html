@@ -476,7 +476,15 @@ uniform vec3 uRot;          // per plate: 1 = stored rotated 90deg CCW, 0 = alre
 vec3 gW;
 float gNight, gStorm, gLit;
 
-float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+// No sin() in the hash. The scene's clock only grows, and several textures (glints,
+// foam, rain) scroll by it quickly; a sin-based hash fed large arguments degrades on
+// GPUs into visible stripes and blocks within minutes. This one stays random for as
+// long as a tab is left open.
+float hash(vec2 p){
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
 float vnoise(vec2 p){
   vec2 i = floor(p), f = fract(p);
   f = f * f * (3.0 - 2.0 * f);
@@ -587,9 +595,12 @@ float butterfly(vec2 uv, float seed, float t, float ar, out float body){
 // kept rotated 90deg CCW while the portrait cuts are upright, and a newly added plate
 // should not have to be re-exported to match its neighbours. So each plate carries its own
 // flag and the scene aspect stays shared.
+// Past the plate's edge the picture is mirrored, never clamped: a clamp repeats the
+// last column of pixels and smears it into streaks across whatever strays outside.
+vec2 mirror(vec2 uv){ return clamp(1.0 - abs(1.0 - mod(uv, 2.0)), 0.002, 0.998); }
 vec2 plateUV(vec2 uv, float rot){
-  vec2 up = clamp(uv, 0.002, 0.998);
-  return rot > 0.5 ? vec2(clamp(1.0 - uv.y, 0.002, 0.998), up.x) : up;
+  vec2 up = mirror(uv);
+  return rot > 0.5 ? vec2(1.0 - up.y, up.x) : up;
 }
 vec4 photo(vec2 uv){
   // One texture fetch at rest, two inside the terminator of a running transition. gW is
@@ -702,10 +713,13 @@ void main(){
 
   // sky: enormous and almost still; two depth layers, slow shape evolution
   float skyDepth = smoothstep(HZ, 0.05, base.y);
-  off.x += above * (-t * 0.00040 * (0.35 + 0.65 * skyDepth));
+  // The sky drifts and comes back. It used to slide at a constant rate, which is
+  // lovely for a minute and, left open for twenty, walks the clouds clean off the
+  // photograph; a five-minute sway reads the same and never leaves the plate.
+  off.x += above * (-0.0085 * sin(t * 0.021)) * (0.35 + 0.65 * skyDepth);
   off += above * (fbm(base * vec2(2.3, 3.9) + vec2(t * 0.0055, -t * 0.0032)) - 0.5) * vec2(0.011, 0.0045) * skyDepth;
   // at night the cloud deck itself creeps: a second, slower shear on the upper sky only
-  off.x += above * gNight * (-t * 0.00052) * (0.4 + 0.6 * skyDepth);
+  off.x += above * gNight * (-0.006 * sin(t * 0.017 + 1.3)) * (0.4 + 0.6 * skyDepth);
   off.y += above * gNight * (fbm(base * vec2(1.4, 2.6) + vec2(t * 0.0031, 0.0)) - 0.5) * 0.0042 * skyDepth;
 
   // water: swell travelling toward the shore, fine chop, both bigger up close
@@ -1323,7 +1337,9 @@ class Component extends DCLogic {
           if (top <= line && top > bestTop) { bestTop = top; best = i; }
         });
       });
-      if (best < 0 || best === active) return;
+      // above the first chapter (back at the top of the hero) the lens returns to the first item
+      if (best < 0) best = 0;
+      if (best === active) return;
       active = best;
       paint();
       measure();
