@@ -500,48 +500,69 @@
     wView.setAttribute("aria-activedescendant", "cxw-" + i);
   }
 
+  // Everything per-frame is cached so a frame writes only what changed, and the loop
+  // stops the moment the wheel has arrived: at rest it costs nothing at all.
+  var wheelEl = track && track.querySelector(".cxw-wheel");
+  var last = { z: [], vis: [], op: -1, m: -1 };
   function drawWheel() {
-    W.raf = W.live ? requestAnimationFrame(drawWheel) : 0;
+    W.raf = 0;
     var n = cards.length, M = W.m;
-    W.target = turnFromScroll();
     var gap = W.target - W.turn;
     if (Math.abs(gap) < 0.0005) W.turn = W.target; else W.turn += gap * (reduced ? 1 : EASE);
     var t = W.turn, m = clamp(t, 0, 1), pos = Math.max(0, t - 1);
+    var r2 = function (v) { return Math.round(v * 100) / 100; };
     // the drum is pulled back so its front face lands on the picture plane, and the
     // set-back arrives with it, or the ring would sit deep in the perspective
-    track.querySelector(".cxw-wheel").style.transform = "translateZ(" + (-m * M.drumR) + "px)";
+    if (m !== last.m) wheelEl.style.transform = "translateZ(" + r2(-m * M.drumR) + "px)";
+    var s = lerp(M.ringScale, 1, m);
     for (var i = 0; i < n; i++) {
       var d = i - pos, drumDeg = d * STEP;
-      var bowX = -M.bow * (1 - Math.cos(rad(drumDeg)));
       var el = cards[i];
-      el.style.transform =
-        "translateX(" + (m * bowX) + "px)" +
-        " rotateZ(" + ((1 - m) * d * (360 / n)) + "deg) translateY(" + (-(1 - m) * M.ringR) + "px)" +
-        " rotateX(" + (m * drumDeg) + "deg) translateZ(" + (m * M.drumR) + "px)";
       var hide = m > 0.5 && Math.abs(d) > CULL;
-      el.style.opacity = hide ? "0" : "1";
-      el.style.pointerEvents = hide ? "none" : "";
-      el.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
-      el.firstElementChild.style.transform = "scale(" + lerp(M.ringScale, 1, m) + ")";
+      // hidden cards are skipped entirely: not painted, not transformed
+      var vis = hide ? "hidden" : "";
+      if (last.vis[i] !== vis) { el.style.visibility = vis; last.vis[i] = vis; }
+      if (hide) continue;
+      var bowX = -M.bow * (1 - Math.cos(rad(drumDeg)));
+      // one transform per card, scale last, so the compositor moves and scales a
+      // layer it already has instead of the page re-drawing the record each frame
+      el.style.transform =
+        "translateX(" + r2(m * bowX) + "px)" +
+        " rotateZ(" + r2((1 - m) * d * (360 / n)) + "deg) translateY(" + r2(-(1 - m) * M.ringR) + "px)" +
+        " rotateX(" + r2(m * drumDeg) + "deg) translateZ(" + r2(m * M.drumR) + "px) scale(" + Math.round(s * 1000) / 1000 + ")";
+      var z = Math.round(100 - Math.abs(d) * 2);
+      if (last.z[i] !== z) { el.style.zIndex = String(z); last.z[i] = z; }
     }
-    wLabel.style.opacity = String(1 - m);
-    wPanel.style.opacity = String(m);
-    wPanel.style.pointerEvents = m > 0.5 ? "" : "none";
-    wHint.style.opacity = String(1 - clamp(t * 3, 0, 1));
+    if (m !== last.m) {
+      wLabel.style.opacity = String(1 - m);
+      wPanel.style.opacity = String(m);
+      wPanel.style.pointerEvents = m > 0.5 ? "" : "none";
+      wHint.style.opacity = String(1 - clamp(t * 3, 0, 1));
+      last.m = m;
+    }
     setActive(clamp(Math.round(pos), 0, n - 1));
+    if (W.turn !== W.target) W.raf = requestAnimationFrame(drawWheel);
+  }
+  // scroll moves the target; the loop runs only until the wheel catches up
+  function wheelKick() {
+    if (!W.live) return;
+    W.target = turnFromScroll();
+    if (!W.raf && W.target !== W.turn) W.raf = requestAnimationFrame(drawWheel);
   }
 
   if (track && cards.length) {
     wheelMetrics();
+    W.target = W.turn = turnFromScroll();
     drawWheel();
-    if ("ResizeObserver" in window) new ResizeObserver(function () { wheelMetrics(); if (!W.live) drawWheel(); }).observe(track.querySelector(".cxw-stage"));
+    var redraw = function () { last.m = -1; last.z = []; last.vis = []; W.target = turnFromScroll(); if (!W.raf) W.raf = requestAnimationFrame(drawWheel); };
+    if ("ResizeObserver" in window) new ResizeObserver(function () { wheelMetrics(); redraw(); }).observe(track.querySelector(".cxw-stage"));
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (es) {
-        var on = es[0].isIntersecting;
-        if (on && !W.live) { W.live = true; W.raf = requestAnimationFrame(drawWheel); }
-        if (!on) { W.live = false; cancelAnimationFrame(W.raf); W.raf = 0; }
+        W.live = es[0].isIntersecting;
+        if (W.live) redraw(); else { cancelAnimationFrame(W.raf); W.raf = 0; }
       }).observe(track);
-    } else { W.live = true; W.raf = requestAnimationFrame(drawWheel); }
+    } else { W.live = true; }
+    window.addEventListener("scroll", wheelKick, { passive: true });
 
     // a gesture has no end of its own, so the rest position is wherever it
     // stopped; left there the drum sits between two records. Settle onto one.
@@ -586,8 +607,8 @@
     if (!bridge) return;
     var vh = window.innerHeight, br = bridge.getBoundingClientRect();
     if (br.bottom > -50 && br.top < vh + 50) {
-      bridgeP = clamp((vh * 0.72 - br.top) / (br.height + vh * 0.3), 0, 1);
-      drawBridge();
+      var np = clamp((vh * 0.72 - br.top) / (br.height + vh * 0.3), 0, 1);
+      if (Math.abs(np - bridgeP) > 0.002 || !bridge._drawn) { bridgeP = np; bridge._drawn = true; drawBridge(); }
     }
   }
   var scrollQueued = false;
@@ -667,6 +688,19 @@
     holder.style.transition = "transform 480ms cubic-bezier(.2,.7,.2,1)";
     holder.style.transform = "translate(" + (to.left - from.left) + "px," + (to.top - from.top) + "px) scale(" + (to.width / from.width) + ")";
     setTimeout(finish, 480);
+  }
+
+  /* ── page-wide: decorative loops rest while their chapter is out of view ────
+     Some thirty infinite CSS animations (packets on the fraud diagram, pulses,
+     carets) otherwise keep the browser restyling every frame wherever the reader
+     is. Each chapter's are paused a screen before it leaves and resumed a screen
+     before it returns, so nobody ever sees one stop. */
+  if ("IntersectionObserver" in window) {
+    var chapters = document.querySelectorAll("#dc-root > [data-dc-component] > section, #dc-root section[id], #dc-root article[id], [data-hero-copy]");
+    var rest = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { e.target.classList.toggle("dc-off", !e.isIntersecting); });
+    }, { rootMargin: "100% 0px" });
+    Array.prototype.forEach.call(chapters, function (el) { if (el.id !== "writing") rest.observe(el); });
   }
 
   /* ── the cursor's note ──────────────────────────────────────────────────── */
