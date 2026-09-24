@@ -20,14 +20,16 @@
 // (`div[style*='radial-gradient']` in initParallax) and writes over them at
 // runtime, so hoisting them into classes would quietly break the choreography.
 //
-// Run: node build.mjs
+// Run: node build.mjs              the site, as deployed
+//      node build.mjs --drafts     the same, with draft articles included and marked
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, rmSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
 import { createHash } from "node:crypto";
-import { loadContent, renderPages, homeWriting } from "./src/content.mjs";
+import { loadContent, homeWriting } from "./src/content.mjs";
+import { renderJournal } from "./src/journal.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, "design");
@@ -188,7 +190,9 @@ let body = inline(ENTRY);
 
 /* ── writing: content/ -> the Blog and Notes pages, and the home page's chapter ── */
 
-const content = loadContent(ROOT);
+// Drafts are for previewing locally; the deployed build never passes the flag.
+const DRAFTS = process.argv.includes("--drafts");
+const content = loadContent(ROOT, { drafts: DRAFTS });
 const SLOT_RE = /<dc-slot name="writing"><\/dc-slot>/;
 if (!SLOT_RE.test(body)) throw new Error(`${ENTRY} has no <dc-slot name="writing"> for the Writing chapter`);
 body = body.replace(SLOT_RE, () => homeWriting(content));
@@ -401,12 +405,19 @@ writeFileSync(join(OUT, "index.html"), html);
 writeFileSync(join(OUT, "styles.css"), css);
 writeFileSync(join(OUT, "app.js"), app);
 
-// the Blog and Notes pages share one stylesheet and the home page's fonts
+// the journal, its article pages and the Notes library share one stylesheet, one
+// small script, and the home page's fonts
 const pagesCss = readFileSync(join(ROOT, "src", "pages.css"), "utf8");
+const journalJs = readFileSync(join(ROOT, "src", "journal.js"), "utf8");
+try { new Script(journalJs, { filename: "journal.js" }); }
+catch (e) { throw new Error(`src/journal.js does not parse — ${e.message}`); }
 writeFileSync(join(OUT, "pages.css"), pagesCss);
-const pages = renderPages(content, {
+writeFileSync(join(OUT, "journal.js"), journalJs);
+const pages = renderJournal(content, {
   cssHref: `/pages.css?v=${stamp(pagesCss)}`,
-  fontHref: [...fontHrefs][0] || "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  jsHref: `/journal.js?v=${stamp(journalJs)}`,
+  fontHref: [...fontHrefs][0] || "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap",
+  drafts: DRAFTS
 });
 for (const [path, text] of pages) {
   mkdirSync(dirname(join(OUT, path)), { recursive: true });
@@ -420,8 +431,8 @@ for (const [from, to] of content.copies) {
 // assets referenced anywhere in the compiled page, so a missing one is reported
 // rather than discovered as a broken image in the browser
 const wanted = new Set();
-// the sub-pages' ground can be any of the three portrait cuts, picked in the browser
-for (const f of ["day", "night", "storm"]) wanted.add(`plate-${f}-portrait.jpg`);
+// pictures the journal pages use, which the home page's markup does not mention
+for (const f of ["journal-night.jpg", "portrait.jpg"]) wanted.add(f);
 for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif)/g)) {
   wanted.add(m[0].slice("assets/".length));
 }
@@ -439,7 +450,8 @@ console.log(`    styles.css  ${kb(css)}   (${hoverRules.length} hover rules)`);
 console.log(`    app.js      ${kb(app)}`);
 console.log(`    assets/     ${wanted.size - missing.length} of ${wanted.size} copied`);
 const articles = content.posts.filter((p) => p.kind === "article").length;
-console.log(`    blog/       ${articles} article${articles === 1 ? "" : "s"}, ${content.posts.length - articles} LinkedIn post${content.posts.length - articles === 1 ? "" : "s"}`);
+const drafts = content.posts.filter((p) => p.draft).length;
+console.log(`    blog/       ${articles} article${articles === 1 ? "" : "s"}, ${content.posts.length - articles} LinkedIn post${content.posts.length - articles === 1 ? "" : "s"}${DRAFTS ? `  (--drafts: ${drafts} draft${drafts === 1 ? "" : "s"} included)` : ""}`);
 console.log(`    notes/      ${content.notes.length} PDF${content.notes.length === 1 ? "" : "s"}`);
 if (content.warn.length) {
   console.log(`\n  CONTENT — fix these in content/ and re-run:`);

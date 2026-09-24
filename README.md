@@ -6,9 +6,13 @@ A static site compiled from the Claude Design project
 **Live:** https://soubhagya-jain-portfolio.vercel.app
 
 ```bash
-node build.mjs                                   # design/ -> dist/
+node build.mjs                                   # design/ + content/ -> dist/
+node build.mjs --drafts                          # the same, with draft articles shown and marked
 python -m http.server 4173 --directory dist      # then open http://localhost:4173
 ```
+
+**Publishing an article, a LinkedIn post or a PDF of notes:** see
+[`content/README.md`](content/README.md). It is one file per item, and needs no code.
 
 ## Deployment
 
@@ -23,14 +27,60 @@ treat this as a plain static site, serve the repo root, and find no `index.html`
 ## Layout
 
 ```
-design/           the artboards, synced from Claude Design — the source of truth
-  *.dc.html         10 artboards: Living Photograph (the page) + 9 it imports
+design/           the artboards, synced from Claude Design (see "Local changes" below)
+  *.dc.html         Living Photograph (the page) + the artboards it imports
   support.js        the design-canvas runtime, kept for reference; not shipped
-  assets/           photographic plates and the portrait
-src/dc-lite.js    the ~100-line runtime that replaces React + Babel
+  assets/           photographic plates, the portrait, journal-night.jpg
+content/          everything written: blog/, linkedin/, notes/, journal.json
+src/
+  dc-lite.js        the ~100-line runtime that replaces React + Babel
+  content.mjs       reads content/: front matter, Markdown, the article record
+  journal.mjs       the Engineering Journal, article, domain, LinkedIn and Notes pages
+  plates.mjs        the drawn engineering plates articles use when they have no cover
+  pages.css         styles for those pages (graphite and paper modes)
+  journal.js        their one small script: reading mode, reveals, newsletter form
+  writing.css       the home page's Writing chapter
 build.mjs         the compiler
 dist/             the built site — generated, wiped on every build
 ```
+
+## The page
+
+The home page reads in this order, and the nav follows it: **About** (intro and a
+three-fact ledger) → **Work** (Aperture, Synapse, the fraud design study, the inference
+engine) → **How I work** (philosophy, beyond the terminal, direction) → **Background**
+(education, technology) → **Writing** (latest journal entries and notes) → **Contact**.
+The nav's scroll spy lets one item own more than one stretch (`data-spy`), so About
+lights again over Background.
+
+The living photograph stays visible and moving behind every chapter. Below the hero
+it sinks only as far as each plate needs for legibility (`DIM_CAP` in the Living
+Photograph logic: more for daylight, less for night) and runs at 30fps instead of
+parking; storm keeps the full rate because rain strobes at lower ones. Legibility over
+the lit ground comes from local shading behind each block of text rather than from
+darkening the whole world.
+
+## The Engineering Journal
+
+`/blog` is built from `content/` by `src/content.mjs` and `src/journal.mjs`:
+
+- a featured article (`featured: true`, else the newest) in the hero slot
+- the domains that have writing, each with its own page at `/blog/topic/<slug>`
+- **Start here**, the reading order set with `start: 1`–`5` (falls back to the newest)
+- an editorial break over the night plate, with the two newest articles as pages
+- the full archive in a varying rhythm (a lead and two, a text-led pair, a feature),
+  beside an author column
+- LinkedIn posts in full, and all of them at `/blog/linkedin`
+- `/blog/feed.xml` (RSS) and `/notes`, the PDF library
+
+Articles without a `cover:` get a drawn plate for their domain (`src/plates.mjs`),
+seeded from the slug so no two cards crop it the same way. Plates draw mechanisms, never
+charts, so they cannot be mistaken for results. Reading mode follows the weather chosen
+on the home page (Daylight → paper, Night/Storm → graphite), with a switch on the page.
+
+The newsletter form appears once `content/journal.json` names an endpoint (any service
+that accepts a form post with an email field, such as Buttondown); until then the band
+offers the RSS feed instead of a form that goes nowhere.
 
 ## What the build does
 
@@ -131,7 +181,24 @@ there is nothing to undo.
 The Aperture demo-sheet frames need no such handling: that artboard already ships its
 own fallback panel and switches to it on load failure.
 
-## Local change to the Contact artboard
+## Local changes to the artboards
+
+Several artboards have been edited here and now **differ from the Claude Design
+project** — re-syncing one would undo its changes:
+
+- **Living Photograph** — chapter order, nav, the About ledger, project copy and
+  numbering, the Writing chapter slot, the per-weather scrim cap, the shader keeping
+  its detail and motion below the hero, the portrait's mask, phone nav and hero breaks.
+- **Aperture RAG Showcase**, **Direction** — stage shading moved behind the diagrams so
+  the photograph shows at the edges; Direction's call to action now goes to Contact.
+- **Tech System** — the board takes its phone shape on load, not only after a resize.
+- **Contact** — the footer line, and the email handling described below.
+- Every imported artboard — its chapter number.
+
+`Areas System.dc.html` is no longer imported (it was the fourth listing of the same six
+topics) and so is not shipped; it stays in `design/` as part of the synced source.
+
+### Contact: email without a mail client
 
 `design/Contact.dc.html` is the one artboard that has been edited here, so it now
 **differs from the Claude Design project** — re-syncing that file would undo it.
@@ -157,10 +224,12 @@ submit handler already validates and assembles the payload.
 - No build-time dependencies — `build.mjs` is plain Node with only `node:fs` and
   `node:path`. The only network requests the page makes are the Google Fonts
   stylesheet and its font files.
-- The night/day toggle persists in `localStorage` under `lp-night`, and night is
-  the default.
-- Every artboard honours `prefers-reduced-motion`, drops its animation loop when
-  scrolled out of view, and has its own phone layout below 860px.
+- The weather switch (day / night / storm) persists in `localStorage` under
+  `lp-theme`, and night is the default. The journal pages read the same key for their
+  reading mode, and their switch writes it back.
+- Every artboard honours `prefers-reduced-motion` and has its own phone layout below
+  860px. The artboards' own loops stop when scrolled out of view; the hero scene is
+  the exception by design, since it is the ground for every chapter (see "The page").
 
 ## Mobile layout invariants
 

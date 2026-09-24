@@ -1,40 +1,78 @@
-// The writing side of the site: blog articles, LinkedIn posts and downloadable notes.
+// The writing side of the site: journal articles, LinkedIn posts and downloadable notes.
 //
-// Everything here is plain files, so publishing needs no dashboard and no API key:
+// Everything is plain files, so publishing needs no dashboard and no API key:
 //
-//   content/blog/2026-09-24-some-title.md     an article, rendered on its own page
+//   content/blog/2026-09-24-some-title.md     a journal article, on its own page
 //   content/linkedin/2026-09-24-anything.md   a LinkedIn post, shown in full on /blog
 //   content/notes/some-notes.pdf              a PDF anyone can open or download
 //   content/notes/some-notes.md               (optional) its title, date and summary
+//   content/journal.json                      settings: the newsletter endpoint
 //
 // Why LinkedIn posts are files and not a live feed: LinkedIn does not let a website read
 // a member's own posts. The permission that would (r_member_social) is closed to all but
 // approved partners, and the scraping services that work around it break without notice.
-// A file per post is one paste, and it keeps the full text on this site even if the post
-// is later edited or deleted there.
+// A file per post is one paste, and it keeps the full text here even if the post is
+// later edited or deleted there.
 //
-// No dependencies, like the rest of the build: node:fs, node:path and a small Markdown
-// renderer that covers what writing about engineering needs (headings, code, lists,
-// quotes, links, images) and escapes everything else.
+// This module loads and parses. The pages themselves are in journal.mjs.
+// No dependencies, like the rest of the build.
 
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join, extname, basename } from "node:path";
+import { join, extname } from "node:path";
 
 export const SITE = "https://soubhagya-jain-portfolio.vercel.app";
-const AUTHOR = "Soubhagya Jain";
+export const AUTHOR = "Soubhagya Jain";
+
+/* ── the journal's domains ───────────────────────────────────────────────── */
+
+// Fixed, so the journal has a shape before it has many articles. An article names one
+// in `category:` by slug or name; the aliases catch the obvious variants.
+export const DOMAINS = [
+  { slug: "ai-systems", name: "AI Systems", aliases: ["systems", "system design", "reliability"],
+    blurb: "How the parts fit: routing, fallbacks, observability, and what a system does when one component quietly fails." },
+  { slug: "rag", name: "RAG & Retrieval", aliases: ["rag", "retrieval", "search"],
+    blurb: "Hybrid search, reranking and grounding — and measuring whether the right evidence arrived." },
+  { slug: "inference", name: "Inference", aliases: ["ai inference", "serving", "llm serving"],
+    blurb: "KV caching, batching, model serving, latency and throughput experiments." },
+  { slug: "agents", name: "Agents", aliases: ["agent", "agentic", "agentic ai"],
+    blurb: "Planning, tool use and verification, and where multi-step systems break." },
+  { slug: "evaluation", name: "Evaluation", aliases: ["eval", "evals", "testing"],
+    blurb: "Harnesses, metrics and regression tests — and what an average hides." },
+  { slug: "ml-infra", name: "ML Infrastructure", aliases: ["mlops", "infrastructure", "infra", "ml infrastructure"],
+    blurb: "Pipelines, deployment and monitoring: the plumbing that keeps a model honest once it ships." }
+];
+
+export function domainOf(v) {
+  const k = String(v || "").trim().toLowerCase();
+  if (!k) return null;
+  return DOMAINS.find((d) => d.slug === k || d.name.toLowerCase() === k || d.aliases.includes(k)) || null;
+}
+
+// What kind of piece it is changes how it is introduced and what the link says.
+const TYPES = {
+  "experiment": { label: "Experiment", cta: "Read the experiment" },
+  "deep dive": { label: "Deep dive", cta: "Read the deep dive" },
+  "postmortem": { label: "Postmortem", cta: "Read the postmortem" },
+  "design note": { label: "Design note", cta: "Read the design note" },
+  "field note": { label: "Field note", cta: "Read the note" },
+  "benchmark": { label: "Benchmark", cta: "Read the benchmark" }
+};
+const typeOf = (v) => TYPES[String(v || "").trim().toLowerCase().replace(/-/g, " ")] || { label: "Article", cta: "Read the article" };
 
 /* ── small helpers ───────────────────────────────────────────────────────── */
 
 export const esc = (s) => String(s)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-const slugify = (s) => String(s).toLowerCase()
+export const slugify = (s) => String(s).toLowerCase()
   .normalize("NFKD").replace(/[̀-ͯ]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "untitled";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const fmtDate = (d) => d ? `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : "";
-const isoDate = (d) => d ? d.toISOString().slice(0, 10) : "";
+const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const fmtDate = (d) => d ? `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}` : "";
+export const fmtMonth = (d) => d ? `${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}` : "";
+export const isoDate = (d) => d ? d.toISOString().slice(0, 10) : "";
 
 function parseDate(v) {
   if (!v) return null;
@@ -57,7 +95,7 @@ export function frontMatter(text) {
     if (!kv) continue;
     let v = kv[2];
     if (/^(['"]).*\1$/.test(v)) v = v.slice(1, -1);
-    data[kv[1].toLowerCase()] = v;
+    data[kv[1].toLowerCase().replace(/-/g, "_")] = v;
   }
   return { data, body: src.slice(m[0].length) };
 }
@@ -81,7 +119,7 @@ function inline(raw, opt) {
   s = s.replace(/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"([^"]*)")?\s*\)/g,
     (_, alt, src) => keep(`<img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">`));
   s = s.replace(/\[([^\]]+)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g,
-    (_, text, href) => keep(`<a href="${esc(opt.link(href))}"${/^https?:/.test(href) ? ' rel="noopener"' : ""}>${inline(text, opt)}</a>`));
+    (_, t, href) => keep(`<a href="${esc(opt.link(href))}"${/^https?:/.test(href) ? ' rel="noopener"' : ""}>${inline(t, opt)}</a>`));
   s = s.replace(/<(https?:\/\/[^>\s]+)>/g, (_, u) => keep(`<a href="${esc(u)}" rel="noopener">${esc(u)}</a>`));
   // bare URLs, minus trailing punctuation that belongs to the sentence
   s = s.replace(/https?:\/\/[^\s<>"]*[^\s<>".,;:!?)'\]]/g, (u) => keep(`<a href="${esc(u)}" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, ""))}</a>`));
@@ -96,20 +134,31 @@ function inline(raw, opt) {
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[+i]);
 }
 
+// Technical callouts, written GitHub-style:  > [!FAILURE] optional title
+const CALLOUTS = {
+  observation: "Observation", note: "Note",
+  failure: "Failure mode", "failure-mode": "Failure mode",
+  benchmark: "Benchmark", measurement: "Benchmark",
+  tradeoff: "Engineering trade-off", "trade-off": "Engineering trade-off",
+  changed: "What changed my mind", "what-changed": "What changed my mind", "changed-my-mind": "What changed my mind"
+};
+
+const splitRow = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
+const isTableSep = (l) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(l);
+
 /**
  * Block structure. `breaks` keeps single line breaks as line breaks, which is how a
  * LinkedIn post is written: short lines on purpose, not paragraphs that happened to wrap.
  */
 export function markdown(text, opt = {}) {
-  opt = { media: (s) => s, link: (s) => s, breaks: false, hashtags: false, ...opt };
+  opt = { media: (s) => s, link: (s) => s, breaks: false, hashtags: false, anchors: false, ids: new Set(), ...opt };
   const lines = text.replace(/\t/g, "    ").split(/\r?\n/);
   const out = [];
-  const ids = new Set();
   let i = 0;
 
-  const isBlockStart = (l) =>
+  const isBlockStart = (l, next) =>
     /^```/.test(l) || /^#{1,4}\s/.test(l) || /^>\s?/.test(l) || /^\s{0,3}([-*+]|\d+[.)])\s+/.test(l) ||
-    /^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(l);
+    /^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(l) || (l.includes("|") && next !== undefined && isTableSep(next));
 
   while (i < lines.length) {
     const line = lines[i];
@@ -130,19 +179,39 @@ export function markdown(text, opt = {}) {
     if ((m = /^(#{1,4})\s+(.*?)\s*#*\s*$/.exec(line))) {
       const level = Math.max(2, m[1].length);          // the page title is the only h1
       let id = slugify(m[2].replace(/[`*_]/g, "")), n = 2;
-      while (ids.has(id)) id = `${slugify(m[2])}-${n++}`;
-      ids.add(id);
-      out.push(`<h${level} id="${id}">${inline(m[2], opt)}</h${level}>`);
+      while (opt.ids.has(id)) id = `${slugify(m[2])}-${n++}`;
+      opt.ids.add(id);
+      const anchor = opt.anchors && level < 4 ? `<a class="anchor" href="#${id}" aria-label="Link to this section">#</a>` : "";
+      out.push(`<h${level} id="${id}">${inline(m[2], opt)}${anchor}</h${level}>`);
       i++;
       continue;
     }
 
     if (/^\s{0,3}(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) { out.push("<hr>"); i++; continue; }
 
+    if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+      const head = splitRow(line);
+      const align = splitRow(lines[i + 1]).map((c) => /^:-+:$/.test(c) ? "center" : /-+:$/.test(c) ? "right" : "");
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].includes("|") && lines[i].trim()) rows.push(splitRow(lines[i++]));
+      const cell = (tag, c, k) => `<${tag}${align[k] ? ` style="text-align:${align[k]}"` : ""}>${inline(c, opt)}</${tag}>`;
+      out.push(`<div class="table"><table><thead><tr>${head.map((c, k) => cell("th", c, k)).join("")}</tr></thead><tbody>${
+        rows.map((r) => `<tr>${head.map((_, k) => cell("td", r[k] || "", k)).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+
     if (/^>\s?/.test(line)) {
       const body = [];
       while (i < lines.length && /^>\s?/.test(lines[i])) body.push(lines[i++].replace(/^>\s?/, ""));
-      out.push(`<blockquote>${markdown(body.join("\n"), opt)}</blockquote>`);
+      const c = /^\[!([\w-]+)\]\s*(.*)$/.exec(body[0] || "");
+      if (c && CALLOUTS[c[1].toLowerCase()]) {
+        const kind = CALLOUTS[c[1].toLowerCase()];
+        const k = slugify(kind);
+        out.push(`<aside class="callout" data-kind="${k}"><div class="c-label">${esc(kind)}${c[2] ? `<span>${inline(c[2], opt)}</span>` : ""}</div>${markdown(body.slice(1).join("\n"), { ...opt, anchors: false })}</aside>`);
+      } else {
+        out.push(`<blockquote>${markdown(body.join("\n"), { ...opt, anchors: false })}</blockquote>`);
+      }
       continue;
     }
 
@@ -173,20 +242,22 @@ export function markdown(text, opt = {}) {
     }
 
     const para = [];
-    while (i < lines.length && lines[i].trim() && !(para.length && isBlockStart(lines[i]))) para.push(lines[i++]);
+    while (i < lines.length && lines[i].trim() && !(para.length && isBlockStart(lines[i], lines[i + 1]))) para.push(lines[i++]);
     out.push(`<p>${inline(para.join("\n"), opt).replace(/\n/g, opt.breaks ? "<br>" : " ")}</p>`);
   }
   return out.join("\n");
 }
 
-const plain = (md) => md
+export const plain = (md) => md
+  .replace(/<!--[\s\S]*?-->/g, " ")
   .replace(/```[\s\S]*?```/g, " ")
   .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
   .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-  .replace(/[#>*_`~]/g, "")
+  .replace(/^>\s*\[![\w-]+\]/gm, " ")
+  .replace(/[#>*_`~|]/g, "")
   .replace(/\s+/g, " ").trim();
 
-const clip = (s, n) => s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$/, "") + "…";
+export const clip = (s, n) => s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$/, "") + "…";
 
 /* ── loading ─────────────────────────────────────────────────────────────── */
 
@@ -194,17 +265,18 @@ const MEDIA_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".
 
 function mdFiles(dir) {
   if (!existsSync(dir)) return [];
-  // a leading underscore keeps a file out of the build: templates, drafts in progress
+  // a leading underscore keeps a file out of the build entirely: templates, scratch
   return readdirSync(dir).filter((f) => f.endsWith(".md") && !f.startsWith("_") && !/^readme\.md$/i.test(f)).sort();
 }
 
 /**
  * Read everything under content/. Returns the entries, the files the build has to copy
- * (article images, PDFs), and a list of problems worth printing. A malformed file is
+ * (images, PDFs), settings, and a list of problems worth printing. A malformed file is
  * skipped with a warning rather than failing the build: one bad paste should not take
- * the whole site down.
+ * the whole site down. With `drafts`, articles marked `draft: true` are included and
+ * flagged, for previewing locally; the deployed build never passes it.
  */
-export function loadContent(root) {
+export function loadContent(root, { drafts = false } = {}) {
   const dir = join(root, "content");
   const warn = [];
   const copies = [];                                   // [from, toInsideDist]
@@ -213,27 +285,39 @@ export function loadContent(root) {
     if (/^(https?:)?\/\//.test(src) || src.startsWith("/")) return src;
     const from = join(dir, sub, src);
     if (!existsSync(from)) { warn.push(`content/${sub}: image not found: ${src}`); return src; }
-    const to = `blog/media/${sub}/${src.replace(/^\.\//, "")}`;
-    copies.push([from, to]);
-    return "/" + to;
+    return `/blog/media/${sub}/${src.replace(/^\.\//, "")}`;
   };
 
   const posts = [];
 
   for (const f of mdFiles(join(dir, "blog"))) {
     const { data, body } = frontMatter(readFileSync(join(dir, "blog", f), "utf8"));
-    if (truthy(data.draft)) continue;
+    const draft = truthy(data.draft);
+    if (draft && !drafts) continue;
     const date = parseDate(data.date) || parseDate(f);
     const title = data.title;
     if (!title) { warn.push(`content/blog/${f}: needs a "title:" line — skipped`); continue; }
     if (!date) { warn.push(`content/blog/${f}: needs a "date: YYYY-MM-DD" line (or a date at the start of the file name) — skipped`); continue; }
     const slug = slugify(data.slug || f.replace(/\.md$/, "").replace(/^\d{4}-\d{2}-\d{2}-?/, "") || title);
+    let domain = domainOf(data.category);
+    if (!domain) {
+      if (data.category) warn.push(`content/blog/${f}: unknown category "${data.category}" — filed under AI Systems. Use one of: ${DOMAINS.map((d) => d.name).join(", ")}`);
+      else warn.push(`content/blog/${f}: no "category:" — filed under AI Systems`);
+      domain = DOMAINS[0];
+    }
     const text = plain(body);
     const words = text ? text.split(" ").length : 0;
+    const media = mediaUrl("blog");
     posts.push({
-      kind: "article", slug, title, date, tags: list(data.tags),
-      summary: data.summary || clip(text, 220),
-      html: markdown(body, { media: mediaUrl("blog") }),
+      kind: "article", slug, title, date, draft, domain, type: typeOf(data.type),
+      tags: list(data.tags),
+      summary: data.summary || data.excerpt || clip(text, 220),
+      text,
+      featured: truthy(data.featured),
+      start: parseInt(data.start, 10) || 0,
+      cover: data.cover ? media(data.cover) : "",
+      coverAlt: data.cover_alt || "",
+      html: markdown(body, { media, anchors: true }),
       minutes: Math.max(1, Math.round(words / 230)),
       href: `/blog/${slug}`, source: `content/blog/${f}`
     });
@@ -241,23 +325,23 @@ export function loadContent(root) {
 
   for (const f of mdFiles(join(dir, "linkedin"))) {
     const { data, body } = frontMatter(readFileSync(join(dir, "linkedin", f), "utf8"));
-    if (truthy(data.draft)) continue;
+    if (truthy(data.draft) && !drafts) continue;
     const date = parseDate(data.date) || parseDate(f);
     if (!date) { warn.push(`content/linkedin/${f}: needs a "date: YYYY-MM-DD" line — skipped`); continue; }
     if (!body.trim()) { warn.push(`content/linkedin/${f}: the post text is empty — skipped`); continue; }
     const id = "li-" + slugify(f.replace(/\.md$/, ""));
     const media = mediaUrl("linkedin");
-    const images = list(data.image || data.images).map(media);
     posts.push({
-      kind: "linkedin", id, date, url: data.url || "",
+      kind: "linkedin", id, date, url: data.url || "", draft: truthy(data.draft),
       html: markdown(body, { breaks: true, hashtags: true, media }),
-      images, excerpt: clip(plain(body).replace(/#\w+/g, "").trim(), 150),
-      href: `/blog#${id}`, source: `content/linkedin/${f}`
+      images: list(data.image || data.images).map(media),
+      excerpt: clip(plain(body).replace(/#\w+/g, "").trim(), 150),
+      href: `/blog/linkedin#${id}`, source: `content/linkedin/${f}`
     });
     if (!data.url) warn.push(`content/linkedin/${f}: no "url:" — it will show without a link back to LinkedIn`);
   }
 
-  // copy every image sitting next to the articles, so a relative path in Markdown works
+  // every image sitting next to the articles, so a relative path in Markdown works
   for (const sub of ["blog", "linkedin"]) {
     const d = join(dir, sub);
     if (!existsSync(d)) continue;
@@ -285,17 +369,16 @@ export function loadContent(root) {
       const base = f.replace(/\.pdf$/i, "");
       const side = join(nd, base + ".md");
       const { data, body } = existsSync(side) ? frontMatter(readFileSync(side, "utf8")) : { data: {}, body: "" };
-      if (truthy(data.draft)) continue;
+      if (truthy(data.draft) && !drafts) continue;
       const file = slugify(base) + ".pdf";
       copies.push([join(nd, f), `notes/files/${file}`]);
-      const bytes = statSync(join(nd, f)).size;
       notes.push({
         title: data.title || base.replace(/^\d{4}-\d{2}-\d{2}[-_ ]?/, "").replace(/[-_]+/g, " ").replace(/^\w/, (c) => c.toUpperCase()),
         date: parseDate(data.date) || parseDate(f),
         summary: data.summary || plain(body),
         topics: list(data.topics || data.tags),
         pages: data.pages || "",
-        href: `/notes/files/${file}`, download: file, size: fmtBytes(bytes)
+        href: `/notes/files/${file}`, download: file, size: fmtBytes(statSync(join(nd, f)).size)
       });
     }
     for (const f of mdFiles(nd)) {
@@ -304,190 +387,14 @@ export function loadContent(root) {
   }
   notes.sort((a, b) => (b.date || 0) - (a.date || 0) || a.title.localeCompare(b.title));
 
-  return { posts, notes, copies, warn };
-}
-
-/* ── pages ───────────────────────────────────────────────────────────────── */
-
-const NAV = [
-  ["About", "/#about"], ["Work", "/#selected-systems"], ["Blog", "/blog"], ["Notes", "/notes"], ["Contact", "/#contact"]
-];
-
-// The ground is the same place as the home page's hero, at the weather the visitor
-// last chose there, sunk behind a scrim so it reads as texture. The upright portrait
-// cuts are used at every size: cover-fitting one into a wide window keeps the band
-// around the horizon, which is the quietest part of the picture.
-const GROUND_SCRIPT = `(function(){try{var t=localStorage.getItem("lp-theme");var f=t==="day"?"day":t==="storm"?"storm":"night";var g=document.querySelector("[data-ground]");if(g&&f!=="night")g.src="/assets/plate-"+f+"-portrait.jpg";}catch(e){}})();`;
-
-function shell({ title, description, path, active, main, cssHref, fontHref, extraHead = "" }) {
-  const full = title ? `${title} — ${AUTHOR}` : `${AUTHOR}`;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(full)}</title>
-<meta name="description" content="${esc(description)}">
-<meta name="color-scheme" content="dark">
-<link rel="canonical" href="${SITE}${path}">
-<meta property="og:title" content="${esc(full)}">
-<meta property="og:description" content="${esc(description)}">
-<meta property="og:url" content="${SITE}${path}">
-<link rel="alternate" type="application/rss+xml" title="${AUTHOR} — Blog" href="/blog/feed.xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${esc(fontHref)}">
-<link rel="stylesheet" href="${cssHref}">
-${extraHead}</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
-<div class="ground" aria-hidden="true"><img data-ground src="/assets/plate-night-portrait.jpg" alt=""></div>
-<script>${GROUND_SCRIPT}</script>
-<header class="pnav">
-  <nav aria-label="Site">
-    <a class="brand" href="/">${AUTHOR}</a>
-    <span class="sep" aria-hidden="true"></span>
-    <div class="links">
-      ${NAV.map(([l, h]) => `<a href="${h}"${l === active ? ' aria-current="page"' : ""}>${l}</a>`).join("\n      ")}
-    </div>
-  </nav>
-</header>
-<main id="main">
-${main}
-</main>
-<footer class="pfoot">
-  <div class="wrap">
-    <a class="brand" href="/">${AUTHOR}</a>
-    <div class="flinks"><a href="/#contact">Contact</a><a href="/blog/feed.xml">RSS</a><a href="https://www.linkedin.com/in/soubhagya-jain-118205204" rel="noopener">LinkedIn</a><a href="https://github.com/SoubhagyaJain" rel="noopener">GitHub</a></div>
-  </div>
-</footer>
-</body>
-</html>
-`;
-}
-
-const kindLabel = (p) => p.kind === "linkedin" ? "LinkedIn" : "Article";
-
-function entryHtml(p) {
-  const when = `<time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time>`;
-  if (p.kind === "article") {
-    return `<article class="entry" data-kind="article">
-  <div class="rail">${when}<span class="kind">Article</span></div>
-  <div class="body">
-    <h2><a href="${p.href}">${esc(p.title)}</a></h2>
-    <p class="summary">${esc(p.summary)}</p>
-    <div class="meta"><span>${p.minutes} min read</span>${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
-    <a class="more" href="${p.href}">Read the article <span aria-hidden="true">&#8594;</span></a>
-  </div>
-</article>`;
+  let settings = {};
+  const sf = join(dir, "journal.json");
+  if (existsSync(sf)) {
+    try { settings = JSON.parse(readFileSync(sf, "utf8")); }
+    catch (e) { warn.push(`content/journal.json does not parse (${e.message}) — using defaults`); }
   }
-  return `<article class="entry" data-kind="linkedin" id="${p.id}">
-  <div class="rail">${when}<span class="kind">LinkedIn</span></div>
-  <div class="body">
-    <div class="post">${p.html}</div>
-    ${p.images.length ? `<div class="shots">${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
-    ${p.url ? `<a class="more" href="${esc(p.url)}" rel="noopener">View on LinkedIn <span aria-hidden="true">&#8599;</span></a>` : ""}
-  </div>
-</article>`;
-}
 
-export function renderPages({ posts, notes }, { cssHref, fontHref }) {
-  const pages = [];
-  const articles = posts.filter((p) => p.kind === "article");
-  const hasBoth = articles.length && articles.length < posts.length;
-
-  const blogMain = `<div class="wrap">
-  <header class="phead">
-    <div class="eyebrow">Blog${posts.length ? ` <span>&#183; ${posts.length} ${posts.length === 1 ? "entry" : "entries"}</span>` : ""}</div>
-    <h1>Writing.</h1>
-    <p class="lead">Longer pieces written here, and everything I post on LinkedIn, kept in full.</p>
-    ${hasBoth ? `<div class="filter" role="group" aria-label="Show">
-      <button type="button" data-f="all" aria-pressed="true">All</button><button type="button" data-f="article" aria-pressed="false">Articles</button><button type="button" data-f="linkedin" aria-pressed="false">LinkedIn</button>
-    </div>` : ""}
-  </header>
-  ${posts.length
-    ? `<div class="stream" data-show="all">\n${posts.map(entryHtml).join("\n")}\n</div>`
-    : `<p class="empty">Nothing published yet.</p>`}
-</div>
-${hasBoth ? `<script>(function(){var s=document.querySelector(".stream"),b=[].slice.call(document.querySelectorAll(".filter button"));b.forEach(function(x){x.addEventListener("click",function(){s.setAttribute("data-show",x.dataset.f);b.forEach(function(y){y.setAttribute("aria-pressed",y===x?"true":"false")})})})})();</script>` : ""}`;
-  pages.push(["blog/index.html", shell({
-    title: "Blog", path: "/blog", active: "Blog", cssHref, fontHref, main: blogMain,
-    description: "Articles and LinkedIn posts by Soubhagya Jain on retrieval, agents, evaluation and inference."
-  })]);
-
-  articles.forEach((p) => {
-    const i = articles.indexOf(p);
-    const newer = articles[i - 1], older = articles[i + 1];
-    const main = `<article class="wrap article">
-  <a class="back" href="/blog"><span aria-hidden="true">&#8592;</span> Blog</a>
-  <header class="ahead">
-    <div class="eyebrow"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> <span>&#183; ${p.minutes} min read</span></div>
-    <h1>${esc(p.title)}</h1>
-    ${p.summary ? `<p class="lead">${esc(p.summary)}</p>` : ""}
-  </header>
-  <div class="prose">
-${p.html}
-  </div>
-  <footer class="afoot">
-    ${p.tags.length ? `<div class="meta">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
-    <nav class="pager" aria-label="More articles">
-      ${older ? `<a href="${older.href}"><span class="dir">Earlier</span><span class="t">${esc(older.title)}</span></a>` : "<span></span>"}
-      ${newer ? `<a href="${newer.href}" class="next"><span class="dir">Later</span><span class="t">${esc(newer.title)}</span></a>` : ""}
-    </nav>
-  </footer>
-</article>`;
-    pages.push([`blog/${p.slug}/index.html`, shell({
-      title: p.title, path: p.href, active: "Blog", cssHref, fontHref, main, description: p.summary,
-      extraHead: `<meta property="og:type" content="article">\n<meta property="article:published_time" content="${isoDate(p.date)}">\n`
-    })]);
-  });
-
-  const notesMain = `<div class="wrap">
-  <header class="phead">
-    <div class="eyebrow">Notes${notes.length ? ` <span>&#183; ${notes.length} PDF${notes.length === 1 ? "" : "s"}</span>` : ""}</div>
-    <h1>Notes.</h1>
-    <p class="lead">Study notes and write-ups, as PDFs. Free to read and to download.</p>
-  </header>
-  ${notes.length ? `<ol class="library">
-${notes.map((n) => `  <li class="doc">
-    <div class="rail">${n.date ? `<time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}<span class="kind">PDF &#183; ${n.size}${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span></div>
-    <div class="body">
-      <h2><a href="${n.href}" target="_blank" rel="noopener">${esc(n.title)}</a></h2>
-      ${n.summary ? `<p class="summary">${esc(n.summary)}</p>` : ""}
-      ${n.topics.length ? `<div class="meta">${n.topics.map((t) => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
-    </div>
-    <div class="acts">
-      <a href="${n.href}" target="_blank" rel="noopener">Open <span aria-hidden="true">&#8599;</span></a>
-      <a href="${n.href}" download="${esc(n.download)}" class="dl">Download <span aria-hidden="true">&#8595;</span></a>
-    </div>
-  </li>`).join("\n")}
-  </ol>` : `<p class="empty">No notes uploaded yet.</p>`}
-</div>`;
-  pages.push(["notes/index.html", shell({
-    title: "Notes", path: "/notes", active: "Notes", cssHref, fontHref, main: notesMain,
-    description: "Study notes and write-ups by Soubhagya Jain, free to download as PDFs."
-  })]);
-
-  const feed = `<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel>
-<title>${esc(AUTHOR)} — Blog</title>
-<link>${SITE}/blog</link>
-<atom:link href="${SITE}/blog/feed.xml" rel="self" type="application/rss+xml"/>
-<description>Articles and LinkedIn posts on retrieval, agents, evaluation and inference.</description>
-<language>en</language>
-${posts.slice(0, 30).map((p) => `<item>
-<title>${esc(p.kind === "article" ? p.title : "LinkedIn: " + p.excerpt)}</title>
-<link>${SITE}${p.href}</link>
-<guid isPermaLink="false">${SITE}${p.kind === "article" ? p.href : "/blog#" + p.id}</guid>
-<pubDate>${p.date.toUTCString()}</pubDate>
-<description>${esc(p.html)}</description>
-</item>`).join("\n")}
-</channel>
-</rss>
-`;
-  pages.push(["blog/feed.xml", feed]);
-  return pages;
+  return { posts, notes, copies, warn, settings, drafts };
 }
 
 /* ── the home page's Writing chapter ─────────────────────────────────────── */
@@ -499,15 +406,15 @@ ${posts.slice(0, 30).map((p) => `<item>
  */
 export function homeWriting({ posts, notes }) {
   const row = (p) => p.kind === "article"
-    ? `<li><a href="${p.href}"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; Article</span><span class="w-title">${esc(p.title)}</span></a></li>`
+    ? `<li><a href="${p.href}"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; ${esc(p.domain.name)} &#183; ${esc(p.type.label)}</span><span class="w-title">${esc(p.title)}</span></a></li>`
     : `<li><a href="${p.href}"><span class="w-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time> &#183; LinkedIn</span><span class="w-text">${esc(p.excerpt)}</span></a></li>`;
   const doc = (n) => `<li><a href="${n.href}" download="${esc(n.download)}"><span class="w-meta">PDF &#183; ${n.size}${n.date ? ` &#183; <time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}</span><span class="w-title">${esc(n.title)} <span class="w-dl" aria-hidden="true">&#8595;</span></span></a></li>`;
 
   return `<div class="w-cols">
       <div id="writing-blog" class="w-col" data-reveal2="1">
-        <div class="w-label"><span class="n">05.1</span><span class="s">/</span>Blog</div>
+        <div class="w-label"><span class="n">05.1</span><span class="s">/</span>Journal</div>
         ${posts.length ? `<ul class="w-list">${posts.slice(0, 3).map(row).join("")}</ul>` : `<p class="w-empty">Nothing published yet.</p>`}
-        <a class="w-all" href="/blog">${posts.length > 3 ? `All ${posts.length} posts` : "Open the blog"} <span aria-hidden="true">&#8594;</span></a>
+        <a class="w-all" href="/blog">${posts.length > 3 ? `All ${posts.length} entries` : "Open the journal"} <span aria-hidden="true">&#8594;</span></a>
       </div>
       <div id="writing-notes" class="w-col" data-reveal2="2">
         <div class="w-label"><span class="n">05.2</span><span class="s">/</span>Notes &#183; PDF</div>
