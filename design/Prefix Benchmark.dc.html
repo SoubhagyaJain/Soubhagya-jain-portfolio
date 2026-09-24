@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* Shared-Prefix LLM Inference Benchmark. A 12s loop drawn live on a canvas: requests
+     are token streams that move at the rate the engine consumes them, so the picture of
+     the time is the time. All words and numbers are HTML; the canvas carries only faint
+     stage markings. */
+  [data-pb-stage] { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #06080a; box-shadow: 0 0 0 1px rgba(214,230,236,0.1), 0 50px 90px -60px rgba(0,0,0,0.9); isolation: isolate; }
+  [data-pb-stage] canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  [data-pb-scrim] { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(6,8,10,0.92) 0%, rgba(6,8,10,0.74) 24%, rgba(6,8,10,0.12) 42%, rgba(6,8,10,0) 56%); }
+  [data-pb-copy] { position: absolute; left: clamp(22px, 3.4vw, 52px); top: 50%; transform: translateY(-50%); width: min(34%, 420px); display: flex; flex-direction: column; gap: clamp(12px, 1.4vw, 20px); z-index: 2; }
+  [data-pb-bars] .pb-fill { transform-origin: 0 50%; transform: scaleX(0); transition: transform 1.6s cubic-bezier(.2,.7,.2,1); }
+  [data-pb-bars].pb-in .pb-fill { transform: scaleX(var(--w)); }
+  [data-pb-bars].pb-in .pb-row:nth-child(2) .pb-fill { transition-delay: .12s; }
+  [data-pb-bars].pb-in .pb-row:nth-child(3) .pb-fill { transition-delay: .24s; }
+  [data-pb-bars].pb-in .pb-row:nth-child(4) .pb-fill { transition-delay: .36s; }
+  @media (max-width: 860px) {
+    [data-pb-stage] { aspect-ratio: auto; display: flex; flex-direction: column; }
+    [data-pb-stage] canvas { position: relative; aspect-ratio: 16 / 10; height: auto; order: 2; }
+    [data-pb-scrim] { display: none; }
+    [data-pb-copy] { position: relative; left: auto; top: auto; transform: none; width: auto; padding: 24px 20px 6px; order: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { [data-pb-bars] .pb-fill { transition: none; } }
+</style>
+</helmet>
+
+<div style="display: flex; flex-direction: column; gap: clamp(22px, 3vw, 36px); color: #f2ece0">
+  <div data-pb-stage ref="{{ stageRef }}">
+    <canvas ref="{{ canvasRef }}" aria-hidden="true"></canvas>
+    <div data-pb-scrim></div>
+    <div data-pb-copy>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .28em; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.2</span><span style="opacity: .42; padding-right: .48em">/</span>ML Systems &#183; Benchmark</div>
+      <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.4vw, 52px); line-height: 1.02; letter-spacing: -0.015em; color: #f7faf5; text-wrap: balance">Shared-Prefix LLM Inference Benchmark</h3>
+      <p style="margin: 0; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16px); line-height: 1.6; color: rgba(238,245,238,0.8); text-wrap: pretty">Thirty sequential requests to a local <span style="font-family: 'IBM Plex Mono', monospace; font-size: .9em">qwen2.5:7b</span> on Ollama, with ~2,800-token prompts that either share a prefix or don't. When the prefix repeats, its KV state is reused: prefill nearly disappears, time to first token falls with it — and decode costs what it always did.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px 26px; margin-top: 4px">
+        <a href="https://github.com/SoubhagyaJain/shared-prefix-benchmark" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 10px; padding-bottom: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.95); border-bottom: 1px solid rgba(246,250,244,0.3)" style-hover="border-bottom-color: rgba(246,250,244,0.9)">Code &amp; raw results <span style="font-size: 13px">&#8599;</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: clamp(26px, 4vw, 64px); align-items: start">
+    <div data-pb-bars ref="{{ barsRef }}" style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(214,230,236,0.14); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(230,240,234,0.56)"><span>Median, 15 requests each</span><span><span style="display: inline-block; width: 16px; height: 2px; vertical-align: middle; margin-right: 8px; background: rgba(236,214,184,0.9)"></span>Different prefixes &#160; <span style="display: inline-block; width: 16px; height: 2px; vertical-align: middle; margin: 0 8px 0 6px; background: #5fd0cb"></span>Shared prefix</span></div>
+      <div class="pb-row" style="display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; align-items: center">
+        <div style="font-family: 'Instrument Sans', sans-serif; font-size: 14px; color: #f4f7f1">Prompt evaluation</div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .348; height: 100%; background: rgba(236,214,184,0.9)"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(240,246,240,0.7); text-align: right">2.534 s</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .077; height: 100%; background: #5fd0cb"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8fe3de; text-align: right">0.559 s</span></div>
+        </div>
+      </div>
+      <div class="pb-row" style="display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; align-items: center">
+        <div style="font-family: 'Instrument Sans', sans-serif; font-size: 14px; color: #f4f7f1">Time to first token</div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .364; height: 100%; background: rgba(236,214,184,0.9)"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(240,246,240,0.7); text-align: right">2.653 s</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .080; height: 100%; background: #5fd0cb"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8fe3de; text-align: right">0.585 s</span></div>
+        </div>
+      </div>
+      <div class="pb-row" style="display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; align-items: center">
+        <div style="font-family: 'Instrument Sans', sans-serif; font-size: 14px; color: rgba(244,247,241,0.8)">Generation <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .12em; color: rgba(230,240,234,0.45)">MEAN</span></div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .650; height: 100%; background: rgba(236,214,184,0.55)"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(240,246,240,0.6); text-align: right">4.731 s</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .663; height: 100%; background: rgba(95,208,203,0.55)"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(143,227,222,0.75); text-align: right">4.826 s</span></div>
+        </div>
+      </div>
+      <div class="pb-row" style="display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 14px; align-items: center">
+        <div style="font-family: 'Instrument Sans', sans-serif; font-size: 14px; color: #f4f7f1">Wall latency</div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: 1; height: 100%; background: rgba(236,214,184,0.9)"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(240,246,240,0.7); text-align: right">7.284 s</span></div>
+          <div style="display: flex; align-items: center; gap: 10px"><div style="flex: 1; height: 7px; background: rgba(255,255,255,0.04)"><div class="pb-fill" style="--w: .759; height: 100%; background: #5fd0cb"></div></div><span style="width: 62px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8fe3de; text-align: right">5.529 s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 18px">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(214,230,236,0.14)">
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.5)">Cached tokens</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(15px, 1.4vw, 19px); color: #f4f7f1">22 <span style="color: rgba(240,246,240,0.4)">&#8594;</span> <span style="color: #8fe3de">2,788</span></span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.5)">Uncached tokens</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(15px, 1.4vw, 19px); color: #f4f7f1">2,818 <span style="color: rgba(240,246,240,0.4)">&#8594;</span> <span style="color: #8fe3de">30</span></span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.5)">Throughput</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(15px, 1.4vw, 19px); color: #f4f7f1">0.136 <span style="color: rgba(240,246,240,0.4)">&#8594;</span> <span style="color: #8fe3de">0.187</span> <span style="font-size: .6em; color: rgba(230,240,234,0.5)">req/s</span></span></div>
+      </div>
+      <p style="margin: 0; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14.5px; line-height: 1.62; color: rgba(238,245,238,0.76)">Why total latency moves less than TTFT: every output token still needs its own forward pass, so generation took ~4.8 s either way. A faster second request alone would not prove caching — the cached-token count reported by the server is the evidence, and the model was warmed and the order alternated so the win is not just a warmer GPU.</p>
+      <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .14em; line-height: 1.7; text-transform: uppercase; color: rgba(230,240,234,0.45)">RTX 4050 Laptop 6 GB &#183; Ollama 0.34.2 &#183; temp 0 &#183; 80 output tokens max &#183; 8,192 ctx &#183; 21 Sep 2026</p>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+// The motion is a model of the measurement, not a decoration of it. A request is a row
+// of token blocks; the engine consumes blocks at a fixed compute rate, so a block's
+// position is simply how far the engine has got. Cached prefix blocks are consumed at
+// memory speed instead — they drain into the KV-cache plane without entering prefill —
+// and that is the entire difference between the two lanes. Decode runs at the same pace
+// in both, which is why the finish line moves less than the first token does.
+
+const W = 1600, H = 900, T = 12;
+const SP = 9, BW = 6.2, BH = 11;                        // block pitch, width, height
+const IN_X = 800, OUT_X = 950;                           // prefill slab
+const DEC_X = 1100, RESP_X = 1196;                       // decode ring, response column
+const LANE = [318, 486];                                 // different prefix, shared prefix
+const R = 30;                                            // compute rate, blocks per second
+const PREFIX = 62, TAIL = 4;                             // ~2,800 prompt tokens : ~30 uncached
+const POUR = 0.42;                                       // cached prefix read time
+const OUTN = 9, OUT_DT = 0.2;                            // decode tokens and their pace
+const CACHE = { x: 740, y: 640, w: 300, cols: 24, rows: 4 };
+
+// When each request reaches the engine. Shared requests arrive later and answer sooner.
+const REQS = [
+  { lane: 0, shared: false, arrive: 1.35 },
+  { lane: 1, shared: true, arrive: 2.9 },
+  { lane: 0, shared: false, arrive: 6.4 },
+  { lane: 1, shared: true, arrive: 7.4 },
+  { lane: 1, shared: true, arrive: 8.7 }
+];
+
+const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const sm = (k) => { k = cl(k); return k * k * (3 - 2 * k); };
+const bump = (t, a, b, e) => sm((t - a) / e) * (1 - sm((t - b) / e));
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.canvasRef = React.createRef();
+    this.stageRef = React.createRef();
+    this.barsRef = React.createRef();
+  }
+  renderVals() { return { canvasRef: this.canvasRef, stageRef: this.stageRef, barsRef: this.barsRef }; }
+
+  // blocks consumed by time t (negative while the request is still approaching)
+  consumed(q, t) {
+    const d = t - q.arrive;
+    if (!q.shared || d <= 0) return d * R;
+    if (d < POUR) return PREFIX * sm(d / POUR);
+    return PREFIX + (d - POUR) * R;
+  }
+  // when block i is consumed — found by bisection, since the pour is eased
+  when(q, i) {
+    if (!q.shared) return q.arrive + i / R;
+    let a = q.arrive - 1, b = q.arrive + 20;
+    for (let k = 0; k < 28; k++) { const m = (a + b) / 2; this.consumed(q, m) < i ? a = m : b = m; }
+    return b;
+  }
+
+  componentDidMount() {
+    const cv = this.canvasRef.current, stage = this.stageRef.current;
+    if (!cv || !stage) return;
+    this.ctx = cv.getContext("2d");
+    stage.__pbDraw = (t) => { this.live = false; this.draw(t); };   // lets a test render one moment
+    this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    REQS.forEach((q) => {
+      q.n = PREFIX + TAIL;
+      q.first = q.shared ? PREFIX : 0;                          // first block that is computed
+      q.ttft = this.when(q, q.n - 1) + (OUT_X - IN_X) / (R * SP);
+      q.done = q.ttft + OUTN * OUT_DT;
+      q.t = new Array(q.n);
+      for (let i = 0; i < q.n; i++) q.t[i] = this.when(q, i);
+    });
+
+    const size = () => {
+      const d = Math.min(2, window.devicePixelRatio || 1);
+      const r = cv.getBoundingClientRect();
+      cv.width = Math.max(1, Math.round(r.width * d));
+      cv.height = Math.max(1, Math.round(r.height * d));
+      this.dpr = d; this.cw = r.width; this.ch = r.height;
+      if (this.reduced || !this.live) this.draw(this.reduced ? 4.6 : this.lastT || 0);
+    };
+    this.onResize = size;
+    window.addEventListener("resize", size);
+    size();
+
+    this.live = false;
+    const bars = this.barsRef.current;
+    if ("IntersectionObserver" in window) {
+      this.io = new IntersectionObserver((en) => {
+        en.forEach((e) => {
+          if (e.target === stage) this.live = e.isIntersecting;
+          if (e.target === bars && e.isIntersecting) bars.classList.add("pb-in");
+        });
+      }, { rootMargin: "10% 0px" });
+      this.io.observe(stage);
+      if (bars) this.io.observe(bars);
+    } else { this.live = true; if (bars) bars.classList.add("pb-in"); }
+
+    if (this.reduced) { this.draw(4.6); return; }
+    this.t0 = performance.now();
+    this.pausedFor = 0;
+    let last = 0;
+    const frame = (now) => {
+      this.raf = requestAnimationFrame(frame);
+      if (!this.live) { this.pausedAt = this.pausedAt || now; return; }
+      if (this.pausedAt) { this.t0 += now - this.pausedAt; this.pausedAt = 0; }
+      if (now - last < 15) return;
+      last = now;
+      this.lastT = ((now - this.t0) / 1000) % T;
+      this.draw(this.lastT);
+    };
+    this.raf = requestAnimationFrame(frame);
+  }
+
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf);
+    window.removeEventListener("resize", this.onResize);
+    if (this.io) this.io.disconnect();
+  }
+
+  draw(t) {
+    const c = this.ctx, d = this.dpr || 1;
+    const cw = this.cw || 1, ch = this.ch || 1;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, cv(this).width, cv(this).height);
+
+    // camera: cover-fit the 1600x900 scene, push in over the first half of the loop and
+    // ease back out over the second; lean toward the cache plane while a cache hit lands
+    // the working part of the scene (x 600-1340) is framed into the right ~60% of the
+    // stage, leaving the left for the HTML copy; on a phone the copy sits above instead
+    const fit = Math.max(cw / W, ch / H) * (cw < 700 ? 1.46 : 1.34);
+    const push = 1 + 0.035 * Math.sin(Math.PI * t / T) ** 2;
+    const lean = bump(t, 2.6, 4.2, 0.7);
+    const s = fit * push * d;
+    const fx = cw < 700 ? 975 : 985, fy = (cw < 700 ? 488 : 455) + lean * 40;
+    c.setTransform(s, 0, 0, s, cw * d * (cw < 700 ? 0.5 : 0.655) - fx * s, (ch * d) / 2 - fy * s);
+    // the scene appears and leaves so the last frame is the first
+    const env = sm(t / 0.5) * (1 - sm((t - (T - 0.7)) / 0.7));
+    const P = (x, y, z = 0) => [x + (y - 470) * -0.1 + z * 0.35, y - z];   // a slight oblique
+
+    // ── the room: a drafting grid that recedes, and nothing else
+    c.lineWidth = 1 / s * d;
+    for (let x = 360; x <= 1640; x += 40) {
+      c.strokeStyle = "rgba(160,200,210," + (x % 200 === 0 ? 0.05 : 0.025) + ")";
+      c.beginPath(); c.moveTo(...P(x, 150)); c.lineTo(...P(x, 800)); c.stroke();
+    }
+    for (let y = 160; y <= 800; y += 40) {
+      c.strokeStyle = "rgba(160,200,210,0.025)";
+      c.beginPath(); c.moveTo(...P(360, y)); c.lineTo(...P(1640, y)); c.stroke();
+    }
+
+    // ── slabs: thin graphite glass, lit only while working
+    const busy = (lane, a, b) => REQS.some((q) => q.lane === lane && t > a(q) && t < b(q));
+    const prefillHot = [0, 1].map((l) => busy(l, (q) => q.t[q.first], (q) => q.ttft));
+    const decodeHot = [0, 1].map((l) => busy(l, (q) => q.ttft, (q) => q.done));
+    const slab = (x0, x1, y0, y1, hot, tint) => {
+      const a = P(x0, y0), b = P(x1, y0), e = P(x1, y1), f = P(x0, y1);
+      const g = c.createLinearGradient(a[0], a[1], f[0], f[1]);
+      g.addColorStop(0, "rgba(255,255,255," + (0.035 + hot * 0.03) + ")");
+      g.addColorStop(1, "rgba(255,255,255," + (0.012 + hot * 0.015) + ")");
+      c.fillStyle = g;
+      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.lineTo(...e); c.lineTo(...f); c.closePath(); c.fill();
+      c.strokeStyle = "rgba(" + tint + "," + (0.1 + hot * 0.22) + ")";
+      c.stroke();
+      c.strokeStyle = "rgba(255,255,255," + (0.12 + hot * 0.1) + ")";          // top edge catches the light
+      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke();
+    };
+    slab(IN_X, OUT_X, 236, 560, Math.max(prefillHot[0], prefillHot[1]) ? 1 : 0, "236,214,184");
+    slab(DEC_X - 44, DEC_X + 44, 236, 560, Math.max(decodeHot[0], decodeHot[1]) ? 1 : 0, "150,220,215");
+    slab(640, 652, 250, 546, 0, "200,210,220");                                    // tokenizer: a hairline gate
+
+    // transformer layers inside prefill: four planes per lane
+    LANE.forEach((ly) => {
+      for (let k = 1; k <= 4; k++) {
+        c.strokeStyle = "rgba(220,230,236,0.06)";
+        c.beginPath(); c.moveTo(...P(IN_X + 6, ly - 12 - k * 13)); c.lineTo(...P(OUT_X - 6, ly - 12 - k * 13)); c.stroke();
+      }
+    });
+
+    // ── the KV cache: a plane beneath prefill. The shared prefix lives here, primed.
+    const cell = (i, n) => {
+      const cols = CACHE.cols, cw2 = CACHE.w / cols;
+      const col = i % cols, row = Math.floor(i / cols);
+      return [CACHE.x + col * cw2 + cw2 / 2, CACHE.y + row * 15];
+    };
+    this.heat = this.heat || new Float32Array(CACHE.cols * CACHE.rows);
+    const heat = new Float32Array(CACHE.cols * CACHE.rows), warm = new Float32Array(CACHE.cols * CACHE.rows);
+    for (let i = 0; i < CACHE.cols * CACHE.rows; i++) {
+      const [x, y] = cell(i);
+      const [px, py] = P(x, y, -30);
+      const shared = i < CACHE.cols * 2;                   // rows 0-1: the primed shared prefix
+      c.fillStyle = shared ? "rgba(95,208,203,0.16)" : "rgba(255,255,255,0.03)";
+      c.fillRect(px - 5, py - 4, 10, 8);
+    }
+    // cache plane frame
+    {
+      const a = P(CACHE.x - 14, CACHE.y - 14, -30), b = P(CACHE.x + CACHE.w + 14, CACHE.y - 14, -30);
+      const e = P(CACHE.x + CACHE.w + 14, CACHE.y + 58, -30), f = P(CACHE.x - 14, CACHE.y + 58, -30);
+      c.strokeStyle = "rgba(150,220,215,0.16)";
+      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.lineTo(...e); c.lineTo(...f); c.closePath(); c.stroke();
+    }
+
+    // ── requests
+    const cachedPulse = [];
+    REQS.forEach((q) => {
+      const ly = LANE[q.lane];
+      const cN = this.consumed(q, t);
+      const life = 1 - sm((t - q.done - 1.2) / 0.8);                // outputs linger, then leave
+      for (let i = 0; i < q.n; i++) {
+        const isPrefix = i < PREFIX;
+        const k = i - cN;                                          // >0: still queued
+        let x = IN_X - k * SP, y = ly, a = 1, col, lit = 0;
+        if (k > 0) {
+          // queued: moving toward the engine at the rate it is consumed
+          a = sm((x - 470) / 160);
+          col = q.shared && isPrefix ? "210,236,234" : "236,222,200";
+          if (x < 380) continue;
+        } else if (q.shared && isPrefix) {
+          // cached: drains down into its cell in the cache plane, never entering prefill
+          const u = cl((t - q.t[i]) / 0.38);
+          if (u >= 1) { heat[Math.floor(i * 48 / PREFIX)] += 0.35; continue; }
+          const [tx, ty] = cell(Math.floor(i * 48 / PREFIX));
+          const e = sm(u);
+          x = IN_X - 8 + (tx - IN_X + 8) * e; y = ly + (ty - ly) * e;
+          a = 1 - u * 0.4; col = "95,208,203";
+          const [px, py] = P(x, y, -30 * e);
+          c.fillStyle = "rgba(" + col + "," + (a * env).toFixed(3) + ")";
+          c.fillRect(px - BW * (1 - e * 0.4) / 2, py - BH * (1 - e * 0.55) / 2, BW * (1 - e * 0.4), BH * (1 - e * 0.55));
+          if (i === 0 && u > 0 && u < 1) cachedPulse.push(t - q.t[0]);
+          continue;
+        } else {
+          // computed: crossing the prefill slab, lit, then writing KV below
+          x = IN_X - k * SP;
+          if (x <= OUT_X) {
+            lit = 1; col = "242,190,120";
+            // the layer signal rises through four planes as the block crosses
+            const f = (x - IN_X) / (OUT_X - IN_X);
+            const layer = Math.floor(f * 5);
+            if (layer >= 1 && layer <= 4) {
+              const [sx, sy] = P(x, ly - 12 - layer * 13);
+              c.fillStyle = "rgba(255,214,160," + (0.55 * env).toFixed(3) + ")";
+              c.fillRect(sx - 1, sy - 1, 2.4, 2.4);
+            }
+          } else {
+            const u = cl((x - OUT_X) / 60);
+            if (u >= 1) {
+              const ci = CACHE.cols * 2 + Math.floor((q.shared ? i - PREFIX + 40 : i) * 48 / q.n) % 48;
+              warm[ci] = Math.max(warm[ci], 1 - cl((t - q.done) / 2.5));
+              continue;
+            }
+            const [tx, ty] = cell(CACHE.cols * 2 + Math.floor((q.shared ? i - PREFIX + 40 : i) * 48 / q.n) % 48);
+            const e = sm(u);
+            x = OUT_X + (tx - OUT_X) * e * 0.5; y = ly + (ty - ly) * e;
+            a = 1 - e; col = "242,190,120";
+          }
+        }
+        const [px, py] = P(x, y);
+        if (lit) {
+          c.fillStyle = "rgba(242,190,120," + (0.16 * env) + ")";
+          c.fillRect(px - BW, py - BH, BW * 2, BH * 2);
+        }
+        c.fillStyle = "rgba(" + col + "," + (a * env * (lit ? 1 : 0.78)).toFixed(3) + ")";
+        c.fillRect(px - BW / 2, py - BH / 2, BW, BH);
+      }
+
+      // decode: one token per step, same pace in both lanes
+      if (t > q.ttft) {
+        const n = Math.min(OUTN, Math.floor((t - q.ttft) / OUT_DT) + 1);
+        const running = t < q.done;
+        const [rx, ry] = P(DEC_X, ly - 44);
+        c.strokeStyle = "rgba(150,220,215," + ((running ? 0.35 : 0.1) * env * life).toFixed(3) + ")";
+        c.beginPath(); c.arc(rx, ry, 17, 0, Math.PI * 2); c.stroke();
+        if (running) {
+          const ang = ((t - q.ttft) / OUT_DT) * Math.PI * 2 - Math.PI / 2;
+          c.fillStyle = "rgba(200,245,240," + (0.9 * env) + ")";
+          c.fillRect(rx + Math.cos(ang) * 17 - 1.5, ry + Math.sin(ang) * 17 - 1.5, 3, 3);
+        }
+        for (let k = 0; k < n; k++) {
+          const u = sm(cl((t - q.ttft - k * OUT_DT) / 0.45));
+          const x = DEC_X + (RESP_X + k * 9 - DEC_X) * u;
+          const [px, py] = P(x, ly);
+          c.fillStyle = "rgba(" + (q.shared ? "150,232,226" : "240,226,204") + "," + (0.9 * env * life).toFixed(3) + ")";
+          c.fillRect(px - 3, py - 5, 6, 10);
+        }
+        // the first token: a hairline mark where TTFT lands
+        const m = 1 - cl((t - q.ttft) / 1.4);
+        if (m > 0) {
+          const [a1, b1] = P(RESP_X - 6, ly - 22), [a2, b2] = P(RESP_X - 6, ly + 22);
+          c.strokeStyle = "rgba(" + (q.shared ? "95,208,203" : "236,214,184") + "," + (m * 0.8 * env) + ")";
+          c.beginPath(); c.moveTo(a1, b1); c.lineTo(a2, b2); c.stroke();
+        }
+      }
+      // links: the shared prefix, compared against what the cache already holds
+      if (q.shared) {
+        const u = (t - q.t[0]);
+        if (u > -0.5 && u < 0.9) {
+          const al = bump(u, -0.5, 0.5, 0.35);
+          for (let j = 0; j < 7; j++) {
+            const [ax, ay] = P(IN_X - 20 - j * 40, ly + BH / 2 + 2);
+            const [bx, by] = P(...cell(j * 6), -30);
+            c.strokeStyle = "rgba(95,208,203," + (al * 0.22 * env).toFixed(3) + ")";
+            c.setLineDash([2, 4]);
+            c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
+            c.setLineDash([]);
+          }
+        }
+      }
+    });
+
+    // one restrained pulse where a cache hit lands
+    cachedPulse.forEach((u) => {
+      const [px, py] = P(CACHE.x + CACHE.w / 2, CACHE.y + 8, -30);
+      const k = cl(u / 0.38);
+      c.strokeStyle = "rgba(95,208,203," + ((1 - k) * 0.5 * env).toFixed(3) + ")";
+      c.beginPath(); c.ellipse(px, py, 40 + k * 150, 12 + k * 40, 0, 0, Math.PI * 2); c.stroke();
+    });
+    // cache cells that were just read (cyan) or just written (warm, and never read again)
+    for (let i = 0; i < CACHE.cols * CACHE.rows; i++) {
+      const [x, y] = cell(i);
+      const [px, py] = P(x, y, -30);
+      if (heat[i] > 0) { c.fillStyle = "rgba(120,230,224," + (Math.min(0.9, heat[i]) * 0.6 * env).toFixed(3) + ")"; c.fillRect(px - 5, py - 4, 10, 8); }
+      if (warm[i] > 0) { c.fillStyle = "rgba(242,190,120," + (warm[i] * 0.35 * env).toFixed(3) + ")"; c.fillRect(px - 5, py - 4, 10, 8); }
+    }
+
+    // ── faint stage markings (the only type the canvas draws)
+    c.font = "500 9px 'IBM Plex Mono', monospace";
+    c.fillStyle = "rgba(220,230,236," + (0.34 * env) + ")";
+    const mark = (s2, x, y, z = 0) => { const [px, py] = P(x, y, z); c.fillText(s2, px, py); };
+    mark("PREFILL", IN_X, 226);
+    mark("DECODE", DEC_X - 30, 226);
+    mark("KV CACHE", CACHE.x - 14, CACHE.y - 22, -30);
+    mark("TOKENIZE", 612, 238);
+    c.fillStyle = "rgba(236,214,184," + (0.3 * env) + ")"; mark("different prefix", 690, LANE[0] + 24);
+    c.fillStyle = "rgba(95,208,203," + (0.38 * env) + ")"; mark("shared prefix", 690, LANE[1] + 24);
+  }
+}
+const cv = (self) => self.canvasRef.current;
+</script>
+</body>
+</html>
