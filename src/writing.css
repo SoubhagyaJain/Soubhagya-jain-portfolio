@@ -13,13 +13,58 @@
 #writing .w-label { padding-bottom: 14px; border-bottom: 1px solid rgba(214,230,236,0.16); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.56); }
 #writing .w-list { margin: 0; padding: 0; list-style: none; }
 #writing .w-list li { border-bottom: 1px solid rgba(214,230,236,0.1); }
-#writing .w-list a { display: flex; flex-direction: column; gap: 8px; padding: 20px 0; color: inherit; transition: padding .5s cubic-bezier(.2,.7,.2,1); }
-#writing .w-list a:hover { padding-left: 8px; }
+#writing .w-list a { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: start; gap: 22px; padding: 22px 0; color: inherit; }
+#writing .w-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding-top: 2px; }
 #writing .w-meta { font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(226,178,116,0.78); }
 #writing .w-title { font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(22px, 2vw, 28px); line-height: 1.12; color: #f7faf5; text-wrap: balance; }
-#writing .w-text { max-width: 52ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.55; color: rgba(240,246,240,0.8); text-wrap: pretty; }
-#writing .w-dl { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: .5em; vertical-align: .3em; color: rgba(226,178,116,0.9); transition: transform .45s cubic-bezier(.2,.7,.2,1); }
-#writing .w-list a:hover .w-dl { transform: translateY(3px); }
+#writing .w-text { max-width: 52ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.55; color: rgba(240,246,240,0.8); text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+#writing .w-go { margin-top: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.9); }
+#writing .w-go span { display: inline-block; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+#writing .w-list a:hover .w-go span, #writing .w-list a:focus-visible .w-go span { transform: translate(4px, 0); }
+
+/* ── thumbnails: a 4:5 page, like the carousel format ─────────────────────── */
+#writing .w-thumb { position: relative; display: block; width: 104px; aspect-ratio: 4 / 5; }
+#writing .w-frame { position: absolute; inset: 0; overflow: hidden; border-radius: 5px; background: #0d1115; box-shadow: 0 0 0 1px rgba(214,230,236,0.14), 0 18px 30px -18px rgba(0,0,0,0.8); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+#writing .w-frame img, #writing .w-frame .plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+#writing .w-frame .plate text { font-size: 9px; }
+#writing .w-list a:hover .w-frame img, #writing .w-list a:hover .w-frame .plate { transform: scale(1.06); }
+#writing .w-badge { position: absolute; left: 6px; bottom: 6px; z-index: 3; padding: 3px 6px; border-radius: 3px; background: rgba(8,11,14,0.78); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,240,230,0.92); }
+/* the drawn plates carry the page's dark-picture palette */
+#writing .w-thumb.dark .plate { --pl-grid: rgba(236,242,238,0.05); --pl-soft: rgba(236,242,238,0.16); --pl-ink: rgba(236,242,238,0.62); --pl-fill: rgba(236,242,238,0.06); --pl-label: rgba(236,242,238,0.5); --pl-acc: #e2b274; --pl-acc-fill: rgba(226,178,116,0.16); }
+#writing .plate * { vector-effect: non-scaling-stroke; }
+#writing .plate .g { stroke: var(--pl-grid); fill: none; } #writing .plate .d { stroke: var(--pl-soft); fill: none; }
+#writing .plate .i { stroke: var(--pl-ink); fill: none; stroke-width: 1.1; } #writing .plate .blk { stroke: var(--pl-ink); fill: var(--pl-fill); stroke-width: 1.1; }
+#writing .plate .dash { stroke: var(--pl-ink); fill: none; stroke-dasharray: 4 5; opacity: .75; } #writing .plate .a { stroke: var(--pl-acc); fill: none; stroke-width: 1.5; }
+#writing .plate .acc { stroke: var(--pl-acc); fill: var(--pl-acc-fill); stroke-width: 1.3; } #writing .plate .accf { fill: var(--pl-acc); stroke: none; }
+#writing .plate text { font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; fill: var(--pl-label); } #writing .plate .ta { fill: var(--pl-acc); }
+
+/* a carousel: the cover, with the next two pages stacked behind it; hover turns one */
+#writing .w-deck .pg { position: absolute; inset: 0; border-radius: 5px; background: #e9e3d6; box-shadow: 0 0 0 1px rgba(20,21,23,0.2); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+#writing .w-deck .pg1 { transform: translate(5px, -4px) rotate(3deg); }
+#writing .w-deck .pg2 { transform: translate(9px, -7px) rotate(6deg); background: #ddd6c7; }
+#writing .w-deck .s2 { transform: translateX(101%); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+#writing .w-list a:hover .w-deck .s2, #writing .w-list a:focus-visible .w-deck .s2 { transform: none; }
+#writing .w-list a:hover .w-deck .s1 { transform: translateX(-24%); }
+#writing .w-list a:hover .w-deck .pg1 { transform: translate(8px, -6px) rotate(5deg); }
+#writing .w-list a:hover .w-deck .pg2 { transform: translate(14px, -10px) rotate(9deg); }
+
+/* a text post: its own opening line, set as a pull quote over its domain's plate */
+#writing .w-quote .plate { opacity: .45; }
+#writing .w-quote .q { position: absolute; left: 9px; right: 9px; top: 10px; font-family: 'Instrument Serif', Georgia, serif; font-size: 13px; line-height: 1.15; color: #f6f1e6; text-wrap: balance; }
+
+/* a PDF: a page with its own title on it */
+#writing .w-paper .w-frame { background: #efe9dd; display: flex; flex-direction: column; gap: 7px; padding: 10px 9px; box-sizing: border-box; }
+#writing .w-paper .pp-top { font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: .18em; text-transform: uppercase; color: rgba(20,21,23,0.55); padding-bottom: 5px; border-bottom: 1px solid rgba(20,21,23,0.18); }
+#writing .w-paper .pp-title { font-family: 'Instrument Serif', Georgia, serif; font-size: 13px; line-height: 1.1; color: #17181a; }
+#writing .w-paper .pp-lines { flex: 1; background: repeating-linear-gradient(180deg, transparent 0 7px, rgba(20,21,23,0.14) 7px 8px); -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
+#writing .w-list a:hover .w-paper .w-frame { transform: translateY(-4px) rotate(-1.5deg); }
+
+/* arrival: each thumbnail unmasks upward, a beat after its column lands */
+@keyframes wUnmask { from { clip-path: inset(100% 0 0 0 round 5px); } to { clip-path: inset(0 0 0 0 round 5px); } }
+@media (prefers-reduced-motion: no-preference) {
+  #writing .w-frame { animation: wUnmask 1.1s cubic-bezier(.2,.7,.2,1) both; animation-timeline: view(); animation-range: entry 10% cover 30%; }
+}
+@media (max-width: 520px) { #writing .w-list a { grid-template-columns: 84px minmax(0, 1fr); gap: 16px; } #writing .w-thumb { width: 84px; } }
 #writing .w-empty { margin: 0; padding: 22px 0; border-bottom: 1px solid rgba(214,230,236,0.1); font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 15px; color: rgba(240,246,240,0.56); }
 #writing .w-all { display: inline-flex; align-items: center; gap: 10px; width: fit-content; margin-top: 18px; padding-bottom: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.94); border-bottom: 1px solid rgba(246,250,244,0.26); transition: gap .45s cubic-bezier(.2,.7,.2,1), border-color .45s ease; }
 #writing .w-all:hover { gap: 16px; border-bottom-color: rgba(246,250,244,0.8); }
