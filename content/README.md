@@ -36,7 +36,22 @@ LinkedIn.
 For a photo, put it in `content/linkedin/images/` and add `image: images/photo.jpg`
 (several: `image: images/a.jpg, images/b.jpg`).
 
-## A blog article
+For a **carousel** (a document post), put the slide images in a folder, for example
+`content/linkedin/images/my-carousel/slide-01.jpg`, `slide-02.jpg`, … and the PDF in
+`content/linkedin/files/`, then add:
+
+```
+slides: images/my-carousel
+slides_title: The carousel's title
+document: files/my-carousel.pdf
+```
+
+The slides show as a strip that swipes on a phone and steps with arrows on a desktop,
+with **Open PDF** and **Download** beside it. An `alts.txt` in the slides folder, one
+line per slide, describes each slide for screen readers.
+`2026-09-24-multilingual-retrieval.md` is a working example.
+
+## A journal article
 
 Create `content/blog/2026-09-24-the-address-you-want.md`. The part of the file name
 after the date becomes the page address: `/blog/the-address-you-want`.
@@ -45,20 +60,52 @@ after the date becomes the page address: `/blog/the-address-you-want`.
 ---
 title: What broke when the index went stale
 date: 2026-09-24
-summary: One or two sentences for the Blog page and for link previews.
+category: RAG & Retrieval
+type: Postmortem
+summary: One or two sentences — the engineering problem, not the conclusion.
 tags: RAG, evaluation
 ---
 
 The article, in Markdown.
 ```
 
-Markdown that works: `## headings`, **bold**, *italic*, `` `code` ``, fenced code
-blocks with a language (```` ```python ````), `> quotes`, lists, `[links](https://…)`
-and images. Put images in `content/blog/images/` and write
-`![caption](images/name.png)`. An image on a line of its own gets its caption shown
-underneath.
+| Field | What it does |
+| --- | --- |
+| `category` | One of: AI Systems, RAG & Retrieval, Inference, Agents, Evaluation, ML Infrastructure. Decides its domain page and its drawn picture. |
+| `type` | Experiment, Deep dive, Postmortem, Design note, Field note or Benchmark. Shown in the metadata and in the link ("Read the experiment"). |
+| `summary` | The abstract on cards, in the hero and in link previews. |
+| `featured: true` | Puts it in the big slot at the top of the journal. Without one, the newest article goes there. |
+| `start: 1` … `5` | Its place in **Start here**, the reading order for a first visit. |
+| `cover: images/x.png` | A real picture — a benchmark graph, a terminal capture, a project screenshot. Without it the article gets a drawn plate for its domain. Add `cover_alt:` to describe it. |
+| `draft: true` | Keeps it off the site. |
 
-Add `draft: true` to keep an article out of the build while you are still writing it.
+Markdown that works: `## headings`, **bold**, *italic*, `` `code` ``, fenced code
+blocks with a language (```` ```python ````), tables, `> quotes`, lists,
+`[links](https://…)` and images. Put images in `content/blog/images/` and write
+`![caption](images/name.png)` on a line of its own; the caption shows underneath.
+Code, tables and images step out wider than the text.
+
+**Callouts** are quotes that start with a tag, with an optional title after it:
+
+```
+> [!FAILURE] The index was three days stale
+> Retrieval kept returning the old policy, and the answer cited it confidently.
+```
+
+The tags: `[!OBSERVATION]`, `[!FAILURE]`, `[!BENCHMARK]`, `[!TRADEOFF]`,
+`[!CHANGED]` (what changed my mind), `[!NOTE]`.
+
+### Drafts, and previewing
+
+The articles already in `content/blog/` are **drafts**: the titles are yours; each
+summary is a placeholder framing for you to rewrite; the bodies are empty. They stay
+off the live site until you write them and delete the `draft: true` line.
+
+To see drafts in place, with every section of the journal filled in, run
+`node build.mjs --drafts` and open `http://localhost:4173/blog` (after
+`python -m http.server 4173 --directory dist`). Drafts are marked, and the live
+build never includes them. `2026-01-01-journal-style-guide.md` is a draft that shows
+every element an article can use — keep it as a reference.
 
 ## A PDF of notes
 
@@ -88,3 +135,16 @@ uploading usually brings it well under 10 MB.
 Run `node build.mjs` locally, or look at the Vercel build log. A file that is missing
 something it needs (a date, a title) is skipped and listed under **CONTENT** in the
 build output, with what to fix. One bad file never breaks the rest of the site.
+
+## Newsletter
+
+The journal has a subscribe form, switched off until it has somewhere to send to. Sign
+up with any service that accepts a plain form post with an email field (Buttondown,
+ConvertKit, or your own serverless function), and put its form address in
+`content/journal.json`:
+
+```json
+{ "newsletter": { "action": "https://…your provider's form address…", "field": "email" } }
+```
+
+Until then the journal offers the RSS feed (`/blog/feed.xml`) in its place.
