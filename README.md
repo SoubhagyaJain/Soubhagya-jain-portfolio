@@ -80,7 +80,7 @@ there.
 - **Featured repositories** are listed in `content/github.json`: exact repo name, your
   own title, category, description, stack, optional live URL, and the drawn plate shown
   on hover. Stars and "updated" dates come from GitHub.
-- **Credentials** live in `content/certifications.json`. Add `image` (and optionally
+- **Credentials** live in `content/certifications.json` and are shown on a wheel, a plain-JS port of crafterui's Works Wheel: a ring of records at rest that opens into a vertical drum and turns one record to the front per stretch of page scroll (the stage is pinned, so it never traps the reader). Readers without the script get the same records as a plain archive. Add `image` (and optionally
   `file`, a PDF) under `content/certificates/` to show the real certificate instead of
   the typeset record. Only list skills the issuer shows.
 - **Metrics** are only ever read or summed from GitHub data; anything GitHub does not

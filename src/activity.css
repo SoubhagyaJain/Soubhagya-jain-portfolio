@@ -175,17 +175,6 @@
 /* the structural grid the contribution cells became, running under the archive */
 #activity .cx::after { content: ""; position: absolute; inset: 0 -2% 0 -2%; z-index: -1; pointer-events: none; background-image: linear-gradient(rgba(214,230,236,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(214,230,236,0.045) 1px, transparent 1px); background-size: 46px 46px; -webkit-mask-image: linear-gradient(180deg, #000, rgba(0,0,0,.5) 40%, transparent 85%); mask-image: linear-gradient(180deg, #000, rgba(0,0,0,.5) 40%, transparent 85%); }
 #activity .cx-count { margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-3); }
-#activity .cx-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: clamp(30px, 5vw, 80px); margin-top: clamp(50px, 9vh, 100px); }
-#activity .cx-rail { position: sticky; top: 110px; align-self: start; }
-#activity .cx-now { display: flex; align-items: baseline; gap: 8px; padding-bottom: 18px; margin-bottom: 8px; border-bottom: 1px solid var(--rule); }
-#activity .cx-now [data-cx-now] { display: inline-block; font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 64px; line-height: 0.9; color: rgba(240,220,190,0.95); font-variant-numeric: tabular-nums; transition: transform .35s var(--ease), opacity .35s ease; }
-#activity .cx-now [data-cx-now].tick { transform: translateY(-6px); opacity: 0; }
-#activity .cx-now .of { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ink-3); }
-#activity .cx-rail ol { list-style: none; margin: 0; padding: 0; }
-#activity .cx-rail a { position: relative; display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0 11px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); transition: color .35s ease, padding .35s var(--ease); }
-#activity .cx-rail a::before { content: ""; position: absolute; left: 0; top: 50%; width: 6px; height: 1px; background: currentColor; transition: width .35s var(--ease); }
-#activity .cx-rail a[aria-current="true"] { color: var(--ink); padding-left: 24px; }
-#activity .cx-rail a[aria-current="true"]::before { width: 14px; background: var(--acc); }
 #activity .cx-month { scroll-margin-top: 110px; }
 #activity .cx-month + .cx-month { margin-top: clamp(50px, 9vh, 100px); }
 #activity .cx-mh { margin: 0 0 22px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 10.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--ink-3); }
@@ -232,13 +221,62 @@
 #activity .cx-doc:focus-visible { outline: none; }
 #activity .cx-doc:focus-visible .cx-paper { outline: 2px solid rgba(226,178,116,.75); outline-offset: 4px; }
 
+
+/* ── the credential wheel (after crafterui's Works Wheel) ──────────────────
+   A pinned stage over a tall track: page scroll is the wheel's one number. The
+   geometry is written per frame by src/activity.js; this only sets the stage. */
+#activity .cxw-track { position: relative; width: 100vw; margin: clamp(30px, 6vh, 70px) 0 0 calc(50% - 50vw); height: calc(var(--n) * 40vh + 100vh); }
+#activity .cxw-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+#activity .cxw-stage::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 60% at 50% 50%, rgba(5,10,15,0.5), rgba(5,10,15,0.18) 70%, rgba(5,10,15,0) 100%); }
+#activity .cxw-view { position: absolute; inset: 0; outline: none; }
+#activity .cxw-view:focus-visible { box-shadow: inset 0 0 0 2px rgba(226,178,116,.6); }
+#activity .cxw-wheel { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
+#activity .cxw-card { position: absolute; left: 0; top: 0; padding: 0; border: 0; background: none; cursor: pointer; backface-visibility: hidden; -webkit-backface-visibility: hidden; container-type: size; will-change: transform; }
+#activity .cxw-face { display: block; width: 100%; height: 100%; }
+#activity .cxw-face .cx-paper { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 3px; }
+/* type measured against the card, so a card is one object at any size or turn */
+#activity .cxw-face .cx-paper .pp-top { font-size: 1.85cqw; }
+#activity .cxw-face .cx-paper .pp-title { font-size: 6.4cqw; -webkit-line-clamp: 3; }
+#activity .cxw-face .cx-paper .pp-foot { font-size: 1.7cqw; }
+#activity .cxw-card[aria-selected="true"]:hover .cx-paper::after { opacity: 1; }
+
+#activity .cxw-label, #activity .cxw-title h3 { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; letter-spacing: -0.015em; color: #f9fbf6; }
+#activity .cxw-label { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font-size: var(--t, 40px); }
+#activity .cxw-title { position: absolute; left: clamp(22px, 4vw, 54px); top: 50%; transform: translateY(-50%); width: min(22%, 320px); display: flex; flex-direction: column; gap: 12px; opacity: 0; }
+#activity .cxw-title .ix { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 22px; color: rgba(240,220,190,0.92); font-variant-numeric: tabular-nums; }
+#activity .cxw-title h3 { margin: 0; font-size: clamp(22px, calc(var(--t, 40px) * .72), 40px); line-height: 1.05; text-wrap: balance; }
+#activity .cxw-title .iss { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); }
+#activity .cxw-title .acts { display: flex; gap: 18px; align-items: baseline; margin-top: 4px; }
+#activity .cxw-open { padding: 0 0 4px; border: 0; border-bottom: 1px solid var(--rule-2); background: none; color: var(--ink); cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; transition: border-color .4s ease; }
+#activity .cxw-open:hover, #activity .cxw-open:focus-visible { border-bottom-color: var(--acc); }
+#activity .cxw-title [hidden] { display: none; }
+#activity .cxw-index { position: absolute; top: 12%; right: clamp(22px, 4vw, 54px); margin: 0; padding: 0; list-style: none; text-align: right; max-width: 24%; }
+#activity .cxw-index button { padding: 3px 0; border: 0; background: none; cursor: pointer; font-family: 'Instrument Sans', sans-serif; font-size: 12px; line-height: 1.35; color: var(--ink-3); text-align: right; transition: color .3s ease, transform .35s var(--ease); }
+#activity .cxw-index button:hover { color: var(--ink-2); }
+#activity .cxw-index button.on { color: var(--ink); transform: translateX(-6px); }
+#activity .cxw-hint { position: absolute; left: 50%; bottom: 5%; margin: 0; transform: translateX(-50%); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--ink-3); pointer-events: none; transition: opacity .5s ease; }
+/* the plain archive is for readers without the script; the wheel needs it */
+.js-act #activity .cxw-fallback { display: none; }
+html:not(.js-act) #activity .cxw-track { display: none; }
+#activity .cxw-fallback { margin-top: clamp(40px, 7vh, 80px); }
+@media (max-width: 900px) {
+  #activity .cxw-index { display: none; }
+  /* the front record's title goes under the drum rather than beside it */
+  #activity .cxw-title { left: 22px; right: 22px; top: auto; bottom: 4%; width: auto; transform: none; gap: 8px; }
+  #activity .cxw-title h3 { font-size: 22px; }
+  #activity .cxw-wheel { top: 40%; }
+  #activity .cxw-label { inset: 40% 0 auto; transform: translateY(-50%); }
+  #activity .cxw-title { padding-top: 60px; background: linear-gradient(180deg, rgba(6,10,14,0), rgba(6,10,14,0.72) 45%); margin: 0 -22px; padding-left: 22px; padding-right: 22px; bottom: 0; padding-bottom: 5%; z-index: 120; }
+  #activity .cxw-hint { white-space: nowrap; }
+}
+
 /* the expanded record */
 .cx-dialog { position: fixed; inset: 0; width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #f7faf5; overflow: auto; }
 .cx-dialog::backdrop { background: rgba(4,7,10,0.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transition: opacity .45s ease; }
 .cx-dialog.open::backdrop { opacity: 1; }
 .cx-dialog .cxd { min-height: 100%; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: clamp(30px, 5vw, 80px); max-width: 1220px; margin: 0 auto; padding: clamp(70px, 10vh, 120px) clamp(22px, 4vw, 54px); }
 .cx-dialog .cxd-doc { transform-origin: 0 0; will-change: transform; }
-.cx-dialog .cx-paper { box-shadow: 0 0 0 1px rgba(20,21,23,0.2), 0 1px 0 rgba(255,255,255,0.6) inset, 0 60px 90px -40px rgba(0,0,0,0.95); }
+.cx-dialog .cx-paper { width: 100%; aspect-ratio: 1.414 / 1; box-shadow: 0 0 0 1px rgba(20,21,23,0.2), 0 1px 0 rgba(255,255,255,0.6) inset, 0 60px 90px -40px rgba(0,0,0,0.95); }
 .cx-dialog .cx-paper .pp-top { font-size: 11px; }
 .cx-dialog .cx-paper .pp-title { font-size: clamp(26px, 3vw, 42px); -webkit-line-clamp: 4; }
 .cx-dialog .cx-paper .pp-foot { font-size: 10px; }
@@ -265,14 +303,6 @@
   #activity .gx-repo { grid-template-columns: 2.6em minmax(0, 1fr); }
   #activity .gx-rmeta { grid-column: 2; padding-top: 0; }
   #activity .gx-media { display: none; }
-  #activity .cx-body { grid-template-columns: minmax(0, 1fr); }
-  /* the rail becomes a thin index that stays in view above the archive */
-  #activity .cx-rail { top: 64px; z-index: 2; margin: 0 -22px; padding: 10px 22px; background: linear-gradient(180deg, rgba(8,12,16,0.86), rgba(8,12,16,0.6)); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-  #activity .cx-now { display: none; }
-  #activity .cx-rail ol { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; }
-  #activity .cx-rail a { padding: 6px 0 6px 12px; white-space: nowrap; }
-  #activity .cx-rail a[aria-current="true"] { padding-left: 18px; }
-  #activity .cx-rail .c { display: none; }
   .cx-dialog .cxd { grid-template-columns: minmax(0, 1fr); align-items: start; }
 }
 @media (max-width: 620px) {

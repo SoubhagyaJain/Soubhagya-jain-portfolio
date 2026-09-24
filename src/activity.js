@@ -421,92 +421,183 @@
     c.globalCompositeOperation = "source-over";
   }
 
-  /* ── 03.2 the archive ───────────────────────────────────────────────────── */
+  /* ── 03.2 the credential wheel ───────────────────────────────────────────
+     A port of crafterui's Works Wheel. At rest the records sit in a ring around
+     the label, each tangent to the circle; the first stretch of scroll blows the
+     ring open into a vertical drum, one record flat at the front and its
+     neighbours rotated away into perspective; every further stretch carries the
+     next one round. The whole thing is one number, `turn`: 0 is the ring, 1 the
+     drum with record 0 at the front, n the drum with record n-1 there.
+
+     One change from the original, deliberately: the original turns on captured
+     wheel and drag events inside its own box. Here the stage is pinned and page
+     scroll is the turn, so it can never trap a reader, and it works by touch with
+     no gesture of its own. The geometry is the original's. */
   var cx = root.querySelector("[data-cx-root]");
-  var docs = cx ? Array.prototype.slice.call(cx.querySelectorAll(".cx-doc")) : [];
-  var groups = cx ? Array.prototype.slice.call(cx.querySelectorAll("[data-cx-group]")) : [];
-  var railLinks = cx ? Array.prototype.slice.call(cx.querySelectorAll("[data-cx-month]")) : [];
-  var nowEl = cx ? cx.querySelector("[data-cx-now]") : null;
-  var wide = function () { return window.innerWidth > 900; };
+  var track = cx ? cx.querySelector(".cxw-track") : null;
+  var cards = track ? Array.prototype.slice.call(track.querySelectorAll(".cxw-card")) : [];
   if (cx) steps(cx.querySelector(".cx-head"), 150);
 
-  var nowIdx = 0;
+  var CARD_H = 0.38, CARD_RATIO = 1.414, STEP = 40, DRUM = 2.22, LENS = 2.7, BOW = 1.82, TITLE = 0.124, CULL = 1.6, EASE = 0.12, SETTLE = 180;
+  var W = { turn: 0, target: 0, active: 0, m: {}, live: false, raf: 0, settle: 0 };
+  var rad = function (d) { return d * Math.PI / 180; };
+  var lerp = function (a, b, t) { return a + (b - a) * t; };
+
+  function wheelMetrics() {
+    var stage = track.querySelector(".cxw-stage");
+    var w = stage.clientWidth, h = stage.clientHeight, n = cards.length;
+    var narrow = w < 700;
+    // a phone's stage is tall and narrow: the card is capped by width, and the
+    // ring pulls in so it still closes inside the frame
+    var cardW = Math.min(h * (narrow ? 0.3 : CARD_H) * CARD_RATIO, w * (narrow ? 0.74 : 0.34));
+    var cardH = cardW / CARD_RATIO;
+    // the ring keeps clear of the nav above and the index beside it
+    var ringR = Math.min(cardH * (narrow ? 0.9 : 1.14), h * 0.3, w * (narrow ? 0.34 : 0.26));
+    W.m = {
+      cardW: cardW, cardH: cardH, ringR: ringR, drumR: cardH * DRUM, bow: cardH * BOW,
+      ringScale: n ? clamp(2 * Math.PI * ringR / n * 0.82 / (cardW || 1), 0.16, 1) : 1
+    };
+    stage.querySelector(".cxw-view").style.perspective = cardH * LENS + "px";
+    stage.style.setProperty("--t", Math.max(26, cardH * TITLE * (narrow ? 1.25 : 1)) + "px");
+    cards.forEach(function (c) {
+      c.style.width = cardW + "px"; c.style.height = cardH + "px";
+      c.style.marginLeft = -cardW / 2 + "px"; c.style.marginTop = -cardH / 2 + "px";
+    });
+  }
+
+  // how far a turn is down the track, and back
+  function trackSpan() { return track.offsetHeight - window.innerHeight; }
+  function turnFromScroll() {
+    var r = track.getBoundingClientRect();
+    return clamp(-r.top / Math.max(1, trackSpan()), 0, 1) * cards.length;
+  }
+  function scrollToTurn(t, smooth) {
+    var top = track.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + t / cards.length * trackSpan(), behavior: smooth && !reduced ? "smooth" : "auto" });
+  }
+
+  var wTitle = track && track.querySelector('[data-cxw="title"]');
+  var wIss = track && track.querySelector('[data-cxw="iss"]');
+  var wIx = track && track.querySelector('[data-cxw="ix"]');
+  var wVerify = track && track.querySelector('[data-cxw="verify"]');
+  var wLabel = track && track.querySelector(".cxw-label");
+  var wPanel = track && track.querySelector(".cxw-title");
+  var wHint = track && track.querySelector(".cxw-hint");
+  var wView = track && track.querySelector(".cxw-view");
+  var wIndex = track ? Array.prototype.slice.call(track.querySelectorAll("[data-cxw-to]")) : [];
+  function monthLong(s) { var p = s.split("-"); return MONTH[+p[1] - 1] + " " + p[0]; }
+
+  function setActive(i) {
+    if (i === W.active) return;
+    W.active = i;
+    var c = DATA.certs[i];
+    wTitle.textContent = c.title;
+    wIss.textContent = c.issuer + " · " + monthLong(c.date);
+    wIx.textContent = String(i + 1).padStart(2, "0") + " / " + String(cards.length).padStart(2, "0");
+    if (c.verificationUrl) { wVerify.href = c.verificationUrl; wVerify.hidden = false; } else wVerify.hidden = true;
+    cards.forEach(function (el, k) { el.setAttribute("aria-selected", k === i ? "true" : "false"); });
+    wIndex.forEach(function (b, k) { b.classList.toggle("on", k === i); });
+    wView.setAttribute("aria-activedescendant", "cxw-" + i);
+  }
+
+  function drawWheel() {
+    W.raf = W.live ? requestAnimationFrame(drawWheel) : 0;
+    var n = cards.length, M = W.m;
+    W.target = turnFromScroll();
+    var gap = W.target - W.turn;
+    if (Math.abs(gap) < 0.0005) W.turn = W.target; else W.turn += gap * (reduced ? 1 : EASE);
+    var t = W.turn, m = clamp(t, 0, 1), pos = Math.max(0, t - 1);
+    // the drum is pulled back so its front face lands on the picture plane, and the
+    // set-back arrives with it, or the ring would sit deep in the perspective
+    track.querySelector(".cxw-wheel").style.transform = "translateZ(" + (-m * M.drumR) + "px)";
+    for (var i = 0; i < n; i++) {
+      var d = i - pos, drumDeg = d * STEP;
+      var bowX = -M.bow * (1 - Math.cos(rad(drumDeg)));
+      var el = cards[i];
+      el.style.transform =
+        "translateX(" + (m * bowX) + "px)" +
+        " rotateZ(" + ((1 - m) * d * (360 / n)) + "deg) translateY(" + (-(1 - m) * M.ringR) + "px)" +
+        " rotateX(" + (m * drumDeg) + "deg) translateZ(" + (m * M.drumR) + "px)";
+      var hide = m > 0.5 && Math.abs(d) > CULL;
+      el.style.opacity = hide ? "0" : "1";
+      el.style.pointerEvents = hide ? "none" : "";
+      el.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
+      el.firstElementChild.style.transform = "scale(" + lerp(M.ringScale, 1, m) + ")";
+    }
+    wLabel.style.opacity = String(1 - m);
+    wPanel.style.opacity = String(m);
+    wPanel.style.pointerEvents = m > 0.5 ? "" : "none";
+    wHint.style.opacity = String(1 - clamp(t * 3, 0, 1));
+    setActive(clamp(Math.round(pos), 0, n - 1));
+  }
+
+  if (track && cards.length) {
+    wheelMetrics();
+    drawWheel();
+    if ("ResizeObserver" in window) new ResizeObserver(function () { wheelMetrics(); if (!W.live) drawWheel(); }).observe(track.querySelector(".cxw-stage"));
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        var on = es[0].isIntersecting;
+        if (on && !W.live) { W.live = true; W.raf = requestAnimationFrame(drawWheel); }
+        if (!on) { W.live = false; cancelAnimationFrame(W.raf); W.raf = 0; }
+      }).observe(track);
+    } else { W.live = true; W.raf = requestAnimationFrame(drawWheel); }
+
+    // a gesture has no end of its own, so the rest position is wherever it
+    // stopped; left there the drum sits between two records. Settle onto one.
+    window.addEventListener("scroll", function () {
+      clearTimeout(W.settle);
+      if (reduced) return;
+      W.settle = setTimeout(function () {
+        var t = turnFromScroll();
+        if (t > 1 && t < cards.length && Math.abs(t - Math.round(t)) > 0.03) scrollToTurn(Math.round(t), true);
+      }, SETTLE);
+    }, { passive: true });
+
+    cards.forEach(function (el, i) {
+      el.addEventListener("click", function () {
+        // the front record opens; any other turns the wheel to it
+        if (i === W.active && W.turn > 0.9) open(i); else scrollToTurn(i + 1, true);
+      });
+      if (finePointer && !reduced) {
+        var paper = el.querySelector(".cx-paper");
+        el.addEventListener("pointermove", function (e) {
+          var r = el.getBoundingClientRect();
+          paper.style.setProperty("--lx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
+          paper.style.setProperty("--ly", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
+        });
+      }
+    });
+    wIndex.forEach(function (b) { b.addEventListener("click", function () { scrollToTurn(+b.getAttribute("data-cxw-to") + 1, true); }); });
+    track.querySelector('[data-cxw="open"]').addEventListener("click", function () { open(W.active); });
+    wView.addEventListener("keydown", function (e) {
+      var t = Math.round(turnFromScroll());
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") scrollToTurn(Math.min(cards.length, Math.max(1, t + 1)), true);
+      else if (e.key === "ArrowUp" || e.key === "ArrowLeft") scrollToTurn(Math.max(0, t - 1), true);
+      else if (e.key === "Enter" || e.key === " ") { if (W.turn > 0.9) open(W.active); else scrollToTurn(1, true); }
+      else return;
+      e.preventDefault();
+    });
+  }
+
+  // the bridge follows the page
   function onScroll() {
     scrollQueued = false;
-    var vh = window.innerHeight;
-    if (bridge) {
-      var br = bridge.getBoundingClientRect();
-      if (br.bottom > -50 && br.top < vh + 50) {
-        bridgeP = clamp((vh * 0.72 - br.top) / (br.height + vh * 0.3), 0, 1);
-        drawBridge();
-      }
+    if (!bridge) return;
+    var vh = window.innerHeight, br = bridge.getBoundingClientRect();
+    if (br.bottom > -50 && br.top < vh + 50) {
+      bridgeP = clamp((vh * 0.72 - br.top) / (br.height + vh * 0.3), 0, 1);
+      drawBridge();
     }
-    if (!cx) return;
-    var cr = cx.getBoundingClientRect();
-    if (cr.bottom < -100 || cr.top > vh + 100) return;
-    // documents move into focus: from behind the page plane, tilted a little back,
-    // soft; to flat, sharp and still. Measured first, written after.
-    var rects = docs.map(function (d) { return d.getBoundingClientRect(); });
-    var blur = wide() && !reduced;
-    var best = 0, bestD = 1e9;
-    docs.forEach(function (d, i) {
-      var r = rects[i];
-      var mid = r.top + r.height / 2;
-      var dd = Math.abs(mid - vh * 0.48);
-      if (dd < bestD) { bestD = dd; best = i; }
-      if (reduced) return;
-      var k = clamp((vh - r.top) / (vh * 0.42), 0, 1);
-      var q = 1 - Math.pow(1 - k, 3);
-      if (d._q !== undefined && Math.abs(d._q - q) < 0.002) return;
-      d._q = q;
-      if (q >= 0.999) { d.style.transform = ""; d.style.opacity = ""; d.style.filter = ""; return; }
-      d.style.transform = "translate3d(0," + ((1 - q) * 46).toFixed(1) + "px," + (-(1 - q) * 160).toFixed(1) + "px) rotateX(" + ((1 - q) * 7).toFixed(2) + "deg) scale(" + (0.94 + 0.06 * q).toFixed(4) + ")";
-      d.style.opacity = q.toFixed(3);
-      d.style.filter = blur && q < 0.98 ? "blur(" + ((1 - q) * 6).toFixed(2) + "px)" : "";
-    });
-    if (best !== nowIdx && nowEl) {
-      nowIdx = best;
-      nowEl.classList.add("tick");
-      setTimeout(function () { nowEl.textContent = String(best + 1).padStart(2, "0"); nowEl.classList.remove("tick"); }, reduced ? 0 : 170);
-    }
-    var line = vh * 0.42, active = 0;
-    groups.forEach(function (g, i) { if (g.getBoundingClientRect().top <= line) active = i; });
-    railLinks.forEach(function (a, i) {
-      if (i === active) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
-    });
   }
   var scrollQueued = false;
   var queue = function () { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(onScroll); } };
   window.addEventListener("scroll", queue, { passive: true });
   window.addEventListener("resize", queue);
   onScroll();
-  railLinks.forEach(function (a) {
-    a.addEventListener("click", function (e) {
-      var t = document.getElementById("cx-" + a.getAttribute("data-cx-month"));
-      if (!t) return;
-      e.preventDefault();
-      t.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-    });
-  });
 
-  // pointer light and a restrained tilt on the document under the pointer
-  if (finePointer && !reduced) {
-    docs.forEach(function (d) {
-      var paper = d.querySelector(".cx-paper");
-      d.addEventListener("pointermove", function (e) {
-        var r = d.getBoundingClientRect();
-        var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        paper.style.setProperty("--lx", (x * 100).toFixed(1) + "%");
-        paper.style.setProperty("--ly", (y * 100).toFixed(1) + "%");
-        paper.style.transform = "translateZ(40px) rotateX(" + ((0.5 - y) * 4).toFixed(2) + "deg) rotateY(" + ((x - 0.5) * 5).toFixed(2) + "deg) scale(1.045)";
-      });
-      d.addEventListener("pointerleave", function () { paper.style.transform = ""; });
-    });
-  }
-
-  /* the expanded record: the document grows out of its place in the archive */
-  var dlg = null, openIdx = -1, srcDoc = null;
-  function monthLong(s) { var p = s.split("-"); return MONTH[+p[1] - 1] + " " + p[0]; }
+  /* the expanded record: the document grows out of its place on the wheel */
+  var dlg = null, srcDoc = null;
   function buildDialog() {
     dlg = document.createElement("dialog");
     dlg.className = "cx-dialog";
@@ -517,29 +608,24 @@
     dlg.addEventListener("cancel", function (e) { e.preventDefault(); close(); });
     dlg.addEventListener("click", function (e) { if (e.target === dlg || e.target.classList.contains("cxd")) close(); });
   }
-  function flip(el, from, to, dur, done) {
-    var dx = from.left - to.left, dy = from.top - to.top, s = from.width / to.width;
+  function flip(el, from, to, dur) {
     el.style.transition = "none";
-    el.style.transform = "translate(" + dx + "px," + dy + "px) scale(" + s + ")";
+    el.style.transform = "translate(" + (from.left - to.left) + "px," + (from.top - to.top) + "px) scale(" + (from.width / to.width) + ")";
     el.getBoundingClientRect();
     requestAnimationFrame(function () {
       el.style.transition = "transform " + dur + "ms cubic-bezier(.2,.7,.2,1)";
       el.style.transform = "";
-      setTimeout(done || function () {}, dur);
     });
   }
   function open(i) {
     var c = DATA.certs[i];
-    if (!c) return;
+    if (!c || !cards[i]) return;
     if (!dlg) buildDialog();
-    openIdx = i;
-    srcDoc = docs[i];
+    srcDoc = cards[i];
     var paper = srcDoc.querySelector(".cx-paper");
     var holder = dlg.querySelector(".cxd-doc");
     holder.innerHTML = "";
-    var copy = paper.cloneNode(true);
-    copy.style.transform = "";
-    holder.appendChild(copy);
+    holder.appendChild(paper.cloneNode(true));
     var rows = [["Issuer", esc(c.issuer)], ["Issued", monthLong(c.date)]];
     if (c.credentialId) rows.push(["Credential ID", esc(c.credentialId)]);
     if (c.skills && c.skills.length) rows.push(["Skills", c.skills.map(esc).join(" · ")]);
@@ -547,7 +633,7 @@
     if (c.verificationUrl) acts.push('<a href="' + esc(c.verificationUrl) + '" rel="noopener" data-cursor="Verify ↗">Verify credential ↗</a>');
     if (c.file) acts.push('<a href="/' + esc(c.file) + '" download>Download certificate ↓</a>');
     dlg.querySelector(".cxd-info").innerHTML =
-      '<span class="gx-label" style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:rgba(232,240,236,0.58)">Record ' + String(i + 1).padStart(2, "0") + " / " + String(DATA.certs.length).padStart(2, "0") + "</span>" +
+      '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:rgba(232,240,236,0.58)">Record ' + String(i + 1).padStart(2, "0") + " / " + String(DATA.certs.length).padStart(2, "0") + "</span>" +
       '<h3 id="cxd-title">' + esc(c.title) + "</h3>" +
       "<dl>" + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl>" +
       (acts.length ? '<div class="acts">' + acts.join("") + "</div>" : "") +
@@ -571,8 +657,8 @@
       dlg.close();
       document.documentElement.style.overflow = "";
       holder.style.transform = ""; holder.style.transition = "";
-      if (srcDoc) { srcDoc.style.visibility = ""; srcDoc.focus({ preventScroll: true }); }
-      openIdx = -1;
+      if (srcDoc) srcDoc.style.visibility = "";
+      if (wView) wView.focus({ preventScroll: true });
     };
     if (reduced || !srcDoc) { finish(); return; }
     dlg.classList.remove("open");
@@ -582,9 +668,6 @@
     holder.style.transform = "translate(" + (to.left - from.left) + "px," + (to.top - from.top) + "px) scale(" + (to.width / from.width) + ")";
     setTimeout(finish, 480);
   }
-  docs.forEach(function (d) {
-    d.addEventListener("click", function () { open(+d.getAttribute("data-cx-open")); });
-  });
 
   /* ── the cursor's note ──────────────────────────────────────────────────── */
   if (finePointer && !reduced) {

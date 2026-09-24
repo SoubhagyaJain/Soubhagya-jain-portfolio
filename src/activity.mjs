@@ -122,24 +122,60 @@ function github(config, data) {
 
 function record(c, i, total) {
   const d = ym(c.date);
-  const face = c.image
-    ? `<img src="/${esc(c.image)}" alt="Certificate: ${esc(c.title)}, issued by ${esc(c.issuer)}" loading="lazy" decoding="async">`
-    : `<span class="pp-top"><span>${esc(c.issuer)}</span><span>Record ${n2(i + 1)} / ${n2(total)}</span></span>
-       <span class="pp-title">${esc(c.title)}</span>
-       <span class="pp-rule"></span>
-       <span class="pp-foot"><span>Issued ${d.short}</span>${c.credentialId ? `<span class="id">${esc(c.credentialId)}</span>` : ""}</span>`;
-  return `<article class="cx-item" data-cx="${i}" style="--i:${i % 3}">
-    <button type="button" class="cx-doc${c.image ? " has-img" : ""}" data-cx-open="${i}" aria-haspopup="dialog" data-cursor="View">
-      <span class="cx-paper${c.image ? " has-img" : ""}">${face}</span>
-      <span class="sr">Open the record for ${esc(c.title)}</span>
-    </button>
+  return `<article class="cx-item" data-cx="${i}">
+    <div class="cx-doc${c.image ? " has-img" : ""}">
+      <span class="cx-paper${c.image ? " has-img" : ""}">${face(c, i, total)}</span>
+    </div>
     <div class="cx-meta">
       <span class="cx-ix">${n2(i + 1)}</span>
       <h4>${esc(c.title)}</h4>
       <span class="cx-iss">${esc(c.issuer)} · ${d.short}</span>
-      ${c.verificationUrl ? `<a class="cx-verify" href="${esc(c.verificationUrl)}" rel="noopener" data-cursor="Verify ↗">Verify credential ${ARROW}</a>` : ""}
+      ${c.credentialId ? `<span class="cx-iss">ID ${esc(c.credentialId)}</span>` : ""}
+      ${c.verificationUrl ? `<a class="cx-verify" href="${esc(c.verificationUrl)}" rel="noopener">Verify credential ${ARROW}</a>` : ""}
     </div>
   </article>`;
+}
+
+/* The face of a record, shared by the wheel and the plain archive */
+function face(c, i, total) {
+  const d = ym(c.date);
+  return c.image
+    ? `<img src="/${esc(c.image)}" alt="Certificate: ${esc(c.title)}, issued by ${esc(c.issuer)}" loading="lazy" decoding="async" draggable="false">`
+    : `<span class="pp-top"><span>${esc(c.issuer)}</span><span>Record ${n2(i + 1)} / ${n2(total)}</span></span>
+       <span class="pp-title">${esc(c.title)}</span>
+       <span class="pp-rule"></span>
+       <span class="pp-foot"><span>Issued ${d.short}</span>${c.credentialId ? `<span class="id">${esc(c.credentialId)}</span>` : ""}</span>`;
+}
+
+/* The archive as a wheel you turn (after crafterui's Works Wheel): at rest the
+   records sit in a ring around the label; scrolling blows the ring open into a
+   vertical drum with one record flat at the front, and every further stretch of
+   scroll carries the next one round. src/activity.js drives it. The plain archive
+   below it is what a reader without the script gets. */
+function wheel(list) {
+  const years = [...new Set(list.map((c) => c.date.slice(2, 4)))].sort();
+  const label = `Credentials ’${years.length > 1 ? `${years[0]}–’${years[years.length - 1]}` : years[0]}`;
+  const first = list[0], d0 = ym(first.date);
+  return `<div class="cxw-track" data-cxw style="--n:${list.length}">
+    <div class="cxw-stage">
+      <div class="cxw-view" tabindex="0" role="listbox" aria-label="${list.length} credentials. Scroll, or use the arrow keys, to turn; Enter opens the front record." aria-activedescendant="cxw-0">
+        <div class="cxw-wheel">
+          ${list.map((c, i) => `<button type="button" tabindex="-1" class="cxw-card" id="cxw-${i}" role="option" aria-selected="${i ? "false" : "true"}" data-i="${i}" data-cursor="View" aria-label="${esc(c.title)}, ${esc(c.issuer)}, ${ym(c.date).long}"><span class="cxw-face"><span class="cx-paper${c.image ? " has-img" : ""}">${face(c, i, list.length)}</span></span></button>`).join("")}
+        </div>
+      </div>
+      <div class="cxw-label" aria-hidden="true">${esc(label)}</div>
+      <div class="cxw-title">
+        <span class="ix" data-cxw="ix">01 / ${n2(list.length)}</span>
+        <h3 data-cxw="title">${esc(first.title)}</h3>
+        <span class="iss" data-cxw="iss">${esc(first.issuer)} · ${d0.long}</span>
+        <span class="acts"><button type="button" class="cxw-open" data-cxw="open">Open record</button><a class="cx-verify" data-cxw="verify" href="${esc(first.verificationUrl || "#")}" rel="noopener" data-cursor="Verify ↗"${first.verificationUrl ? "" : " hidden"}>Verify ↗</a></span>
+      </div>
+      <ol class="cxw-index" aria-label="All credentials">
+        ${list.map((c, i) => `<li><button type="button" data-cxw-to="${i}"${i ? "" : ' class="on"'}>${esc(c.title)}</button></li>`).join("")}
+      </ol>
+      <p class="cxw-hint" aria-hidden="true">Scroll to turn the wheel</p>
+    </div>
+  </div>`;
 }
 
 function credentials(list) {
@@ -160,17 +196,12 @@ function credentials(list) {
       <p class="gx-lead" data-step="2">Formal checkpoints along a much larger engineering education.</p>
       <p class="cx-count" data-step="3">${list.length} credentials · ${issuers} issuers · ${span}</p>
     </header>
-    <div class="cx-body">
-      <nav class="cx-rail" aria-label="Credentials by month">
-        <span class="cx-now" aria-hidden="true"><span data-cx-now>01</span><span class="of">/ ${n2(list.length)}</span></span>
-        <ol>${groups.map((g, k) => `<li><a href="#cx-${g.date}" data-cx-month="${g.date}"${k ? "" : ' aria-current="true"'}><span class="m">${ym(g.date).long}</span><span class="c">${n2(g.items.length)}</span></a></li>`).join("")}</ol>
-      </nav>
-      <div class="cx-archive">
-        ${groups.map((g) => `<section class="cx-month" id="cx-${g.date}" data-cx-group="${g.date}">
-          <h3 class="cx-mh"><span>${ym(g.date).long}</span></h3>
-          <div class="cx-list">${g.items.map(([c, i]) => record(c, i, list.length)).join("")}</div>
-        </section>`).join("")}
-      </div>
+    ${wheel(list)}
+    <div class="cxw-fallback">
+      ${groups.map((g) => `<section class="cx-month" id="cx-${g.date}">
+        <h3 class="cx-mh"><span>${ym(g.date).long}</span></h3>
+        <div class="cx-list">${g.items.map(([c, i]) => record(c, i, list.length)).join("")}</div>
+      </section>`).join("")}
     </div>
   </article>`;
 }
