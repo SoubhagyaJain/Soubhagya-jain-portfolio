@@ -51,19 +51,7 @@ Jev does not decide the entire application flow. It provides a bounded judgment.
 
 Conceptually:
 
-```text
-application state
-        ↓
-typed questions
-        ↓
-       Jev
-        ↓
-probability distributions
-        ↓
-thresholds + business logic
-        ↓
-act / escalate / call another model
-```
+![Application state and typed questions go into Jev, which returns distributions; thresholds and business logic then act, call an LLM, or escalate to a human.](images/jev/f1-pipeline.svg "Jev returns a bounded judgment. What happens next — act, call a generative model, escalate — is the application's decision."){full}
 
 That makes the model easier to reason about than a free-form generation endpoint in one important way: its output contract is extremely narrow.
 
@@ -182,6 +170,8 @@ We can observe the interface and measurements.
 
 We should not pretend we know an architecture that has not been published.
 
+![A generative model prefills, then decodes one token at a time before the structured result; a typed decision model goes from input and questions to distributions in one bounded pass.](images/jev/f2-decode.svg "Where the latency could go. The lower lane is an interpretation of Jev's interface, not its disclosed implementation.")
+
 ---
 
 ## The headline benchmark numbers are real. The comparison is doing a lot of work.
@@ -210,6 +200,8 @@ That is still a substantial difference.
 But it is different from hearing "444× cheaper" without context.
 
 The speed comparison changes again when the baseline is a small, non-reasoning model rather than a slow reasoning-heavy model. Independent measurements in the notebook landed around 239 ms p50 in one setup and roughly 0.43 seconds in others; against small non-reasoning LLMs, the observed advantage was closer to roughly **2–3×** than hundreds of times.
+
+![Log-scale chart of speed and cost multiples: TypeSafe's headline 193.6 times faster and 444.6 times cheaper; about 25 times faster and 76 times cheaper than GPT-5.6 Terra at matched agreement; about 2 to 3 times faster than small non-reasoning LLMs in independent measurements.](images/jev/f3-denominators.svg "The same model against three denominators. The headline multiple depends on which comparator sits underneath it.")
 
 > [!RESULTS] The same model, three denominators
 > - **193.6× / 444.6×** — faster / cheaper: TypeSafe's headline, the high end of its workflow comparisons
@@ -273,6 +265,8 @@ And whenever reality can fall outside your categories, add an explicit escape ha
 `none_of_these` is not cosmetic.
 
 It is part of the safety model.
+
+![An input outside the answer space is forced into the least-wrong valid option, billing, with a valid, confident, wrong answer; an explicit none_of_these option gives it a way out. Without one, an independent evaluation saw 0 of 30 out-of-scope messages rejected at a 0.99 gate.](images/jev/f4-closed-world.svg "A closed-world failure: nothing malformed, nothing out of schema — and still wrong.")
 
 ---
 
@@ -385,27 +379,7 @@ I would use it to avoid calling one unnecessarily.
 
 That leads to an architecture closer to:
 
-```text
-event / user input
-        ↓
-deterministic code
-parse · calculate · lookup
-        ↓
-fast decision layer
-route · classify · score · gate
-       ↙            ↘
-   confident      uncertain / open-ended
-      ↓                  ↓
- deterministic       generative LLM
-    action               ↓
-                         result
-                           ↓
-                     fast verifier
-                       ↙       ↘
-                     pass      fail
-                               ↓
-                         human review
-```
+![A cascade: event, then deterministic code, then a fast decision layer; confident cases go to a deterministic action, uncertain ones to a generative LLM, then a fast verifier that passes a result or fails to human review.](images/jev/f5-cascade.svg "The cascade: each layer is called only when the one before it cannot safely finish."){full}
 
 Plausible positions for this kind of model include query routing, tool selection, guardrails, RAG relevance filtering, document classification, ticket routing, phishing triage, escalation decisions, and output verification.
 

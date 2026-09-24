@@ -349,7 +349,13 @@ function blocks(text, opt) {
       if (imgs.length === 1) {
         const [, alt, src, title] = imgs[0];
         const cap = title || alt;
-        out.push(`<figure data-size="${size}"><img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">${cap ? `<figcaption>${opt.anchors ? num() : ""}${inline(cap, opt)}</figcaption>` : ""}</figure>`);
+        // a drawn figure (.svg) is set inline, so it takes the page's ink, rules and
+        // accent in both reading modes instead of carrying one palette of its own
+        const svg = /\.svg$/i.test(src) && opt.svg ? opt.svg(src) : null;
+        const body = svg
+          ? `<div class="svgfig" role="img" aria-label="${esc(alt)}"><div class="svg-scroll">${svg}</div></div>`
+          : `<img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+        out.push(`<figure data-size="${size}"${svg ? ' class="drawn"' : ""}>${body}${cap ? `<figcaption>${opt.anchors ? num() : ""}${inline(cap, opt)}</figcaption>` : ""}</figure>`);
       } else {
         out.push(`<figure class="gallery" data-size="${size}" style="--n:${imgs.length}">${imgs.map(([, alt, src, title]) =>
           `<div><img src="${esc(opt.media(src))}" alt="${esc(alt)}" loading="lazy" decoding="async">${title || alt ? `<figcaption>${opt.anchors ? num() : ""}${inline(title || alt, opt)}</figcaption>` : ""}</div>`).join("")}</figure>`);
@@ -486,7 +492,13 @@ export function loadContent(root, { drafts = false } = {}) {
       ...(() => {
         const toc = [];
         const math = truthy(data.math) || /^\s*\$\$/m.test(body);
-        return { html: markdown(body, { media, anchors: true, notes: true, math, toc }), toc, math };
+        // drawn figures are read here and inlined; the file's own XML prolog, if any, is dropped
+        const svg = (src) => {
+          const from = join(dir, "blog", src.replace(/^\.\//, ""));
+          if (/^(https?:)?\//.test(src) || !existsSync(from)) return null;
+          return readFileSync(from, "utf8").replace(/<\?xml[^>]*>\s*/, "").replace(/<!--[\s\S]*?-->\s*/g, "").trim();
+        };
+        return { html: markdown(body, { media, anchors: true, notes: true, math, toc, svg }), toc, math };
       })(),
       minutes: Math.max(1, Math.round(words / 230)),
       href: `/blog/${slug}`, source: `content/blog/${f}`
