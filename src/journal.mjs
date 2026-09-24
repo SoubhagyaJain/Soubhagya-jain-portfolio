@@ -436,7 +436,7 @@ function NotesPage(content) {
   </header>
   <section class="wrap sec">${notes.length ? `<ol class="library">
 ${notes.map((n) => `  <li class="doc" data-rv>
-    <div class="doc-rail">${n.date ? `<time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}<span class="k">PDF &#183; ${n.size}${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span></div>
+    <div class="doc-rail">${n.cover ? `<a class="doc-cover" href="${n.href}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(n.cover)}" alt="" loading="lazy" decoding="async"></a>` : ""}${n.date ? `<time datetime="${isoDate(n.date)}">${fmtDate(n.date)}</time>` : ""}<span class="k">PDF &#183; ${n.size}${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span></div>
     <div class="doc-body">
       <h2><a href="${n.href}" target="_blank" rel="noopener">${esc(n.title)}</a></h2>
       ${n.summary ? `<p>${esc(n.summary)}</p>` : ""}
