@@ -6,10 +6,36 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/linkedin", "destination": "/blog/linkedin", "permanent": true },
-    { "source": "/blog/linkdln", "destination": "/blog/linkedin", "permanent": true },
-    { "source": "/blog/linkdin", "destination": "/blog/linkedin", "permanent": true },
-    { "source": "/blog/linkedln", "destination": "/blog/linkedin", "permanent": true },
-    { "source": "/journal", "destination": "/blog", "permanent": true }
-  ]
+    {
+      "source": "/linkedin",
+      "destination": "/blog/linkedin",
+      "permanent": true
+    },
+    {
+      "source": "/blog/linkdln",
+      "destination": "/blog/linkedin",
+      "permanent": true
+    },
+    {
+      "source": "/blog/linkdin",
+      "destination": "/blog/linkedin",
+      "permanent": true
+    },
+    {
+      "source": "/blog/linkedln",
+      "destination": "/blog/linkedin",
+      "permanent": true
+    },
+    {
+      "source": "/journal",
+      "destination": "/blog",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "api/github.js": {
+      "includeFiles": "content/github.json",
+      "maxDuration": 15
+    }
+  }
 }

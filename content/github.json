@@ -1,0 +1,64 @@
+{
+  "_readme": "The GitHub chapter on the home page (03.1). `username` drives every live request. `featured` is the exhibition list, in order: `repo` must be the exact repository name; name/category/description/technologies are yours to write; stars, language and last update come from GitHub at build time and refresh from /api/github. Leave `technologies` empty to show GitHub's primary language instead. Set GITHUB_TOKEN in Vercel (a fine-grained token with no permissions is enough) for exact contribution counts via GraphQL and a higher rate limit; without it the calendar is read from your public profile. `plate` picks the drawn engineering plate shown on hover: rag, inference, agents, evaluation, ai-systems or ml-infra.",
+  "username": "SoubhagyaJain",
+  "featured": [
+    {
+      "repo": "Company-policy-rag",
+      "name": "Aperture RAG",
+      "category": "RAG + AI Reliability",
+      "description": "A local-first retrieval system built around one constraint: if the evidence is weak, the answer should not pretend otherwise.",
+      "technologies": [
+        "Python",
+        "FastAPI"
+      ],
+      "liveUrl": "",
+      "plate": "rag"
+    },
+    {
+      "repo": "shared-prefix-benchmark",
+      "name": "Shared-Prefix Benchmark",
+      "category": "ML Systems · Benchmark",
+      "description": "Measures what KV-cache reuse does to prefill, time to first token and throughput for a local qwen2.5:7b on Ollama.",
+      "technologies": [
+        "Python",
+        "Ollama"
+      ],
+      "liveUrl": "",
+      "plate": "inference"
+    },
+    {
+      "repo": "Automate-testing-for-llm",
+      "name": "Automated LLM Testing",
+      "category": "LLMOps",
+      "description": "A CI pipeline that evaluates LLM applications for hallucinations, harmful outputs and data drift before they ship.",
+      "technologies": [],
+      "liveUrl": "",
+      "plate": "evaluation"
+    },
+    {
+      "repo": "CyberSentinel-SOC",
+      "name": "CyberSentinel SOC",
+      "category": "Explainable AI · Security",
+      "description": "A security-operations platform that explains its predictions with feature importance, SHAP local explanations and plain-language summaries.",
+      "technologies": [
+        "Python",
+        "SHAP"
+      ],
+      "liveUrl": "",
+      "plate": "ai-systems"
+    },
+    {
+      "repo": "Collabrative-Filtering-System",
+      "name": "Collaborative Filtering",
+      "category": "Recommender Systems",
+      "description": "User–user collaborative filtering on an IMDB movie dataset, served as an interactive Streamlit recommender.",
+      "technologies": [
+        "Python",
+        "scikit-learn",
+        "Streamlit"
+      ],
+      "liveUrl": "",
+      "plate": "ml-infra"
+    }
+  ]
+}
