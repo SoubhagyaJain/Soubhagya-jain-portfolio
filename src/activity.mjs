@@ -124,7 +124,7 @@ function record(c, i, total) {
   const d = ym(c.date);
   return `<article class="cx-item" data-cx="${i}">
     <div class="cx-doc${c.image ? " has-img" : ""}">
-      <span class="cx-paper${c.image ? " has-img" : ""}">${face(c, i, total)}</span>
+      <span class="cx-paper${c.image ? " has-img" : c.art ? " has-art" : ""}">${face(c, i, total)}</span>
     </div>
     <div class="cx-meta">
       <span class="cx-ix">${n2(i + 1)}</span>
@@ -137,11 +137,15 @@ function record(c, i, total) {
 }
 
 /* The face of a record, shared by the wheel and the plain archive */
+export const artFile = (c, i) => c.art ? `credentials/art/${n2(i + 1)}-${c.art}.svg` : "";
+
 function face(c, i, total) {
   const d = ym(c.date);
+  // the drawing is decorative: the record's own words say what it is
+  const art = c.art ? `<img class="pp-art" src="/${artFile(c, i)}" alt="" loading="lazy" decoding="async" draggable="false">` : "";
   return c.image
     ? `<img src="/${esc(c.image)}" alt="Certificate: ${esc(c.title)}, issued by ${esc(c.issuer)}" loading="lazy" decoding="async" draggable="false">`
-    : `<span class="pp-top"><span>${esc(c.issuer)}</span><span>Record ${n2(i + 1)} / ${n2(total)}</span></span>
+    : `${art}<span class="pp-top"><span>${esc(c.issuer)}</span><span>Record ${n2(i + 1)} / ${n2(total)}</span></span>
        <span class="pp-title">${esc(c.title)}</span>
        <span class="pp-rule"></span>
        <span class="pp-foot"><span>Issued ${d.short}</span>${c.credentialId ? `<span class="id">${esc(c.credentialId)}</span>` : ""}</span>`;
@@ -160,7 +164,7 @@ function wheel(list) {
     <div class="cxw-stage">
       <div class="cxw-view" tabindex="0" role="listbox" aria-label="${list.length} credentials. Scroll, or use the arrow keys, to turn; Enter opens the front record." aria-activedescendant="cxw-0">
         <div class="cxw-wheel">
-          ${list.map((c, i) => `<button type="button" tabindex="-1" class="cxw-card" id="cxw-${i}" role="option" aria-selected="${i ? "false" : "true"}" data-i="${i}" data-cursor="View" aria-label="${esc(c.title)}, ${esc(c.issuer)}, ${ym(c.date).long}"><span class="cxw-face"><span class="cx-paper${c.image ? " has-img" : ""}">${face(c, i, list.length)}</span></span></button>`).join("")}
+          ${list.map((c, i) => `<button type="button" tabindex="-1" class="cxw-card" id="cxw-${i}" role="option" aria-selected="${i ? "false" : "true"}" data-i="${i}" data-cursor="View" aria-label="${esc(c.title)}, ${esc(c.issuer)}, ${ym(c.date).long}"><span class="cxw-face"><span class="cx-paper${c.image ? " has-img" : c.art ? " has-art" : ""}">${face(c, i, list.length)}</span></span></button>`).join("")}
         </div>
       </div>
       <div class="cxw-label" aria-hidden="true">${esc(label)}</div>

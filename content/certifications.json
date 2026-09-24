@@ -1,20 +1,171 @@
 {
-  "_readme": "The Credentials archive on the home page (03.2), newest first within each month. date is YYYY-MM. Add `image` (a file in content/certificates/, e.g. \"certificates/agentic-ai.jpg\") to show the real certificate instead of the typeset record, and `file` (a PDF in the same folder) to offer a download. Skills list only what the issuer shows; LinkedIn's hidden \"+N skills\" are left out rather than guessed. verificationUrl values marked in `_verify` were built from the credential ID using the issuer's standard verification address; confirm they open, and fill in the empty ones.",
+  "_readme": "The Credentials archive on the home page (03.2), newest first within each month. date is YYYY-MM. Add `image` (a file in content/certificates/, e.g. \"certificates/agentic-ai.jpg\") to show the real certificate instead of the typeset record, and `file` (a PDF in the same folder) to offer a download. Skills list only what the issuer shows; LinkedIn's hidden \"+N skills\" are left out rather than guessed. verificationUrl values marked in `_verify` were built from the credential ID using the issuer's standard verification address; confirm they open, and fill in the empty ones. `art` picks the drawing printed on the record (an illustration of the subject, not the certificate): guardrails, hub, llmops, attention, agentic, trace, semantic, hnsw, monitoring, documents, network, datascience, gpu or fundamentals. Leave it empty for a plain record; an `image` replaces the record entirely.",
   "_verify": "DeepLearning.AI: learn.deeplearning.ai/accomplishments/<id> · Udemy: udemy.com/certificate/<id>/ · Coursera: coursera.org/account/accomplishments/verify/<id> · MongoDB (MDB… ids) and Hugging Face: verification address not supplied, left empty.",
   "certifications": [
-    { "title": "Safe and reliable AI via guardrails", "issuer": "DeepLearning.AI", "date": "2026-07", "credentialId": "dc929629-6c85-463e-8e46-f7c2f673fcb2", "verificationUrl": "https://learn.deeplearning.ai/accomplishments/dc929629-6c85-463e-8e46-f7c2f673fcb2", "skills": [], "image": "", "file": "" },
-    { "title": "Open Source Models with Hugging Face", "issuer": "DeepLearning.AI", "date": "2026-06", "credentialId": "95f89803-cba3-41fd-a285-bedc8a665656", "verificationUrl": "https://learn.deeplearning.ai/accomplishments/95f89803-cba3-41fd-a285-bedc8a665656", "skills": [], "image": "", "file": "" },
-    { "title": "Automated Testing for LLMOps", "issuer": "DeepLearning.AI", "date": "2026-06", "credentialId": "d500d2da-8b42-465b-a891-1a56f1eca965", "verificationUrl": "https://learn.deeplearning.ai/accomplishments/d500d2da-8b42-465b-a891-1a56f1eca965", "skills": ["Model Evaluation", "LLMOps"], "image": "", "file": "" },
-    { "title": "Transformers in Practice", "issuer": "DeepLearning.AI", "date": "2026-06", "credentialId": "1f0009ee-4897-473e-b957-cbfe74490b2d", "verificationUrl": "https://learn.deeplearning.ai/accomplishments/1f0009ee-4897-473e-b957-cbfe74490b2d", "skills": [], "image": "", "file": "" },
-    { "title": "Agentic AI", "issuer": "DeepLearning.AI", "date": "2026-05", "credentialId": "5a25a719-42bc-4fd0-95c6-84f67b3e580a", "verificationUrl": "https://learn.deeplearning.ai/accomplishments/5a25a719-42bc-4fd0-95c6-84f67b3e580a", "skills": ["Performance Metrics", "Production Deployment"], "image": "", "file": "" },
-    { "title": "AI Agents Fundamentals", "issuer": "Hugging Face", "date": "2026-05", "credentialId": "Soubhagya007", "verificationUrl": "", "skills": [], "image": "", "file": "" },
-    { "title": "Using Vector Search for Semantic Search", "issuer": "MongoDB", "date": "2026-05", "credentialId": "MDBs2pizclpgb", "verificationUrl": "", "skills": [], "image": "", "file": "" },
-    { "title": "Vector Search Performance", "issuer": "MongoDB", "date": "2026-05", "credentialId": "", "verificationUrl": "https://www.credly.com/badges/3f7024ef-5cbb-4884-8e9a-5fe5cb89e89c", "skills": ["Database Analysis", "Cost Management"], "image": "", "file": "" },
-    { "title": "Monitoring Tooling", "issuer": "MongoDB", "date": "2026-05", "credentialId": "MDBvrxle89hq2", "verificationUrl": "", "skills": ["Alarm Management"], "image": "", "file": "" },
-    { "title": "MongoDB Overview", "issuer": "MongoDB", "date": "2026-05", "credentialId": "MDB8i67x1a1qq", "verificationUrl": "", "skills": [], "image": "", "file": "" },
-    { "title": "Deep Learning A-Z 2026: Neural Networks, AI, AWS & LLM Prize", "issuer": "Udemy", "date": "2026-05", "credentialId": "UC-180fe2fe-9d3a-46e1-805d-b1d23546d178", "verificationUrl": "https://www.udemy.com/certificate/UC-180fe2fe-9d3a-46e1-805d-b1d23546d178/", "skills": [], "image": "", "file": "" },
-    { "title": "Data Science A-Z: Hands-On Exercises & ChatGPT Prize [2026]", "issuer": "Udemy", "date": "2026-02", "credentialId": "UC-13ccdb0a-8f13-4615-b241-f093d5639cde", "verificationUrl": "https://www.udemy.com/certificate/UC-13ccdb0a-8f13-4615-b241-f093d5639cde/", "skills": [], "image": "", "file": "" },
-    { "title": "NVIDIA GenAI & LLMs", "issuer": "Udemy", "date": "2026-02", "credentialId": "UC-ef6bd536-bf23-4aa7-a799-a60995b0452e", "verificationUrl": "https://www.udemy.com/certificate/UC-ef6bd536-bf23-4aa7-a799-a60995b0452e/", "skills": [], "image": "", "file": "" },
-    { "title": "AI Fundamentals", "issuer": "Google", "date": "2026-02", "credentialId": "EICF5GMLR3SY", "verificationUrl": "https://www.coursera.org/account/accomplishments/verify/EICF5GMLR3SY", "skills": [], "image": "", "file": "" }
+    {
+      "title": "Safe and reliable AI via guardrails",
+      "issuer": "DeepLearning.AI",
+      "date": "2026-07",
+      "credentialId": "dc929629-6c85-463e-8e46-f7c2f673fcb2",
+      "verificationUrl": "https://learn.deeplearning.ai/accomplishments/dc929629-6c85-463e-8e46-f7c2f673fcb2",
+      "skills": [],
+      "art": "guardrails",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Open Source Models with Hugging Face",
+      "issuer": "DeepLearning.AI",
+      "date": "2026-06",
+      "credentialId": "95f89803-cba3-41fd-a285-bedc8a665656",
+      "verificationUrl": "https://learn.deeplearning.ai/accomplishments/95f89803-cba3-41fd-a285-bedc8a665656",
+      "skills": [],
+      "art": "hub",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Automated Testing for LLMOps",
+      "issuer": "DeepLearning.AI",
+      "date": "2026-06",
+      "credentialId": "d500d2da-8b42-465b-a891-1a56f1eca965",
+      "verificationUrl": "https://learn.deeplearning.ai/accomplishments/d500d2da-8b42-465b-a891-1a56f1eca965",
+      "skills": [
+        "Model Evaluation",
+        "LLMOps"
+      ],
+      "art": "llmops",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Transformers in Practice",
+      "issuer": "DeepLearning.AI",
+      "date": "2026-06",
+      "credentialId": "1f0009ee-4897-473e-b957-cbfe74490b2d",
+      "verificationUrl": "https://learn.deeplearning.ai/accomplishments/1f0009ee-4897-473e-b957-cbfe74490b2d",
+      "skills": [],
+      "art": "attention",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Agentic AI",
+      "issuer": "DeepLearning.AI",
+      "date": "2026-05",
+      "credentialId": "5a25a719-42bc-4fd0-95c6-84f67b3e580a",
+      "verificationUrl": "https://learn.deeplearning.ai/accomplishments/5a25a719-42bc-4fd0-95c6-84f67b3e580a",
+      "skills": [
+        "Performance Metrics",
+        "Production Deployment"
+      ],
+      "art": "agentic",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "AI Agents Fundamentals",
+      "issuer": "Hugging Face",
+      "date": "2026-05",
+      "credentialId": "Soubhagya007",
+      "verificationUrl": "",
+      "skills": [],
+      "art": "trace",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Using Vector Search for Semantic Search",
+      "issuer": "MongoDB",
+      "date": "2026-05",
+      "credentialId": "MDBs2pizclpgb",
+      "verificationUrl": "",
+      "skills": [],
+      "art": "semantic",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Vector Search Performance",
+      "issuer": "MongoDB",
+      "date": "2026-05",
+      "credentialId": "",
+      "verificationUrl": "https://www.credly.com/badges/3f7024ef-5cbb-4884-8e9a-5fe5cb89e89c",
+      "skills": [
+        "Database Analysis",
+        "Cost Management"
+      ],
+      "art": "hnsw",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Monitoring Tooling",
+      "issuer": "MongoDB",
+      "date": "2026-05",
+      "credentialId": "MDBvrxle89hq2",
+      "verificationUrl": "",
+      "skills": [
+        "Alarm Management"
+      ],
+      "art": "monitoring",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "MongoDB Overview",
+      "issuer": "MongoDB",
+      "date": "2026-05",
+      "credentialId": "MDB8i67x1a1qq",
+      "verificationUrl": "",
+      "skills": [],
+      "art": "documents",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Deep Learning A-Z 2026: Neural Networks, AI, AWS & LLM Prize",
+      "issuer": "Udemy",
+      "date": "2026-05",
+      "credentialId": "UC-180fe2fe-9d3a-46e1-805d-b1d23546d178",
+      "verificationUrl": "https://www.udemy.com/certificate/UC-180fe2fe-9d3a-46e1-805d-b1d23546d178/",
+      "skills": [],
+      "art": "network",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "Data Science A-Z: Hands-On Exercises & ChatGPT Prize [2026]",
+      "issuer": "Udemy",
+      "date": "2026-02",
+      "credentialId": "UC-13ccdb0a-8f13-4615-b241-f093d5639cde",
+      "verificationUrl": "https://www.udemy.com/certificate/UC-13ccdb0a-8f13-4615-b241-f093d5639cde/",
+      "skills": [],
+      "art": "datascience",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "NVIDIA GenAI & LLMs",
+      "issuer": "Udemy",
+      "date": "2026-02",
+      "credentialId": "UC-ef6bd536-bf23-4aa7-a799-a60995b0452e",
+      "verificationUrl": "https://www.udemy.com/certificate/UC-ef6bd536-bf23-4aa7-a799-a60995b0452e/",
+      "skills": [],
+      "art": "gpu",
+      "image": "",
+      "file": ""
+    },
+    {
+      "title": "AI Fundamentals",
+      "issuer": "Google",
+      "date": "2026-02",
+      "credentialId": "EICF5GMLR3SY",
+      "verificationUrl": "https://www.coursera.org/account/accomplishments/verify/EICF5GMLR3SY",
+      "skills": [],
+      "art": "fundamentals",
+      "image": "",
+      "file": ""
+    }
   ]
 }

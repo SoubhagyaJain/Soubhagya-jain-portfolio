@@ -30,7 +30,8 @@ import { Script } from "node:vm";
 import { createHash } from "node:crypto";
 import { loadContent, homeWriting } from "./src/content.mjs";
 import { fetchGitHub } from "./src/github.mjs";
-import { renderActivity } from "./src/activity.mjs";
+import { renderActivity, artFile } from "./src/activity.mjs";
+import { credentialArt } from "./src/credential-art.mjs";
 import { renderJournal } from "./src/journal.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -218,9 +219,15 @@ if (process.env.GH_FIXTURE) {
   }
 }
 const certs = JSON.parse(readFileSync(join(ROOT, "content", "certifications.json"), "utf8")).certifications;
-for (const c of certs) {
+const generated = [];                                  // [pathInsideDist, text]
+certs.forEach((c, i) => {
   for (const k of ["image", "file"]) if (c[k]) content.copies.push([join(ROOT, "content", c[k]), c[k]]);
-}
+  if (c.art) {
+    const svg = credentialArt(c.art, c.title);
+    if (!svg) throw new Error(`content/certifications.json: unknown art "${c.art}" for "${c.title}"`);
+    generated.push([artFile(c, i), svg]);
+  }
+});
 const ACT_RE = /<dc-slot name="activity"><\/dc-slot>/;
 if (!ACT_RE.test(body)) throw new Error(`${ENTRY} has no <dc-slot name="activity"> for chapter 03`);
 body = body.replace(ACT_RE, () => renderActivity({ config: ghConfig, data: ghData, certifications: certs }));
@@ -453,6 +460,10 @@ const pages = renderJournal(content, {
   drafts: DRAFTS
 });
 for (const [path, text] of pages) {
+  mkdirSync(dirname(join(OUT, path)), { recursive: true });
+  writeFileSync(join(OUT, path), text);
+}
+for (const [path, text] of generated) {
   mkdirSync(dirname(join(OUT, path)), { recursive: true });
   writeFileSync(join(OUT, path), text);
 }
