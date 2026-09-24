@@ -48,7 +48,7 @@ dist/             the built site — generated, wiped on every build
 
 The home page reads in this order, and the nav follows it: **About** (intro and a
 three-fact ledger) → **Work** (Aperture, the prefix-caching benchmark, the fraud design study, the inference
-engine) → **How I work** (philosophy, beyond the terminal, direction) → **Background**
+engine) → **Engineering activity & credentials** (GitHub, then the credential archive) → **How I work** (philosophy, beyond the terminal, direction) → **Background**
 (education, technology) → **Writing** (latest journal entries and notes) → **Contact**.
 The nav's scroll spy lets one item own more than one stretch (`data-spy`), so About
 lights again over Background.
@@ -59,6 +59,34 @@ Photograph logic: more for daylight, less for night) and runs at 30fps instead o
 parking. Legibility over
 the lit ground comes from local shading behind each block of text rather than from
 darkening the whole world.
+
+## GitHub activity and credentials (chapter 03)
+
+Rendered at build time by `src/activity.mjs`, styled by `src/activity.css`, animated by
+`src/activity.js` (appended to `app.js`). The markup is complete on its own: with no
+script, or with GitHub down, every number, repository, credential and link is still
+there.
+
+- **Data flow.** `build.mjs` reads GitHub once per deploy through `src/github.mjs` and
+  bakes the result into the page. The page then asks `/api/github` (a Vercel function,
+  `api/github.js`) for anything newer; the CDN caches that for six hours and serves it
+  stale for a day while refreshing, so GitHub sees a few requests a day. If GitHub
+  cannot be reached at build time, `content/github-snapshot.json` (public data only) is
+  used instead.
+- **Token (optional).** Set `GITHUB_TOKEN` in the Vercel project (a fine-grained token
+  with no permissions is enough). With it, the contribution calendar and pinned repos
+  come from GraphQL and the rate limit rises; without it, the calendar is read from the
+  public profile. It never reaches the browser.
+- **Featured repositories** are listed in `content/github.json`: exact repo name, your
+  own title, category, description, stack, optional live URL, and the drawn plate shown
+  on hover. Stars and "updated" dates come from GitHub.
+- **Credentials** live in `content/certifications.json`. Add `image` (and optionally
+  `file`, a PDF) under `content/certificates/` to show the real certificate instead of
+  the typeset record. Only list skills the issuer shows.
+- **Metrics** are only ever read or summed from GitHub data; anything GitHub does not
+  return shows as a dash rather than a guess.
+- Previewing without network: `GH_FIXTURE=path/to/data.json node build.mjs` substitutes
+  local data. Never set it on Vercel.
 
 ## The Engineering Journal
 

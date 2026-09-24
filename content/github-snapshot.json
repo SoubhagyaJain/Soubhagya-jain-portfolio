@@ -1,0 +1,411 @@
+{
+ "_note": "Last-known-good public GitHub data, used only when the build and /api/github both fail to reach GitHub. Public repositories only.",
+ "fetchedAt": "2026-09-24T10:30:00Z",
+ "source": "snapshot",
+ "user": {
+  "login": "SoubhagyaJain",
+  "name": "SoubhagyaNeural",
+  "avatar": "https://avatars.githubusercontent.com/u/213740668?v=4",
+  "bio": "ML Engineer | Production ML Systems | FastAPI • Docker • MLOps • XAI |   IIT Madras",
+  "followers": 2,
+  "following": 7,
+  "publicRepos": 45,
+  "location": "India",
+  "url": "https://github.com/SoubhagyaJain",
+  "createdAt": "2025-05-28T05:21:29Z"
+ },
+ "repos": [
+  {
+   "name": "Soubhagya-jain-portfolio",
+   "url": "https://github.com/SoubhagyaJain/Soubhagya-jain-portfolio",
+   "description": "",
+   "language": "HTML",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-09-24T10:09:44Z",
+   "homepage": "https://soubhagya-jain-portfolio.vercel.app"
+  },
+  {
+   "name": "Company-policy-rag",
+   "url": "https://github.com/SoubhagyaJain/Company-policy-rag",
+   "description": "",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-09-23T11:34:27Z",
+   "homepage": ""
+  },
+  {
+   "name": "DecisionGuard",
+   "url": "https://github.com/SoubhagyaJain/DecisionGuard",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-09-23T11:13:29Z",
+   "homepage": ""
+  },
+  {
+   "name": "shared-prefix-benchmark",
+   "url": "https://github.com/SoubhagyaJain/shared-prefix-benchmark",
+   "description": "",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-09-21T04:06:02Z",
+   "homepage": ""
+  },
+  {
+   "name": "linkedin-content-os",
+   "url": "https://github.com/SoubhagyaJain/linkedin-content-os",
+   "description": "",
+   "language": "PowerShell",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-08-26T09:45:12Z",
+   "homepage": ""
+  },
+  {
+   "name": "SoubhagyaJain",
+   "url": "https://github.com/SoubhagyaJain/SoubhagyaJain",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-08-25T11:19:48Z",
+   "homepage": ""
+  },
+  {
+   "name": "AI-ENGINERRING-",
+   "url": "https://github.com/SoubhagyaJain/AI-ENGINERRING-",
+   "description": "",
+   "language": "Python",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-08-24T10:59:35Z",
+   "homepage": ""
+  },
+  {
+   "name": "CycloneWatch-Agent-The-Autonomous-Disaster-Response-Agent.",
+   "url": "https://github.com/SoubhagyaJain/CycloneWatch-Agent-The-Autonomous-Disaster-Response-Agent.",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-08-17T06:49:54Z",
+   "homepage": ""
+  },
+  {
+   "name": "Vector-steel",
+   "url": "https://github.com/SoubhagyaJain/Vector-steel",
+   "description": "",
+   "language": "HTML",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-08-03T13:49:44Z",
+   "homepage": "https://65f23df4-a841-461a-981c-42185351925.vercel.app"
+  },
+  {
+   "name": "CodeHarness",
+   "url": "https://github.com/SoubhagyaJain/CodeHarness",
+   "description": "",
+   "language": "HTML",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-07-24T13:03:48Z",
+   "homepage": "https://docssite-bice.vercel.app"
+  },
+  {
+   "name": "Food-Bridge",
+   "url": "https://github.com/SoubhagyaJain/Food-Bridge",
+   "description": "",
+   "language": "TypeScript",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-06-28T08:23:23Z",
+   "homepage": ""
+  },
+  {
+   "name": "FOODBRIDGE",
+   "url": "https://github.com/SoubhagyaJain/FOODBRIDGE",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-06-24T08:20:39Z",
+   "homepage": ""
+  },
+  {
+   "name": "Website",
+   "url": "https://github.com/SoubhagyaJain/Website",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-06-16T11:37:50Z",
+   "homepage": ""
+  },
+  {
+   "name": "Scout-agent",
+   "url": "https://github.com/SoubhagyaJain/Scout-agent",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-06-11T05:16:04Z",
+   "homepage": ""
+  },
+  {
+   "name": "Rag-",
+   "url": "https://github.com/SoubhagyaJain/Rag-",
+   "description": "",
+   "language": "Python",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-06-07T04:04:05Z",
+   "homepage": ""
+  },
+  {
+   "name": "RAG-SYSTEM",
+   "url": "https://github.com/SoubhagyaJain/RAG-SYSTEM",
+   "description": "",
+   "language": "Jupyter Notebook",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-06-06T11:53:03Z",
+   "homepage": ""
+  },
+  {
+   "name": "Quiz-generator-locally-",
+   "url": "https://github.com/SoubhagyaJain/Quiz-generator-locally-",
+   "description": "",
+   "language": "Jupyter Notebook",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-06-02T05:28:14Z",
+   "homepage": ""
+  },
+  {
+   "name": "Automate-testing-for-llm",
+   "url": "https://github.com/SoubhagyaJain/Automate-testing-for-llm",
+   "description": "Built an LLMOps-based CI pipeline for automated evaluation of LLM applications. Implemented testing workflows to detect hallucinations, harmful outputs, and data drift while enabling continuous integration, faster debugging, safer deployments, and scalable AI application development.",
+   "language": null,
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-06-01T08:01:45Z",
+   "homepage": ""
+  },
+  {
+   "name": "Multi-Agent-System-with-Ollama-Scout-Publisher-and-Orchestrator",
+   "url": "https://github.com/SoubhagyaJain/Multi-Agent-System-with-Ollama-Scout-Publisher-and-Orchestrator",
+   "description": "",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-05-24T06:44:15Z",
+   "homepage": ""
+  },
+  {
+   "name": "Recognize-Emotions-from-Speech-using-Librosa",
+   "url": "https://github.com/SoubhagyaJain/Recognize-Emotions-from-Speech-using-Librosa",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-05-15T14:29:24Z",
+   "homepage": ""
+  },
+  {
+   "name": "E-Commerce-Website-Using-Next.js",
+   "url": "https://github.com/SoubhagyaJain/E-Commerce-Website-Using-Next.js",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-05-13T09:38:44Z",
+   "homepage": ""
+  },
+  {
+   "name": "TensorTonic-Solutions",
+   "url": "https://github.com/SoubhagyaJain/TensorTonic-Solutions",
+   "description": "My solutions to TensorTonic problems",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-05-07T11:39:57Z",
+   "homepage": ""
+  },
+  {
+   "name": "Cyber-system",
+   "url": "https://github.com/SoubhagyaJain/Cyber-system",
+   "description": "",
+   "language": "JavaScript",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-04-21T14:16:59Z",
+   "homepage": ""
+  },
+  {
+   "name": "Animation",
+   "url": "https://github.com/SoubhagyaJain/Animation",
+   "description": "",
+   "language": "Python",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-04-07T07:56:42Z",
+   "homepage": ""
+  },
+  {
+   "name": "Blog",
+   "url": "https://github.com/SoubhagyaJain/Blog",
+   "description": "",
+   "language": null,
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-04-05T04:06:16Z",
+   "homepage": ""
+  },
+  {
+   "name": "Portfolio",
+   "url": "https://github.com/SoubhagyaJain/Portfolio",
+   "description": "",
+   "language": "HTML",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-03-21T04:56:03Z",
+   "homepage": ""
+  },
+  {
+   "name": "AISC",
+   "url": "https://github.com/SoubhagyaJain/AISC",
+   "description": "",
+   "language": "TypeScript",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-03-12T06:18:10Z",
+   "homepage": "https://aisc-three.vercel.app"
+  },
+  {
+   "name": "CyberSentinel-AI",
+   "url": "https://github.com/SoubhagyaJain/CyberSentinel-AI",
+   "description": "",
+   "language": "JavaScript",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-03-04T03:35:30Z",
+   "homepage": "https://cyber-sentinel-ai-ten.vercel.app"
+  },
+  {
+   "name": "Personal-collabrative-system",
+   "url": "https://github.com/SoubhagyaJain/Personal-collabrative-system",
+   "description": "",
+   "language": "Python",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-03-02T05:39:50Z",
+   "homepage": ""
+  },
+  {
+   "name": "Collabrative-Filtering-System",
+   "url": "https://github.com/SoubhagyaJain/Collabrative-Filtering-System",
+   "description": "Built a user-user collaborative filtering recommendation system using an IMDB movie dataset. This memory-based approach finds similar users from interaction data and recommends movies they liked. Implemented using scikit-learn and deployed as a simple interactive recommender web app with Streamlit.",
+   "language": "Python",
+   "stars": 2,
+   "forks": 0,
+   "pushedAt": "2026-03-02T03:39:45Z",
+   "homepage": ""
+  },
+  {
+   "name": "CyberSentinel-SOC",
+   "url": "https://github.com/SoubhagyaJain/CyberSentinel-SOC",
+   "description": "To enhance transparency, the platform integrates Explainable AI techniques, including Feature Importance visualization and SHAP-based local explanations. Natural language summaries translate model predictions into beginner-friendly insights, making the system both educational and operational.",
+   "language": "Python",
+   "stars": 0,
+   "forks": 0,
+   "pushedAt": "2026-02-20T12:38:49Z",
+   "homepage": ""
+  },
+  {
+   "name": "Detect-cyber-intrusion",
+   "url": "https://github.com/SoubhagyaJain/Detect-cyber-intrusion",
+   "description": "",
+   "language": "Jupyter Notebook",
+   "stars": 0,
+   "forks": 1,
+   "pushedAt": "2026-02-15T16:06:15Z",
+   "homepage": ""
+  },
+  {
+   "name": "Traffic-prediction",
+   "url": "https://github.com/SoubhagyaJain/Traffic-prediction",
+   "description": "",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-02-12T03:13:56Z",
+   "homepage": ""
+  },
+  {
+   "name": "infoundry",
+   "url": "https://github.com/SoubhagyaJain/infoundry",
+   "description": "",
+   "language": "Jupyter Notebook",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-01-27T01:42:02Z",
+   "homepage": ""
+  },
+  {
+   "name": "Personal-ai",
+   "url": "https://github.com/SoubhagyaJain/Personal-ai",
+   "description": "",
+   "language": "TypeScript",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-01-26T11:09:42Z",
+   "homepage": ""
+  },
+  {
+   "name": "Sim-automation",
+   "url": "https://github.com/SoubhagyaJain/Sim-automation",
+   "description": "",
+   "language": "TypeScript",
+   "stars": 2,
+   "forks": 0,
+   "pushedAt": "2026-01-25T05:38:32Z",
+   "homepage": ""
+  },
+  {
+   "name": "-Build-Agents-that-never-forget-with-self-evolving-AI-memory",
+   "url": "https://github.com/SoubhagyaJain/-Build-Agents-that-never-forget-with-self-evolving-AI-memory",
+   "description": "Most agents have no real memory. Every conversation starts fresh with no recall of yesterday and no understanding of how information connects.",
+   "language": "Python",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-01-23T09:39:30Z",
+   "homepage": ""
+  },
+  {
+   "name": "Browser-Automation-in-any-language",
+   "url": "https://github.com/SoubhagyaJain/Browser-Automation-in-any-language",
+   "description": "",
+   "language": "TypeScript",
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-01-23T09:20:44Z",
+   "homepage": ""
+  },
+  {
+   "name": "Sam0064324314",
+   "url": "https://github.com/SoubhagyaJain/Sam0064324314",
+   "description": "",
+   "language": null,
+   "stars": 1,
+   "forks": 0,
+   "pushedAt": "2026-01-13T15:29:38Z",
+   "homepage": ""
+  }
+ ],
+ "calendar": null,
+ "events": []
+}

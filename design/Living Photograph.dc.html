@@ -214,7 +214,7 @@
 
         <div data-nav-links style="position: relative; z-index: 2; display: flex; align-items: center; gap: 2px">
           <a href="#about" data-nav-item="1" data-active="1" data-spy="thinking background" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">About</a>
-          <a href="#selected-systems" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Work</a>
+          <a href="#selected-systems" data-spy="activity" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Work</a>
           <a href="/blog" data-spy="writing writing-blog" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Blog</a>
           <a href="/notes" data-spy="writing-notes" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Notes</a>
           <a href="#contact" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Contact</a>
@@ -354,6 +354,14 @@
     <div ref="{{ tipRef }}" style="position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -140%); padding: 8px 12px; border-radius: 9px; background: rgba(7,16,24,0.62); backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2); box-shadow: 0 0 0 1px rgba(226,238,242,0.14), 0 1px 0 rgba(255,255,255,0.18) inset, 0 18px 30px -22px rgba(2,6,10,0.9); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(244,249,243,0.92); white-space: nowrap; transition: opacity .3s ease"></div>
   </section>
 
+  <!-- Chapter 03, filled at build time by src/activity.mjs from GitHub and
+       content/certifications.json; src/activity.js adds the motion. -->
+  <section id="activity" style="scroll-margin-top: 96px; position: relative; padding: clamp(90px, 18vh, 220px) clamp(22px, 4vw, 54px) clamp(40px, 8vh, 100px); box-sizing: border-box">
+    <div style="position: relative; max-width: 1220px; margin: 0 auto">
+      <dc-slot name="activity"></dc-slot>
+    </div>
+  </section>
+
   <section id="thinking" style="scroll-margin-top: 96px; position: relative; overflow: clip; padding: 0 clamp(22px, 4vw, 54px); box-sizing: border-box">
     <div style="position: relative; max-width: 1220px; margin: 0 auto">
     <div id="philosophy" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 82% at 40% 48%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
@@ -393,7 +401,7 @@
     <div style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 70% at 30% 40%, rgba(5,10,15,0.46), rgba(5,10,15,0.1) 70%, rgba(5,10,15,0) 90%)"></div>
     <div style="position: relative; max-width: 1220px; margin: 0 auto">
       <header class="w-head" style="opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
-        <div class="w-eyebrow"><span class="n">05</span><span class="s">/</span>Writing</div>
+        <div class="w-eyebrow"><span class="n">06</span><span class="s">/</span>Writing</div>
         <h2>Written down.</h2>
         <p class="w-lead">Articles, the posts I write on LinkedIn, and study notes you can download as PDFs.</p>
       </header>
@@ -1404,6 +1412,8 @@ class Component extends DCLogic {
 
     const paint = (name) => {
       const c = CHROME[name] || CHROME.dark;
+      // chapter 03 draws its own canvases and styles its paper per plate
+      document.documentElement.dataset.scene = name === "day" ? "day" : "dark";
       const veil = this.veilRef.current, dim = this.dimRef.current;
       if (veil) veil.style.background = c.veil;
       if (dim) dim.style.background = c.dim;

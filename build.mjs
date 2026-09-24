@@ -29,6 +29,8 @@ import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
 import { createHash } from "node:crypto";
 import { loadContent, homeWriting } from "./src/content.mjs";
+import { fetchGitHub } from "./src/github.mjs";
+import { renderActivity } from "./src/activity.mjs";
 import { renderJournal } from "./src/journal.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -197,6 +199,32 @@ const SLOT_RE = /<dc-slot name="writing"><\/dc-slot>/;
 if (!SLOT_RE.test(body)) throw new Error(`${ENTRY} has no <dc-slot name="writing"> for the Writing chapter`);
 body = body.replace(SLOT_RE, () => homeWriting(content));
 
+/* ── chapter 03: GitHub activity and credentials ─────────────────────────────
+   GitHub is read here, once per deploy, and baked into the page; the page then asks
+   /api/github (CDN-cached) for anything newer. If GitHub cannot be reached from the
+   build, the last good copy in content/github-snapshot.json is used, so a deploy never
+   fails and the chapter never renders empty. GH_FIXTURE=<file> substitutes local test
+   data for previews where GitHub is unreachable; it is never set on Vercel. */
+const ghConfig = JSON.parse(readFileSync(join(ROOT, "content", "github.json"), "utf8"));
+let ghData;
+if (process.env.GH_FIXTURE) {
+  ghData = JSON.parse(readFileSync(process.env.GH_FIXTURE, "utf8"));
+} else {
+  try {
+    ghData = await fetchGitHub(ghConfig.username, { token: process.env.GITHUB_TOKEN || "" });
+  } catch (e) {
+    console.log(`  github: using content/github-snapshot.json (${e.message})`);
+    ghData = JSON.parse(readFileSync(join(ROOT, "content", "github-snapshot.json"), "utf8"));
+  }
+}
+const certs = JSON.parse(readFileSync(join(ROOT, "content", "certifications.json"), "utf8")).certifications;
+for (const c of certs) {
+  for (const k of ["image", "file"]) if (c[k]) content.copies.push([join(ROOT, "content", c[k]), c[k]]);
+}
+const ACT_RE = /<dc-slot name="activity"><\/dc-slot>/;
+if (!ACT_RE.test(body)) throw new Error(`${ENTRY} has no <dc-slot name="activity"> for chapter 03`);
+body = body.replace(ACT_RE, () => renderActivity({ config: ghConfig, data: ghData, certifications: certs }));
+
 /* ── stylesheet ───────────────────────────────────────────────────────────── */
 
 const fontHrefs = new Set();
@@ -300,6 +328,7 @@ html,body{max-width:100%;overflow-x:clip}
 }`,
   ...helmetStyles,
   readFileSync(join(ROOT, "src", "writing.css"), "utf8").trim(),
+  readFileSync(join(ROOT, "src", "activity.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
 ].join("\n\n");
@@ -330,6 +359,9 @@ const app = `${runtime}
 ${logic}
 
 dc.mount();
+
+/* ── chapter 03: src/activity.js ─────────────────────────────────────────── */
+${readFileSync(join(ROOT, "src", "activity.js"), "utf8")}
 `;
 
 /* ── emit ─────────────────────────────────────────────────────────────────── */
@@ -365,6 +397,7 @@ ${favicon}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
 <link rel="stylesheet" href="styles.css?v=${stamp(css)}">
+<script>document.documentElement.classList.add("js-act")</script>
 </head>
 <body>
 <div id="dc-root" data-dc-component="${escapeAttr(ENTRY)}">${body}</div>
