@@ -9,7 +9,7 @@ tags: LLMs, Reliability, Inference, Calibration, AI Engineering
 ---
 
 > [!NOTE] Sources
-> This article is based on my research notebook covering TypeSafe's primary documentation and independent evaluations reviewed through September 21, 2026. The independent evaluations discussed here are single-author tests, not peer-reviewed studies.
+> This article is based on [my research notebook](/notes/files/jev-research-notebook.pdf) (22-page PDF, also in [Notes](/notes)) covering TypeSafe's primary documentation and independent evaluations reviewed through September 21, 2026. The independent evaluations discussed here are single-author tests, not peer-reviewed studies.
 
 TypeSafe says its new model, Jev, cannot hallucinate.
 
