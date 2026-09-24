@@ -31,7 +31,22 @@ LinkedIn.
    Line breaks are kept. #hashtags are highlighted.
    ```
 
-3. Commit. It shows on `/blog` in full, with a **View on LinkedIn** link.
+3. Commit. It shows in full on `/blog/linkedin` (Shorter notes), with a **View on
+   LinkedIn** link, and as a short preview on `/blog`.
+
+Write it the way you write on LinkedIn; the page reads the shape of your lines back
+into structure:
+
+| You write | It becomes |
+| --- | --- |
+| lines that start with `→` | an arrow list |
+| a **bold** line followed by `→` lines | a small case; two in a row sit side by side |
+| `Query` / `↓` / `Embedding` / `↓` / … | a pipeline, drawn as steps |
+| lines that start with `•` | a bulleted list |
+| a line that is **bold from start to end** | a pull line, set large |
+| `label:` then a **bold value** on the next line | a measurement; neighbours sit side by side |
+
+Add `title:` for the entry's heading; without it, a carousel's `slides_title` is used.
 
 For a photo, put it in `content/linkedin/images/` and add `image: images/photo.jpg`
 (several: `image: images/a.jpg, images/b.jpg`).
@@ -93,7 +108,25 @@ Code, tables and images step out wider than the text.
 ```
 
 The tags: `[!OBSERVATION]`, `[!FAILURE]`, `[!BENCHMARK]`, `[!TRADEOFF]`,
-`[!CHANGED]` (what changed my mind), `[!NOTE]`.
+`[!CHANGED]` (what changed my mind), `[!QUESTION]` (open question), `[!NOTE]`.
+
+**For technical articles** — the page is built for long ones, with a contents rail,
+numbered sections, a reading-progress line and notes in the margin:
+
+| Write | For |
+| --- | --- |
+| `> [!TAKEAWAYS]` then `> - …` lines | Key takeaways, numbered, near the top |
+| `> [!RESULTS] title` then `> - **2.53 s → 0.56 s** — prompt evaluation` | Headline numbers, set large enough to find by skimming |
+| `> [!SETUP]` then `> - GPU: RTX 4050` | The conditions an experiment ran under, as a spec sheet |
+| `Table: caption` on the line above a table | A numbered, captioned table; number-only columns align right |
+| `![alt](images/x.png "Caption"){full}` | A numbered figure; `{narrow}`, wide (default) or `{full}` |
+| `![a](images/a.png "Before") ![b](images/b.png "After")` | Figures side by side |
+| ```` ```python title="bench.py" ```` | Code with a file name and a copy button |
+| `$x^2$` and `$$ … $$` | Maths, typeset by KaTeX. Turned on by `math: true`, or by any `$$` block |
+| `text[^id]` and `[^id]: the note` | A note: in the margin beside its line on a wide screen, and listed under *Notes & references* at the end — use it for citations |
+
+See `2026-01-01-journal-style-guide.md` (a permanent draft) for every one of these in
+place: `node build.mjs --drafts`.
 
 ### Drafts, and previewing
 
