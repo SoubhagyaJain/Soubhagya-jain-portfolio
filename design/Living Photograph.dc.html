@@ -660,6 +660,18 @@ void main(){
   cen = vec2(cen.x * cos(roll) - cen.y * sin(roll), cen.x * sin(roll) + cen.y * cos(roll));
   vec2 base = 0.5 + cen / (zoom * (1.0 + 0.16 * sc * depth)) + float2 * (0.4 + 0.9 * depth) + look;
   base.y += sc * 0.012 * depth + sc * 0.052; // less sky, more world as we go deeper
+  // Leaving the hero, the scene separates into layers (after Osmo's parallax header):
+  // the sky barely moves, the sea and town rise, the bench and the ground rise fastest.
+  // The rate follows height in the frame rather than a per-pixel depth guess, and in
+  // this photograph nearer is always lower, so every layer slides over the one behind
+  // it and nothing is ever uncovered - no holes to fill, nothing to smear.
+  // It plays out over the first screen of scrolling (sc reaches 0.5 there), eased, and
+  // the difference between layers is kept small enough to read as the camera craning
+  // up rather than the lower picture being squeezed.
+  float exitP = clamp(sc * 2.0, 0.0, 1.0);
+  exitP = exitP * exitP * (3.0 - 2.0 * exitP);
+  float layer = smoothstep(HZ - 0.04, 0.95, uv.y);
+  base.y += exitP * (0.025 + 0.06 * layer) * (1.0 - uStill);
 
   // ---- classify from the plate
   vec3 probe = photo(base).rgb;
@@ -2116,7 +2128,10 @@ class Component extends DCLogic {
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       const copyEl = this.copyRef.current;
       if (copyEl) {
-        copyEl.style.transform = "translateY(" + (-(this.copyOut || 0) * 54).toFixed(2) + "px) translate3d(" +
+        // the title is the middle layer: it trails the page at 40% of the scroll, so it
+        // sinks back between the photograph and the chapter arriving over it
+        const lag = this.reduced ? 0 : Math.min(this.scrollY || 0, window.innerHeight * 1.2) * 0.4;
+        copyEl.style.transform = "translateY(" + lag.toFixed(2) + "px) translate3d(" +
           (this.mouse.x * -5).toFixed(2) + "px," + (this.mouse.y * -3).toFixed(2) + "px,0)";
       }
     };
