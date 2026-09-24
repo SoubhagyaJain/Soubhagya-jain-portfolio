@@ -80,7 +80,7 @@
       grid-column: 1 / -1;
       grid-row: 2;
       display: grid !important;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 0 !important;
       width: 100%;
     }
@@ -93,7 +93,7 @@
       min-height: 44px;
       padding: 0 4px !important;
       font-size: 10px !important;
-      letter-spacing: .12em !important;
+      letter-spacing: .1em !important;
     }
     /* Three segments need more room than the old single toggle. Each keeps a 44px tall
        tap target while the pill stays 44px overall, so the row height is unchanged. */
@@ -115,8 +115,25 @@
       padding: 0 10px !important;
     }
     [data-hero-copy] { padding-top: 146px !important; }
+    /* The desktop's three lines leave "systems" alone on a line at phone width; four
+       short lines of near-equal length read as the same sentence, set for the column. */
+    [data-br="narrow"] { display: inline; }
     [data-hero-cta], [data-hero-secondary] { min-height: 44px; box-sizing: border-box; }
   }
+  /* Below ~440px the first row cannot hold the full name, the weather switch and the
+     status label at once, and it was the name that lost ("SOUBHAGYA JA"). The label
+     is the one to give up: the dot stays, the words stay for screen readers and in
+     the tooltip, and Contact says the same thing in full. */
+  @media (max-width: 440px) {
+    [data-nav-status] { padding: 0 12px !important; }
+    [data-nav-status] > span:last-child {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+    }
+    [data-nav-brand] { letter-spacing: .2em !important; }
+  }
+  [data-br="narrow"] { display: none; }
+  [data-ledger-link]:hover [data-ledger-arrow], [data-ledger-link]:focus-visible [data-ledger-arrow] { transform: translateY(3px); }
   /* Portrait screens cannot crop-to-fill a 16:9 panorama without discarding the
      bench and bicycle. Keep the moving cover as atmosphere, then lay a wider,
      undistorted scene over it and feather the horizontal plate into that ground. */
@@ -200,9 +217,10 @@
         <span data-nav-separator style="position: relative; z-index: 2; width: 1px; height: 18px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.34), rgba(255,255,255,0)); flex: 0 0 auto"></span>
 
         <div data-nav-links style="position: relative; z-index: 2; display: flex; align-items: center; gap: 2px">
-          <a href="#selected-systems" data-nav-item="1" data-active="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Work</a>
-          <a href="#philosophy" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Notes</a>
-          <a href="#about" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">About</a>
+          <a href="#about" data-nav-item="1" data-active="1" data-spy="thinking background" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">About</a>
+          <a href="#selected-systems" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Work</a>
+          <a href="/blog" data-spy="writing writing-blog" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Blog</a>
+          <a href="/notes" data-spy="writing-notes" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Notes</a>
           <a href="#contact" data-nav-item="1" style="padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 0.74vw, 11px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Contact</a>
         </div>
 
@@ -212,7 +230,7 @@
           <button type="button" data-theme="dark" aria-label="Night" title="Night" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9790;</button>
           <button type="button" data-theme="storm" aria-label="Storm" title="Storm" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9889;</button>
         </div>
-        <div data-nav-status style="position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-left: clamp(4px, 0.8vw, 12px); padding: 7px clamp(10px, 1vw, 14px); border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset">
+        <div data-nav-status title="Available for AI/ML engineering roles" style="position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-left: clamp(4px, 0.8vw, 12px); padding: 7px clamp(10px, 1vw, 14px); border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset">
           <span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(246,231,199,0.95); box-shadow: 0 0 7px 2px rgba(246,231,199,0.4); flex: 0 0 auto"></span>
           <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.88); white-space: nowrap">Available</span>
         </div>
@@ -224,7 +242,7 @@
       <div style="align-self: center; max-width: min(760px, 62vw); display: flex; flex-direction: column; gap: clamp(16px, 2vw, 26px)">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #ffffff; text-shadow: 0 1px 10px rgba(4,10,16,.85), 0 0 26px rgba(4,10,16,.7); opacity: 0; transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="0">AI / ML Engineer</div>
         <div style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 4.2vw, 64px); line-height: 1.06; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: balance; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">Soubhagya <span style="color: #e2b274">Jain</span></div>
-        <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(38px, 5.4vw, 84px); text-wrap: balance; line-height: 1.02; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: pretty; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">I engineer AI systems<br />that hold up<br />beyond the demo.</h1>
+        <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(38px, 5.4vw, 84px); text-wrap: balance; line-height: 1.02; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: pretty; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">I engineer <br data-br="narrow" />AI systems<br />that hold up<br />beyond the demo.</h1>
         <p style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.15vw, 17px); line-height: 1.55; color: rgba(240,246,240,0.9); text-shadow: 0 1px 16px rgba(4,10,16,.6); opacity: 0; transform: translateY(16px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="2">I work on the parts of AI that decide whether a system survives production &#8212; retrieval, agents, evaluation, inference, and the engineering behind reliability.</p>
         <div style="display: flex; align-items: center; gap: clamp(18px, 2.6vw, 34px); flex-wrap: wrap; opacity: 0; transform: translateY(14px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="3">
           <a href="#selected-systems" data-hero-cta="1" style="position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 13px 2px 15px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #f9fcf7; transition: gap .5s cubic-bezier(.2,.7,.2,1)" style-hover="gap: 20px">
@@ -233,7 +251,7 @@
             <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(249,252,247,0.24)"></span>
             <span data-hero-line="1" style="position: absolute; left: 0; bottom: 0; width: 26%; height: 1px; background: linear-gradient(90deg, rgba(246,231,199,0.95), rgba(246,231,199,0.3)); transition: width .8s cubic-bezier(.2,.7,.2,1)"></span>
           </a>
-          <a href="#philosophy" data-hero-secondary style="display: inline-flex; align-items: center; gap: 10px; padding: 13px 0 15px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(240,246,240,0.72); transition: color .45s ease, gap .45s cubic-bezier(.2,.7,.2,1)" style-hover="color: #ffffff; gap: 16px">Read Notes <span style="font-size: 12px">&#8594;</span></a>
+          <a href="#thinking" data-hero-secondary style="display: inline-flex; align-items: center; gap: 10px; padding: 13px 0 15px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(240,246,240,0.72); transition: color .45s ease, gap .45s cubic-bezier(.2,.7,.2,1)" style-hover="color: #ffffff; gap: 16px">How I work <span style="font-size: 12px">&#8594;</span></a>
         </div>
       </div>
 
@@ -244,7 +262,6 @@
           <div style="position: relative; z-index: 2; display: flex; align-items: center; gap: 2px">
             <a href="https://github.com/SoubhagyaJain" target="_blank" rel="noopener" style="padding: 9px 14px; border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">GitHub</a>
             <a href="https://www.linkedin.com/in/soubhagya-jain-118205204" target="_blank" rel="noopener" style="padding: 9px 14px; border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">LinkedIn</a>
-            <a href="#" style="padding: 9px 14px; border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; transition: color .4s ease, background .45s ease, box-shadow .45s ease" style-hover="color: #ffffff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset">Resume</a>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .24em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(238,244,238,0.6); animation: cueDrift 4.5s ease-in-out 3s infinite">Scroll <span>↓</span></div>
@@ -272,55 +289,30 @@
         </div>
 
         <div style="display: flex; flex-direction: column; gap: clamp(20px, 2.6vw, 32px)">
-          <div style="opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">01</span><span style="opacity: .42; padding-right: .48em">/</span>Intro</div></div>
-          <h2 style="margin: 0; max-width: 22ch; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.6vw, 68px); text-wrap: balance; line-height: 1.02; letter-spacing: -0.018em; color: #f9fbf6; text-wrap: pretty; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">I build AI systems that have to work beyond the demo.</h2>
-          <p style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14.5px, 1.15vw, 17px); line-height: 1.64; color: rgba(240,246,240,0.82); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="2">What interests me starts after the prototype works. Retrieval quality and grounding. Agents that verify instead of guessing. Evaluation that catches regressions before users do. Inference cost, latency and the trade-offs between them. Observability, so a bad answer leaves a trace you can follow. Most of the engineering lives in those places not in the first working call.</p>
+          <div style="opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">01</span><span style="opacity: .42; padding-right: .48em">/</span>About</div></div>
+          <h2 style="margin: 0; max-width: 22ch; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(34px, 4.6vw, 68px); text-wrap: balance; line-height: 1.02; letter-spacing: -0.018em; color: #f9fbf6; text-wrap: pretty; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">The interesting problems start after the first call works.</h2>
+          <p style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14.5px, 1.15vw, 17px); line-height: 1.64; color: rgba(240,246,240,0.82); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="2">Retrieval quality and grounding. Agents that verify instead of guessing. Evaluation that catches regressions before users do. Inference cost, latency and the trade-offs between them. Observability, so a bad answer leaves a trace you can follow. That is where most of my time goes.</p>
         </div>
       </div>
 
-    <div style="position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(66% 78% at 34% 50%, rgba(5,10,15,0.44), rgba(5,10,15,0.1) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(18px, 3vw, 40px); align-items: start">
-        <div style="opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02</span><span style="opacity: .42; padding-right: .48em">/</span>Currently</div></div>
-        <div style="min-width: 0; display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 30px)">
-          <div style="display: flex; flex-direction: column; gap: 8px; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
-            <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(24px, 2.6vw, 36px); line-height: 1.1; color: #f7faf5">AI / ML Engineering</div>
-            <p style="margin: 0; max-width: 42ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 15px; line-height: 1.6; color: rgba(240,246,240,0.78)">Building and studying reliable LLM, RAG, agentic and production ML systems.</p>
-          </div>
-          <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid rgba(214,230,236,0.13); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="2">
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: rgba(240,246,240,0.72)">AI Trainer</span>
-            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(232,240,232,0.48)">Handshake AI</span>
-          </div></div>
+    <!-- The three facts a first-time reader is looking for, in one row: what I do now,
+         where I study, what I am building. Each one is picked up in detail further down. -->
+    <div data-ledger style="position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: clamp(26px, 3.4vw, 56px); margin-top: clamp(56px, 10vh, 120px)">
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid rgba(214,230,236,0.16); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.52)">Now</div>
+        <div style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.08; letter-spacing: -0.01em; color: #f7faf5">AI Trainer</div>
+        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14px; line-height: 1.55; color: rgba(240,246,240,0.66); text-wrap: pretty">Handshake AI</p>
       </div>
-    </div>
-
-    <div id="education" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 80% at 42% 50%, rgba(5,10,15,0.46), rgba(5,10,15,0.12) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="position: relative">
-        <dc-import name="Education System" hint-size="100%,900px"></dc-import>
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid rgba(214,230,236,0.16); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.52)">Studying</div>
+        <div style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.08; letter-spacing: -0.01em; color: #f7faf5">IIT Madras</div>
+        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14px; line-height: 1.55; color: rgba(240,246,240,0.66); text-wrap: pretty">BS in Data Science and Computer Programming, 2024 &#8211; present</p>
       </div>
-    </div>
-
-    <div id="areas" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 80% at 58% 50%, rgba(5,10,15,0.46), rgba(5,10,15,0.12) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="position: relative">
-        <dc-import name="Areas System" hint-size="100%,1020px"></dc-import>
-      </div>
-    </div>
-    <div id="philosophy" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 82% at 40% 48%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="position: relative">
-        <dc-import name="Philosophy" hint-size="100%,940px"></dc-import>
-      </div>
-    </div>
-    <div id="technology" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(72% 82% at 50% 52%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="position: relative">
-        <dc-import name="Tech System" hint-size="100%,860px"></dc-import>
-      </div>
-    </div>
-    <div id="beyond" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 82% at 46% 50%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
-      <div style="position: relative">
-        <dc-import name="Beyond Terminal" hint-size="100%,900px"></dc-import>
-      </div>
-    </div>
-    <div id="direction" style="scroll-margin-top: 110px; position: relative; border-top: 1px solid rgba(214,230,236,0.13)">
-      <dc-import name="Direction" hint-size="100%,100vh"></dc-import>
+      <a href="#inference" data-ledger-link style="display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid rgba(214,230,236,0.16); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1); color: inherit" style-hover="border-top-color: rgba(226,178,116,0.7)" data-reveal2="2">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.52)">Building</div>
+        <div style="font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.08; letter-spacing: -0.01em; color: #f7faf5">An LLM inference engine <span data-ledger-arrow style="display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 0.5em; vertical-align: 0.3em; color: rgba(226,178,116,0.9); transition: transform .45s cubic-bezier(.2,.7,.2,1)">&#8595;</span></div>
+        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14px; line-height: 1.55; color: rgba(240,246,240,0.66); text-wrap: pretty">Reimplementing the scheduler and KV cache small, and measuring what each choice costs.</p>
+      </a>
     </div>
     </div>
   </section>
@@ -328,38 +320,18 @@
   <section id="selected-systems" style="scroll-margin-top: 96px; position: relative; padding: clamp(90px, 22vh, 260px) clamp(22px, 4vw, 54px) 0; box-sizing: border-box">
     <div style="max-width: 1220px; margin: 0 auto; display: flex; flex-direction: column">
       <header style="display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 30px); padding-bottom: clamp(50px, 9vh, 120px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02</span><span style="opacity: .42; padding-right: .48em">/</span>Selected Systems</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02</span><span style="opacity: .42; padding-right: .48em">/</span>Work</div>
         <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(44px, 7vw, 104px); text-wrap: balance; line-height: 0.98; letter-spacing: -0.02em; color: #f9fbf6">Selected systems.</h2>
-        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: rgba(238,245,238,0.78)">A few systems I’ve built, broken,<br>measured and improved.</p>
+        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: rgba(238,245,238,0.78)">Two I’ve built and broken, one I’ve designed but not built, and one I’m building now.</p>
       </header>
     <div style="position: relative; border-top: 1px solid rgba(214,230,236,0.12)">
       <dc-import name="Aperture RAG Showcase" hint-size="100%,900px"></dc-import>
     </div>
     <article style="position: relative; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12); overflow: clip">
-      <div style="position: absolute; inset: -4% 0; pointer-events: none; background: radial-gradient(74% 96% at 72% 50%, rgba(4,12,19,0.35), rgba(4,12,19,0) 76%); filter: blur(14px)"></div>
-      <div style="position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: clamp(30px, 4.5vw, 78px); align-items: center">
-        <div style="display: flex; flex-direction: column; gap: 22px; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
-      <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: clamp(20px, 2.4vw, 34px) clamp(16px, 2vw, 30px); border-radius: 18px; background: rgba(6,15,23,0.52); box-shadow: 0 0 0 1px rgba(220,234,240,0.09), 0 1px 0 rgba(255,255,255,0.14) inset, 0 40px 70px -50px rgba(2,6,10,0.9)">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(226,238,232,0.5)"><span>Decision path · per transaction</span><span>&lt;100ms budget</span></div>
-        <div data-node="Ingest · card-present + online · 500M/day" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Transaction</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.2s linear infinite"></div></div><div data-node="Kafka · enrichment · exactly-once" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Streaming Pipeline</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 6.3s linear infinite"></div></div><div data-node="Redis · 240 features · freshness &lt;2s" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Online Feature Store</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.7s linear infinite"></div></div><div data-node="Gradient boosting · calibrated · 14ms" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Fraud Model</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 6.8s linear infinite"></div></div><div data-node="Policy · asymmetric cost · thresholds" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Risk Engine</div><div style="position: relative; height: 26px"><div style="position: absolute; left: 16.67%; right: 16.67%; top: 13px; height: 1px; background: linear-gradient(90deg, rgba(206,226,234,0.10), rgba(206,226,234,0.30) 20%, rgba(206,226,234,0.30) 80%, rgba(206,226,234,0.10))"></div><div style="position: absolute; left: 50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 16.67%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 50.00%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 83.33%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: clamp(6px, 0.8vw, 12px); justify-items: center"><div data-node="Silent pass · 99.2% of volume" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Approve</div><div data-node="Step-up auth · 0.7%" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Verify</div><div data-node="Block + case queue · 0.1%" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Decline</div></div>
-        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(214,230,236,0.12); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.5)"><span style="width: 5px; height: 5px; border-radius: 50%; background: #f4e3bd; animation: dotPulse 4.5s ease-in-out infinite"></span>Delayed labels · chargebacks return in 30–90 days · drift + monitoring loop</div>
-      </div>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: clamp(16px, 2vw, 28px)"><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">500M</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">transactions / day</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">25K</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">peak QPS</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">&lt;100ms</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">decision target</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">0.1%</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">fraud rate</div></div></div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: clamp(16px, 1.8vw, 24px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02</span><span style="opacity: .42; padding-right: .48em">/</span>ML System Design</div>
-          <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.7vw, 56px); text-wrap: balance; line-height: 1.06; letter-spacing: -0.015em; color: #f7faf5">Real-Time Fraud Detection</h3>
-          <p style="margin: 0; max-width: 42ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16.5px); line-height: 1.62; color: rgba(238,245,238,0.82)">Designing a production ML system where latency, feature freshness, delayed labels and asymmetric risk matter as much as model accuracy.</p>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px"><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Streaming</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Online Features</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Calibration</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Cost-Sensitive Thresholds</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Drift Monitoring</span></div>
-          <a href="#" data-cta="1" style="display: inline-flex; align-items: center; gap: 12px; width: fit-content; padding-bottom: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.94); border-bottom: 1px solid rgba(246,250,244,0.28); transition: gap .45s cubic-bezier(.2,.7,.2,1), transform .45s cubic-bezier(.2,.7,.2,1), border-bottom-color .45s ease" style-hover="gap: 20px; transform: translateX(2px); border-bottom-color: rgba(246,250,244,0.85)">Explore system design <span data-cta-line="1" style="display: inline-block; width: 0; height: 1px; background: rgba(246,250,244,0.6); transition: width .5s cubic-bezier(.2,.7,.2,1)"></span><span style="font-size: 13px">↗</span></a>
-        </div>
-      </div>
-    </article>
-    <article style="position: relative; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12); overflow: clip">
       <div style="position: absolute; inset: -4% 0; pointer-events: none; background: radial-gradient(78% 92% at 50% 46%, rgba(4,12,19,0.35), rgba(4,12,19,0) 76%); filter: blur(14px)"></div>
       <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(26px, 3.4vw, 46px); text-align: center">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 60ch; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">03</span><span style="opacity: .42; padding-right: .48em">/</span>Agentic AI</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.2</span><span style="opacity: .42; padding-right: .48em">/</span>Agentic AI</div>
           <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.7vw, 56px); text-wrap: balance; line-height: 1.06; color: #f7faf5">Synapse</h3>
           <p style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16.5px); line-height: 1.62; color: rgba(238,245,238,0.82)">A local multi-agent architecture exploring specialization, tool use, memory and orchestration.</p>
         </div>
@@ -371,7 +343,25 @@
         </div>
         <div style="display: flex; flex-direction: column; align-items: center; gap: clamp(18px, 2vw, 26px); max-width: 52ch; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="2">
           <p style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(20px, 2.1vw, 30px); line-height: 1.32; text-indent: -0.4em; color: rgba(248,251,244,0.92); text-wrap: pretty">“The challenge wasn’t adding more agents. It was deciding when specialization actually improved reliability.”</p>
-          <a href="#" data-cta="1" style="display: inline-flex; align-items: center; gap: 12px; width: fit-content; padding-bottom: 9px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.94); border-bottom: 1px solid rgba(246,250,244,0.28); transition: gap .45s cubic-bezier(.2,.7,.2,1), transform .45s cubic-bezier(.2,.7,.2,1), border-bottom-color .45s ease" style-hover="gap: 20px; transform: translateX(2px); border-bottom-color: rgba(246,250,244,0.85)">View architecture <span data-cta-line="1" style="display: inline-block; width: 0; height: 1px; background: rgba(246,250,244,0.6); transition: width .5s cubic-bezier(.2,.7,.2,1)"></span><span style="font-size: 13px">↗</span></a>
+        </div>
+      </div>
+    </article>
+    <article style="position: relative; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12); overflow: clip">
+      <div style="position: absolute; inset: -4% 0; pointer-events: none; background: radial-gradient(74% 96% at 72% 50%, rgba(4,12,19,0.35), rgba(4,12,19,0) 76%); filter: blur(14px)"></div>
+      <div style="position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: clamp(30px, 4.5vw, 78px); align-items: center">
+        <div style="display: flex; flex-direction: column; gap: 22px; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
+      <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: clamp(20px, 2.4vw, 34px) clamp(16px, 2vw, 30px); border-radius: 18px; background: rgba(6,15,23,0.52); box-shadow: 0 0 0 1px rgba(220,234,240,0.09), 0 1px 0 rgba(255,255,255,0.14) inset, 0 40px 70px -50px rgba(2,6,10,0.9)">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(226,238,232,0.5)"><span>Decision path · per transaction</span><span>&lt;100ms budget</span></div>
+        <div data-node="Ingest · card-present + online · 500M/day" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Transaction</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.2s linear infinite"></div></div><div data-node="Kafka · enrichment · exactly-once" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Streaming Pipeline</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 6.3s linear infinite"></div></div><div data-node="Redis · 240 features · freshness &lt;2s" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Online Feature Store</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.7s linear infinite"></div></div><div data-node="Gradient boosting · calibrated · 14ms budget" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Fraud Model</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 6.8s linear infinite"></div></div><div data-node="Policy · asymmetric cost · thresholds" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Risk Engine</div><div style="position: relative; height: 26px"><div style="position: absolute; left: 16.67%; right: 16.67%; top: 13px; height: 1px; background: linear-gradient(90deg, rgba(206,226,234,0.10), rgba(206,226,234,0.30) 20%, rgba(206,226,234,0.30) 80%, rgba(206,226,234,0.10))"></div><div style="position: absolute; left: 50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 16.67%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 50.00%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 83.33%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: clamp(6px, 0.8vw, 12px); justify-items: center"><div data-node="Silent pass · 99.2% of volume" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Approve</div><div data-node="Step-up auth · 0.7%" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Verify</div><div data-node="Block + case queue · 0.1%" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Decline</div></div>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(214,230,236,0.12); font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.5)"><span style="width: 5px; height: 5px; border-radius: 50%; background: #f4e3bd; animation: dotPulse 4.5s ease-in-out infinite"></span>Delayed labels · chargebacks return in 30–90 days · drift + monitoring loop</div>
+      </div>
+          <div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: rgba(226,178,116,0.78)">Load it is designed for &#183; assumptions, not measurements</div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: clamp(16px, 2vw, 28px)"><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">500M</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">transactions / day</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">25K</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">peak QPS</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">&lt;100ms</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">decision target</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">0.1%</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">assumed fraud rate</div></div></div></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: clamp(16px, 1.8vw, 24px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.3</span><span style="opacity: .42; padding-right: .48em">/</span>ML System Design &#183; Study</div>
+          <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.7vw, 56px); text-wrap: balance; line-height: 1.06; letter-spacing: -0.015em; color: #f7faf5">Real-Time Fraud Detection</h3>
+          <p style="margin: 0; max-width: 42ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16.5px); line-height: 1.62; color: rgba(238,245,238,0.82)">A design study, not a deployed system. The question it works through: what has to surround a fraud model when every decision gets under 100ms, labels arrive 30&#8211;90 days late, and blocking a real customer costs something different from missing a fraud.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px"><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Streaming</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Online Features</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Calibration</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Cost-Sensitive Thresholds</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Drift Monitoring</span></div>
         </div>
       </div>
     </article>
@@ -385,8 +375,55 @@
     <div ref="{{ tipRef }}" style="position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; opacity: 0; transform: translate(-50%, -140%); padding: 8px 12px; border-radius: 9px; background: rgba(7,16,24,0.62); backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2); box-shadow: 0 0 0 1px rgba(226,238,242,0.14), 0 1px 0 rgba(255,255,255,0.18) inset, 0 18px 30px -22px rgba(2,6,10,0.9); font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(244,249,243,0.92); white-space: nowrap; transition: opacity .3s ease"></div>
   </section>
 
+  <section id="thinking" style="scroll-margin-top: 96px; position: relative; overflow: clip; padding: 0 clamp(22px, 4vw, 54px); box-sizing: border-box">
+    <div style="position: relative; max-width: 1220px; margin: 0 auto">
+    <div id="philosophy" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 82% at 40% 48%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
+      <div style="position: relative">
+        <dc-import name="Philosophy" hint-size="100%,940px"></dc-import>
+      </div>
+    </div>
+    <div id="beyond" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 82% at 46% 50%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
+      <div style="position: relative">
+        <dc-import name="Beyond Terminal" hint-size="100%,900px"></dc-import>
+      </div>
+    </div>
+    <div id="direction" style="scroll-margin-top: 110px; position: relative; border-top: 1px solid rgba(214,230,236,0.13)">
+      <dc-import name="Direction" hint-size="100%,100vh"></dc-import>
+    </div>
+    </div>
+  </section>
+
+  <section id="background" style="scroll-margin-top: 96px; position: relative; overflow: clip; padding: 0 clamp(22px, 4vw, 54px) clamp(40px, 8vh, 100px); box-sizing: border-box">
+    <div style="position: relative; max-width: 1220px; margin: 0 auto">
+    <div id="education" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(70% 80% at 42% 50%, rgba(5,10,15,0.46), rgba(5,10,15,0.12) 68%, rgba(5,10,15,0) 88%)"></div>
+      <div style="position: relative">
+        <dc-import name="Education System" hint-size="100%,900px"></dc-import>
+      </div>
+    </div>
+    <div id="technology" style="scroll-margin-top: 110px; position: relative; padding: clamp(46px, 8vh, 104px) 0; border-top: 1px solid rgba(214,230,236,0.13)"><div style="position: absolute; inset: 0 -6%; pointer-events: none; background: radial-gradient(72% 82% at 50% 52%, rgba(5,10,15,0.5), rgba(5,10,15,0.14) 68%, rgba(5,10,15,0) 88%)"></div>
+      <div style="position: relative">
+        <dc-import name="Tech System" hint-size="100%,860px"></dc-import>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- Filled at build time from content/ by src/content.mjs: the latest blog posts
+       (articles and LinkedIn posts) and the latest downloadable notes. -->
+  <section id="writing" style="scroll-margin-top: 96px; position: relative; overflow: clip; padding: clamp(90px, 16vh, 200px) clamp(22px, 4vw, 54px) clamp(40px, 8vh, 100px); box-sizing: border-box">
+    <div style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(70% 70% at 30% 40%, rgba(5,10,15,0.46), rgba(5,10,15,0.1) 70%, rgba(5,10,15,0) 90%)"></div>
+    <div style="position: relative; max-width: 1220px; margin: 0 auto">
+      <header class="w-head" style="opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
+        <div class="w-eyebrow"><span class="n">05</span><span class="s">/</span>Writing</div>
+        <h2>Written down.</h2>
+        <p class="w-lead">Articles, the posts I write on LinkedIn, and study notes you can download as PDFs.</p>
+      </header>
+      <dc-slot name="writing"></dc-slot>
+    </div>
+  </section>
+
   <section id="contact" style="scroll-margin-top: 96px; position: relative; padding: clamp(60px, 12vh, 150px) clamp(22px, 4vw, 54px) clamp(30px, 6vh, 70px); box-sizing: border-box">
-    <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,10,14,0.28) 0%, rgba(6,10,14,0.6) 46%, rgba(5,8,11,0.82) 100%)"></div>
+    <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,10,14,0.16) 0%, rgba(6,10,14,0.36) 46%, rgba(5,8,11,0.56) 100%)"></div>
     <div style="position: relative; max-width: 1220px; margin: 0 auto">
       <dc-import name="Contact" hint-size="100%,1100px"></dc-import>
     </div>
@@ -766,7 +803,9 @@ void main(){
   float veryNear = smoothstep(0.90, 1.0, fuv.y);
   float blur = (0.0010 * far + 0.0016 * veryNear) * (1.0 + 0.7 * sc);
   vec3 col = photo(fuv).rgb;
-  float detail = 1.0 - smoothstep(0.35, 0.75, sc);
+  // The scene stays alive under every chapter, so its motion no longer fades out with
+  // depth. What depth still does is quiet: a little softer, a little cooler.
+  float detail = 1.0;
   if (uQ > 0.5 && blur > 0.00006 && detail > 0.05) {
     vec3 acc = col * 0.36;
     acc += photo(fuv + vec2(blur, 0.0)).rgb * 0.16;
@@ -1194,9 +1233,9 @@ void main(){
   vec2 vg = (uv - 0.5) * vec2(1.02, 1.0);
   col *= 1.0 - dot(vg, vg) * 0.28;
   float gray = luma(col);
-  col = mix(col, vec3(gray), 0.18 * sc);
-  col = mix(col, vec3(0.055, 0.085, 0.115), 0.09 * sc);
-  col *= 1.0 - 0.14 * sc;
+  col = mix(col, vec3(gray), 0.08 * sc);
+  col = mix(col, vec3(0.055, 0.085, 0.115), 0.04 * sc);
+  col *= 1.0 - 0.06 * sc;
   col += (hash(gl_FragCoord.xy + fract(t) * 91.7) - 0.5) * 0.006;
 
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
@@ -1276,21 +1315,26 @@ class Component extends DCLogic {
       });
     });
 
-    // scroll spy: the lens follows whichever chapter the reader is actually in
+    // scroll spy: the lens follows whichever chapter the reader is actually in. An item
+    // can own more than one stretch of the page (data-spy): Background sits after the
+    // notes but is still about the person, so the lens goes back to About for it rather
+    // than leaving Notes lit over an education record.
     const targets = items.map((el) => {
       const href = el.getAttribute("href") || "";
-      return href.length > 1 ? href.slice(1) : null;
+      const ids = href.length > 1 && href[0] === "#" ? [href.slice(1)] : [];
+      return ids.concat((el.dataset.spy || "").split(/\s+/).filter(Boolean));
     });
     this.navSpy = () => {
       if (this.navLocked && performance.now() - this.navLocked < 900) return;
       const line = window.innerHeight * 0.34;
       let best = -1, bestTop = -Infinity;
-      targets.forEach((id, i) => {
-        if (!id) return;
-        const el = document.getElementById(id);
-        if (!el) return;
-        const top = el.getBoundingClientRect().top;
-        if (top <= line && top > bestTop) { bestTop = top; best = i; }
+      targets.forEach((ids, i) => {
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const top = el.getBoundingClientRect().top;
+          if (top <= line && top > bestTop) { bestTop = top; best = i; }
+        });
       });
       if (best < 0 || best === active) return;
       active = best;
@@ -1417,6 +1461,7 @@ class Component extends DCLogic {
       this.mixAt = performance.now();
       this.setState({ theme: name });
       paint(name);
+      if (this.applyScroll) this.applyScroll();   // the scrim depth is per plate
       try { localStorage.setItem("lp-theme", name); } catch (e) {}
     };
 
@@ -1813,7 +1858,12 @@ class Component extends DCLogic {
       const veil = this.veilRef.current;
       if (veil) veil.style.opacity = (cl(y / (vh * 1.25)) * 0.25).toFixed(3);
       const dim = this.dimRef.current;
-      if (dim) dim.style.opacity = deep.toFixed(3);
+      // The photograph stays in view behind every chapter. The scrim still sinks it as
+      // the hero leaves, but only as far as the type needs, and that depends on the
+      // plate: daylight is bright enough that text over it needs more help than a night
+      // sky does. Local shading behind each block of text does the rest.
+      const DIM_CAP = { day: 0.66, dark: 0.5, storm: 0.52 };
+      if (dim) dim.style.opacity = (deep * (DIM_CAP[this.state.theme] || 0.5)).toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
       if (this.navSpy) this.navSpy();
     };
@@ -2077,43 +2127,19 @@ class Component extends DCLogic {
     const frame = (now) => {
       this.raf = requestAnimationFrame(frame);
 
-      // Past the hero this is a full-screen fragment shader painting behind twenty
-      // screens of content that nobody is looking at — and on a phone GPU that one
-      // element can eat the whole frame budget. uScroll saturates at 1, so beyond that
-      // only ambient motion remains, and it is under a veil and a dim layer by then.
-      // Park instead: preserveDrawingBuffer keeps the last frame on screen, so the
-      // backdrop still reads as the photograph, it has simply stopped breathing.
-      // Phones park earlier because they can least afford it. Never park mid-dusk.
-      const parkAt = this.small ? 0.72 : 1;
-      const settled = this.mixK >= 0.999;
-      if (this.scroll >= parkAt && settled && this.revealed) {
-        if (this.parked) return;
-        this.parked = true;          // fall through once, so we park on a fresh frame
-      } else if (this.parked) {
-        this.parked = false;
-        last = 0;                    // resume immediately rather than waiting a budget
-      }
-
-      // The landscape is background motion - but "background" is not one state. While the
-      // photograph is still being looked at it has to move at the display's rate; only
-      // once it has sunk behind the chapters can it fall back to ambient. Tying that to
-      // the scrim which does the sinking, rather than to a scroll number chosen
-      // separately from it, is what keeps the two in step: the old threshold dropped to
-      // 24fps at 1.1vh while the scrim was still fading until 1.35vh, so for a quarter of
-      // a screen the picture was fully visible and running at less than half rate.
-      //
-      // Storm is the case that exposes it. Rain is thin, fast and high contrast, and at
-      // 24fps it strobes rather than falls - the same rate that reads as perfectly calm
-      // behind a still day plate. So the fast window stays open while there is rain in
-      // the frame, until the hero is genuinely gone.
+      // The scene is the ground for the whole page, and it keeps moving under every
+      // chapter rather than freezing once the hero has gone. What changes with depth is
+      // the rate. While the photograph is the thing being looked at it runs at the
+      // display's rate; once it sits behind a chapter it drops to 30fps, which is smooth
+      // for water and light that move this slowly and halves the GPU time. Rain is the
+      // exception: thin, fast streaks strobe at a reduced rate, so storm keeps the full
+      // rate everywhere. A hidden tab costs nothing either way, because rAF stops.
+      // (The shader measured 0.77ms a frame on a phone against a 27ms budget, so even the
+      // phone keeps a comfortable margin at these rates.)
       const ground = 1 - (this.deep === undefined ? 0 : this.deep);
       const rainy = this.wCur[2] > 0.02;
-      const fast = ground > 0.02 || (rainy && this.scroll < 0.92);
-      // A phone keeps a penalty, but a smaller one while the picture is still up: the
-      // shader costs 0.77ms there against a 27ms budget - thirty-five times the headroom -
-      // so the throttle was buying battery in the one stretch where it was also buying
-      // visible stutter. Once the ground has sunk, the full penalty comes back.
-      const budget = (fast ? 16 : 41) * (this.small ? (fast ? 1.5 : 1.7) : 1);
+      const fast = ground > 0.02 || rainy;
+      const budget = (fast ? 16 : 33) * (this.small ? 1.4 : 1);
       if (now - last < budget) return;
       last = now;
       draw();
