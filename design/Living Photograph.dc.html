@@ -1848,7 +1848,7 @@ class Component extends DCLogic {
 
     window.addEventListener("scroll", this.onScroll, { passive: true });
     if ("IntersectionObserver" in window) {
-      const pinned = ["aperture-pipeline", "direction"].map((id) => document.getElementById(id)).filter(Boolean);
+      const pinned = ["aperture-pipeline", "direction", "credentials"].map((id) => document.getElementById(id)).filter(Boolean);
       const on = new Set();
       this.pinIO = new IntersectionObserver((entries) => {
         entries.forEach((en) => { en.isIntersecting ? on.add(en.target) : on.delete(en.target); });

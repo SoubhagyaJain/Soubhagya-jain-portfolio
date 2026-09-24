@@ -191,11 +191,11 @@
   box-shadow: 0 0 0 1px rgba(20,21,23,0.2), 0 1px 0 rgba(255,255,255,0.6) inset, 0 2px 0 -1px rgba(0,0,0,0.25), 0 26px 40px -26px rgba(0,0,0,0.9), 0 60px 80px -60px rgba(0,0,0,0.7);
   transition: box-shadow .5s var(--ease), transform .5s var(--ease); }
 /* grain and a light-leak that moves with the pointer (set by the script) */
-.cx-paper::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
+.cx-paper::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
   background-image: repeating-radial-gradient(circle at 17% 23%, rgba(0,0,0,0.025) 0 1px, transparent 1px 3px), repeating-linear-gradient(97deg, rgba(0,0,0,0.018) 0 1px, transparent 1px 4px); }
 .cx-paper::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .5s ease;
-  background: radial-gradient(60% 70% at var(--lx, 30%) var(--ly, 20%), rgba(255,250,236,0.55), rgba(255,250,236,0) 60%); mix-blend-mode: soft-light; }
-:root[data-scene="dark"] .cx-paper { filter: brightness(.9) saturate(.9); }
+  background: radial-gradient(60% 70% at var(--lx, 30%) var(--ly, 20%), rgba(255,252,244,0.28), rgba(255,250,236,0) 60%); }
+:root[data-scene="dark"] #activity, :root[data-scene="dark"] .cx-dialog { --paper: #d9d4c9; --paper-2: #cbc4b5; }
 .cx-paper .pp-top { display: flex; justify-content: space-between; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: clamp(7.5px, .62vw, 9px); letter-spacing: .2em; text-transform: uppercase; color: var(--paper-ink-2); }
 .cx-paper .pp-title { margin-top: auto; font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(17px, 1.55vw, 23px); line-height: 1.08; letter-spacing: -0.005em; text-wrap: balance; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .cx-paper .pp-rule { height: 1px; margin: 12% 0 6%; background: linear-gradient(90deg, rgba(26,27,29,0.5), rgba(26,27,29,0.08)); }
@@ -204,7 +204,7 @@
 .cx-paper.has-img { padding: 0; }
 /* a record with a drawing: the drawing is printed across the upper sheet, the words
    keep their places and sit above it */
-.cx-paper .pp-art { position: absolute; left: 5%; top: 13%; width: 90%; height: 56%; object-fit: contain; pointer-events: none; mix-blend-mode: multiply; opacity: .95; }
+.cx-paper .pp-art { position: absolute; left: 5%; top: 13%; width: 90%; height: 56%; object-fit: contain; pointer-events: none; opacity: .95; }
 .cx-paper .pp-top, .cx-paper .pp-title, .cx-paper .pp-rule, .cx-paper .pp-foot { position: relative; z-index: 1; }
 .cx-paper.has-art .pp-title { -webkit-line-clamp: 2; }
 .cx-paper.has-art .pp-rule { margin: 5% 0 4%; }
@@ -240,6 +240,14 @@
 #activity .cxw-view:focus-visible { box-shadow: inset 0 0 0 2px rgba(226,178,116,.6); }
 #activity .cxw-wheel { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
 #activity .cxw-card { position: absolute; left: 0; top: 0; padding: 0; border: 0; background: none; cursor: pointer; backface-visibility: hidden; -webkit-backface-visibility: hidden; container-type: size; will-change: transform; }
+/* A blurred box-shadow on a card in perspective is re-rasterised as the card turns,
+   and it was most of the wheel's frame cost. A gradient under the sheet reads the
+   same and rasterises once. */
+#activity .cxw-face { position: relative; }
+#activity .cxw-face::before { content: ""; position: absolute; left: 4%; right: 4%; top: 30%; bottom: -12%; z-index: -1; background: radial-gradient(closest-side, rgba(0,0,0,0.55), rgba(0,0,0,0)); pointer-events: none; }
+#activity .cxw-face .cx-paper { box-shadow: 0 0 0 1px rgba(20,21,23,0.22); transition: none; }
+#activity .cxw-face .cx-paper::before { content: none; }
+#activity .cxw-stage { contain: layout paint style; }
 #activity .cxw-face { display: block; width: 100%; height: 100%; }
 #activity .cxw-face .cx-paper { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 3px; }
 /* type measured against the card, so a card is one object at any size or turn */
@@ -336,3 +344,6 @@ html:not(.js-act) #activity .cxw-track { display: none; }
   .js-act #activity h2 .ln > span, .js-act #activity .gx-rb { transform: none !important; }
   .js-act #activity .gx-langs .bar::after { transform: none !important; }
 }
+
+/* page-wide: a chapter out of view keeps its CSS loops paused (see activity.js) */
+.dc-off *, .dc-off *::before, .dc-off *::after { animation-play-state: paused !important; }
