@@ -54,6 +54,22 @@
     [].slice.call(document.querySelectorAll("[data-rv]")).forEach(function (el) { io.observe(el); });
   }
 
+  /* ── carousels: arrows step one slide; the strip itself stays natively scrollable ── */
+  [].slice.call(document.querySelectorAll("[data-deck]")).forEach(function (deck) {
+    var fig = deck.parentNode, prev = fig.querySelector('[data-deck-go="-1"]'), next = fig.querySelector('[data-deck-go="1"]');
+    function step() { var s = deck.querySelector("img"); return s ? s.getBoundingClientRect().width + 10 : deck.clientWidth; }
+    function sync() {
+      if (prev) prev.disabled = deck.scrollLeft < 4;
+      if (next) next.disabled = deck.scrollLeft + deck.clientWidth > deck.scrollWidth - 4;
+    }
+    [prev, next].forEach(function (b) { if (b) b.addEventListener("click", function () { deck.scrollBy({ left: step() * +b.getAttribute("data-deck-go"), behavior: reduced ? "auto" : "smooth" }); }); });
+    deck.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); deck.scrollBy({ left: step() * (e.key === "ArrowRight" ? 1 : -1), behavior: reduced ? "auto" : "smooth" }); }
+    });
+    deck.addEventListener("scroll", sync, { passive: true });
+    sync();
+  });
+
   /* ── newsletter: posts to whatever endpoint content/journal.json names ──
      Most providers (Buttondown, ConvertKit, a serverless function) accept a plain form
      post. It is sent in the background so the reader stays on the page; if that is

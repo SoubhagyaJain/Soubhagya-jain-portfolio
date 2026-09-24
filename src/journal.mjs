@@ -206,11 +206,37 @@ function AuthorAside(articles) {
 
 /* ── LinkedIn posts, in full ─────────────────────────────────────────────── */
 
+function DocLinks(doc) {
+  return `<span class="deck-meta">PDF${doc.pages ? ` &#183; ${doc.pages} pages` : ""} &#183; ${doc.size}</span>
+    <a href="${esc(doc.href)}" target="_blank" rel="noopener">Open PDF <span aria-hidden="true">&#8599;</span></a>
+    <a href="${esc(doc.href)}" download="${esc(doc.name)}">Download <span aria-hidden="true">&#8595;</span></a>`;
+}
+
+/**
+ * A LinkedIn document post's carousel, as the slides themselves: a strip that scrolls
+ * sideways and snaps slide by slide — swipe on a phone, arrows or keys on a desktop —
+ * with the original PDF beside it.
+ */
+function LinkedInDeck(p) {
+  const n = p.slides.length;
+  return `<figure class="deck-wrap">
+    <div class="deck" tabindex="0" role="region" aria-label="${esc(p.deckTitle || "Carousel")}, ${n} slides — scroll sideways" data-deck>
+      ${p.slides.map((sl, k) => `<img src="${esc(sl.src)}" alt="${esc(sl.alt)}" width="900" height="1125" ${k < 2 ? "" : 'loading="lazy" '}decoding="async">`).join("\n      ")}
+    </div>
+    <figcaption class="deck-bar">
+      <span class="deck-meta">Carousel &#183; ${n} slides</span>
+      <span class="deck-nav"><button type="button" data-deck-go="-1" aria-label="Previous slide">&#8592;</button><button type="button" data-deck-go="1" aria-label="Next slide">&#8594;</button></span>
+      ${p.doc ? DocLinks(p.doc) : ""}
+    </figcaption>
+  </figure>`;
+}
+
 function LinkedInPost(p) {
   return `<article class="li" id="${p.id}" data-rv>
   <div class="li-meta"><time datetime="${isoDate(p.date)}">${fmtDate(p.date)}</time><span>LinkedIn</span>${p.draft ? '<span class="am-draft">Draft</span>' : ""}</div>
   <div class="li-text">${p.html}</div>
   ${p.images.length ? `<div class="li-shots">${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`).join("")}</div>` : ""}
+  ${p.slides.length ? LinkedInDeck(p) : p.doc ? `<div class="deck-bar">${DocLinks(p.doc)}</div>` : ""}
   ${p.url ? `<a class="li-go" href="${esc(p.url)}" rel="noopener">View on LinkedIn <span aria-hidden="true">&#8599;</span></a>` : ""}
 </article>`;
 }
@@ -294,7 +320,7 @@ function BlogPage(content, ctx) {
   const masthead = `<header class="mast wrap" data-rv>
     <h1>Engineering Journal</h1>
     <p>Experiments, failures, benchmarks and design decisions from building AI systems.</p>
-    <div class="mast-meta"><span>${articles.length} ${articles.length === 1 ? "article" : "articles"}</span>${shorts.length ? `<a href="/blog/linkedin">${shorts.length} LinkedIn ${shorts.length === 1 ? "post" : "posts"}</a>` : ""}<a href="/blog/feed.xml">RSS</a></div>
+    <div class="mast-meta">${articles.length ? `<span>${articles.length} ${articles.length === 1 ? "article" : "articles"}</span>` : ""}${shorts.length ? `<a href="/blog/linkedin">${shorts.length} LinkedIn ${shorts.length === 1 ? "post" : "posts"}</a>` : ""}<a href="/blog/feed.xml">RSS</a></div>
   </header>`;
 
   if (!articles.length && !shorts.length) {
@@ -335,7 +361,7 @@ function BlogPage(content, ctx) {
   if (shorts.length) {
     parts.push(`<section class="wrap sec" aria-labelledby="shorts">
   ${SectionHead({ id: "shorts", eyebrow: "First posted on LinkedIn", title: "Shorter notes", aside: shorts.length > 4 ? `<a class="more" href="/blog/linkedin">All ${shorts.length} posts ${arrow}</a>` : "" })}
-  <div class="li-grid">${shorts.slice(0, 4).map(LinkedInPost).join("\n")}</div>
+  <div class="${shorts.length === 1 ? "li-col" : "li-grid"}">${shorts.slice(0, 4).map(LinkedInPost).join("\n")}</div>
 </section>`);
   }
   return parts.join("\n");

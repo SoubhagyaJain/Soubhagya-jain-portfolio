@@ -352,6 +352,20 @@ a.am-cat:hover { text-decoration: underline; text-underline-offset: 3px; }
 .li-text .tag { color: var(--acc-ink); }
 .li-shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; }
 .li-shots img { width: 100%; border-radius: 8px; }
+/* a carousel: the slides themselves, snapping one at a time */
+.deck-wrap { margin: 4px 0 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.deck { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; overscroll-behavior-x: contain; padding-bottom: 6px; scrollbar-width: thin; scrollbar-color: var(--rule-2) transparent; border-radius: 8px; }
+.deck img { flex: 0 0 min(300px, 78%); width: min(300px, 78%); height: auto; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px; scroll-snap-align: start; box-shadow: 0 0 0 1px var(--rule); background: var(--bg-2); }
+.deck-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; font: 400 10.5px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); }
+.deck-bar a { color: var(--ink); border-bottom: 1px solid var(--rule-2); padding-bottom: 3px; }
+.deck-bar a:hover { border-bottom-color: var(--acc); }
+.deck-meta { color: var(--ink-3); }
+.deck-nav { display: none; gap: 6px; margin-left: auto; }
+html.js .deck-nav { display: inline-flex; }
+.deck-nav button { width: 36px; height: 36px; border: 0; border-radius: 999px; background: var(--tint); box-shadow: 0 0 0 1px var(--rule-2) inset; cursor: pointer; font-size: 14px; color: var(--ink); transition: background .3s ease; }
+.deck-nav button:hover { background: rgba(226,178,116,0.18); }
+.deck-nav button:disabled { opacity: .35; cursor: default; }
+.li-col .deck img { flex-basis: min(320px, 78%); width: min(320px, 78%); }
 .li-go { width: fit-content; font: 400 10.5px var(--mono); letter-spacing: .2em; text-transform: uppercase; border-bottom: 1px solid var(--rule-2); padding-bottom: 5px; }
 @media (max-width: 760px) { .li-grid { grid-template-columns: 1fr; } }
 

@@ -36,6 +36,21 @@ LinkedIn.
 For a photo, put it in `content/linkedin/images/` and add `image: images/photo.jpg`
 (several: `image: images/a.jpg, images/b.jpg`).
 
+For a **carousel** (a document post), put the slide images in a folder, for example
+`content/linkedin/images/my-carousel/slide-01.jpg`, `slide-02.jpg`, … and the PDF in
+`content/linkedin/files/`, then add:
+
+```
+slides: images/my-carousel
+slides_title: The carousel's title
+document: files/my-carousel.pdf
+```
+
+The slides show as a strip that swipes on a phone and steps with arrows on a desktop,
+with **Open PDF** and **Download** beside it. An `alts.txt` in the slides folder, one
+line per slide, describes each slide for screen readers.
+`2026-09-24-multilingual-retrieval.md` is a working example.
+
 ## A journal article
 
 Create `content/blog/2026-09-24-the-address-you-want.md`. The part of the file name

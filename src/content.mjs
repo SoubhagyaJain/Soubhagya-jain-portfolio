@@ -261,7 +261,18 @@ export const clip = (s, n) => s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$
 
 /* ── loading ─────────────────────────────────────────────────────────────── */
 
-const MEDIA_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".svg"]);
+const MEDIA_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif", ".svg", ".pdf"]);
+const IMAGE_EXT = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif"]);
+
+// A PDF's page count, read from its page tree without a PDF library. Good for the
+// ordinary files people export; if it cannot tell, the count is simply not shown.
+function pdfPages(file) {
+  try {
+    const t = readFileSync(file).toString("latin1");
+    const counts = [...t.matchAll(/\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)|\/Count\s+(\d+)[^>]*?\/Type\s*\/Pages\b/g)].map((m) => +(m[1] || m[2]));
+    return counts.length ? Math.max(...counts) : 0;
+  } catch (e) { return 0; }
+}
 
 function mdFiles(dir) {
   if (!existsSync(dir)) return [];
@@ -331,9 +342,31 @@ export function loadContent(root, { drafts = false } = {}) {
     if (!body.trim()) { warn.push(`content/linkedin/${f}: the post text is empty — skipped`); continue; }
     const id = "li-" + slugify(f.replace(/\.md$/, ""));
     const media = mediaUrl("linkedin");
+    // A carousel: `slides:` names a folder of slide images, shown in file-name order;
+    // an alts.txt beside them gives each slide its alt text, one line per slide.
+    // `document:` is the PDF itself, offered to open or download.
+    let slides = [];
+    if (data.slides) {
+      const rel = data.slides.replace(/^\.\//, "").replace(/\/+$/, "");
+      const sd = join(dir, "linkedin", rel);
+      if (!existsSync(sd)) warn.push(`content/linkedin/${f}: slides folder not found: ${data.slides}`);
+      else {
+        const altFile = join(sd, "alts.txt");
+        const alts = existsSync(altFile) ? readFileSync(altFile, "utf8").split(/\r?\n/).map((l) => l.trim()) : [];
+        slides = readdirSync(sd).filter((x) => IMAGE_EXT.has(extname(x).toLowerCase())).sort()
+          .map((x, k, all) => ({ src: `/blog/media/linkedin/${rel}/${x}`, alt: alts[k] || `Slide ${k + 1} of ${all.length}` }));
+      }
+    }
+    let doc = null;
+    if (data.document) {
+      const from = join(dir, "linkedin", data.document.replace(/^\.\//, ""));
+      if (!existsSync(from)) warn.push(`content/linkedin/${f}: document not found: ${data.document}`);
+      else doc = { href: media(data.document), name: data.document.split("/").pop(), size: fmtBytes(statSync(from).size), pages: pdfPages(from) };
+    }
     posts.push({
       kind: "linkedin", id, date, url: data.url || "", draft: truthy(data.draft),
       html: markdown(body, { breaks: true, hashtags: true, media }),
+      slides, doc, deckTitle: data.slides_title || "",
       images: list(data.image || data.images).map(media),
       excerpt: clip(plain(body).replace(/#\w+/g, "").trim(), 150),
       href: `/blog/linkedin#${id}`, source: `content/linkedin/${f}`
