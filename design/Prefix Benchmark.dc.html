@@ -103,7 +103,7 @@
 // in both, which is why the finish line moves less than the first token does.
 
 const W = 1600, H = 900, T = 12;
-const SP = 9, BW = 6.2, BH = 11;                        // block pitch, width, height
+const SP = 9.5, BW = 7, BH = 13;                        // block pitch, width, height
 const IN_X = 800, OUT_X = 950;                           // prefill slab
 const DEC_X = 1100, RESP_X = 1196;                       // decode ring, response column
 const LANE = [318, 486];                                 // different prefix, shared prefix
@@ -198,7 +198,7 @@ class Component extends DCLogic {
       this.raf = requestAnimationFrame(frame);
       if (!this.live) { this.pausedAt = this.pausedAt || now; return; }
       if (this.pausedAt) { this.t0 += now - this.pausedAt; this.pausedAt = 0; }
-      if (now - last < 15) return;
+      if (now - last < 6) return;                         // every display frame; guards double-fires only
       last = now;
       this.lastT = ((now - this.t0) / 1000) % T;
       this.draw(this.lastT);
@@ -215,217 +215,254 @@ class Component extends DCLogic {
   draw(t) {
     const c = this.ctx, d = this.dpr || 1;
     const cw = this.cw || 1, ch = this.ch || 1;
+    const el = this.canvasRef.current;
     c.setTransform(1, 0, 0, 1, 0, 0);
-    c.clearRect(0, 0, cv(this).width, cv(this).height);
+    c.clearRect(0, 0, el.width, el.height);
 
-    // camera: cover-fit the 1600x900 scene, push in over the first half of the loop and
-    // ease back out over the second; lean toward the cache plane while a cache hit lands
-    // the working part of the scene (x 600-1340) is framed into the right ~60% of the
-    // stage, leaving the left for the HTML copy; on a phone the copy sits above instead
-    const fit = Math.max(cw / W, ch / H) * (cw < 700 ? 1.46 : 1.34);
-    const push = 1 + 0.035 * Math.sin(Math.PI * t / T) ** 2;
-    const lean = bump(t, 2.6, 4.2, 0.7);
+    // camera: the working part of the scene framed into the right ~60% of the stage
+    // (the left is the HTML copy); a slow push in over the first half of the loop, an
+    // equal pull back over the second, and a lean toward the cache plane at the hit
+    const phone = cw < 700;
+    const fit = Math.max(cw / W, ch / H) * (phone ? 1.46 : 1.34);
+    const push = 1 + 0.04 * Math.sin(Math.PI * t / T) ** 2;
+    const lean = bump(t, 2.6, 4.3, 0.7);
     const s = fit * push * d;
-    const fx = cw < 700 ? 975 : 985, fy = (cw < 700 ? 488 : 455) + lean * 40;
-    c.setTransform(s, 0, 0, s, cw * d * (cw < 700 ? 0.5 : 0.655) - fx * s, (ch * d) / 2 - fy * s);
-    // the scene appears and leaves so the last frame is the first
-    const env = sm(t / 0.5) * (1 - sm((t - (T - 0.7)) / 0.7));
-    const P = (x, y, z = 0) => [x + (y - 470) * -0.1 + z * 0.35, y - z];   // a slight oblique
+    const fx = phone ? 1010 : 1000, fy = (phone ? 470 : 450) + lean * 34;
+    c.setTransform(s, 0, 0, s, cw * d * (phone ? 0.5 : 0.655) - fx * s, (ch * d) / 2 - fy * s);
+    const env = sm(t / 0.5) * (1 - sm((t - (T - 0.7)) / 0.7));   // last frame is the first
+    const hair = 1 / (s / d);                                     // one device pixel, in scene units
+    const P = (x, y, z = 0) => [x + (y - 470) * -0.1 + z * 0.35, y - z];
+    const rgba = (rgb, a) => "rgba(" + rgb + "," + Math.max(0, a * env).toFixed(3) + ")";
+    const WARM = "242,196,140", WARM_HI = "255,226,184", CYAN = "104,214,208", CYAN_HI = "176,244,238", INK = "220,230,236";
 
-    // ── the room: a drafting grid that recedes, and nothing else
-    c.lineWidth = 1 / s * d;
-    for (let x = 360; x <= 1640; x += 40) {
-      c.strokeStyle = "rgba(160,200,210," + (x % 200 === 0 ? 0.05 : 0.025) + ")";
-      c.beginPath(); c.moveTo(...P(x, 150)); c.lineTo(...P(x, 800)); c.stroke();
-    }
-    for (let y = 160; y <= 800; y += 40) {
-      c.strokeStyle = "rgba(160,200,210,0.025)";
-      c.beginPath(); c.moveTo(...P(360, y)); c.lineTo(...P(1640, y)); c.stroke();
+    // ── the room: a quiet dot grid, denser nowhere, brighter nowhere
+    c.fillStyle = rgba(INK, 0.07);
+    for (let x = 400; x <= 1600; x += 32) for (let y = 170; y <= 800; y += 32) {
+      const [px, py] = P(x, y); c.fillRect(px - hair, py - hair, hair * 2, hair * 2);
     }
 
-    // ── slabs: thin graphite glass, lit only while working
-    const busy = (lane, a, b) => REQS.some((q) => q.lane === lane && t > a(q) && t < b(q));
-    const prefillHot = [0, 1].map((l) => busy(l, (q) => q.t[q.first], (q) => q.ttft));
-    const decodeHot = [0, 1].map((l) => busy(l, (q) => q.ttft, (q) => q.done));
-    const slab = (x0, x1, y0, y1, hot, tint) => {
-      const a = P(x0, y0), b = P(x1, y0), e = P(x1, y1), f = P(x0, y1);
-      const g = c.createLinearGradient(a[0], a[1], f[0], f[1]);
-      g.addColorStop(0, "rgba(255,255,255," + (0.035 + hot * 0.03) + ")");
-      g.addColorStop(1, "rgba(255,255,255," + (0.012 + hot * 0.015) + ")");
-      c.fillStyle = g;
-      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.lineTo(...e); c.lineTo(...f); c.closePath(); c.fill();
-      c.strokeStyle = "rgba(" + tint + "," + (0.1 + hot * 0.22) + ")";
-      c.stroke();
-      c.strokeStyle = "rgba(255,255,255," + (0.12 + hot * 0.1) + ")";          // top edge catches the light
-      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke();
+    const pgon = (pts) => { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(...p) : c.moveTo(...p)); c.closePath(); };
+    const slab = (x0, x1, y0, y1, hot, rgb) => {
+      const q = [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)];
+      const g = c.createLinearGradient(q[0][0], q[0][1], q[3][0], q[3][1]);
+      g.addColorStop(0, rgba("255,255,255", 0.045 + hot * 0.035));
+      g.addColorStop(0.5, rgba("255,255,255", 0.018 + hot * 0.02));
+      g.addColorStop(1, rgba("255,255,255", 0.01));
+      c.fillStyle = g; pgon(q); c.fill();
+      c.lineWidth = hair; c.strokeStyle = rgba(rgb, 0.12 + hot * 0.3); c.stroke();
+      c.strokeStyle = rgba("255,255,255", 0.2 + hot * 0.2);                   // lit top edge
+      c.beginPath(); c.moveTo(...q[0]); c.lineTo(...q[1]); c.stroke();
     };
-    slab(IN_X, OUT_X, 236, 560, Math.max(prefillHot[0], prefillHot[1]) ? 1 : 0, "236,214,184");
-    slab(DEC_X - 44, DEC_X + 44, 236, 560, Math.max(decodeHot[0], decodeHot[1]) ? 1 : 0, "150,220,215");
-    slab(640, 652, 250, 546, 0, "200,210,220");                                    // tokenizer: a hairline gate
 
-    // transformer layers inside prefill: four planes per lane
+    // who is working right now
+    const inPrefill = (q) => t > q.t[q.first] && t < q.ttft;
+    const inDecode = (q) => t > q.ttft && t < q.done;
+    const pHot = REQS.some(inPrefill) ? 1 : 0, dHot = REQS.some(inDecode) ? 1 : 0;
+
+    slab(630, 640, 250, 548, 0, INK);                                          // tokenizer gate
+    slab(IN_X, OUT_X, 236, 562, pHot, WARM);
+    slab(DEC_X - 46, DEC_X + 46, 236, 562, dHot, CYAN);
+
+    // transformer layers: four planes per lane inside prefill
     LANE.forEach((ly) => {
       for (let k = 1; k <= 4; k++) {
-        c.strokeStyle = "rgba(220,230,236,0.06)";
-        c.beginPath(); c.moveTo(...P(IN_X + 6, ly - 12 - k * 13)); c.lineTo(...P(OUT_X - 6, ly - 12 - k * 13)); c.stroke();
+        c.strokeStyle = rgba(INK, 0.07);
+        c.beginPath(); c.moveTo(...P(IN_X + 6, ly - 14 - k * 14)); c.lineTo(...P(OUT_X - 6, ly - 14 - k * 14)); c.stroke();
       }
     });
 
-    // ── the KV cache: a plane beneath prefill. The shared prefix lives here, primed.
-    const cell = (i, n) => {
-      const cols = CACHE.cols, cw2 = CACHE.w / cols;
-      const col = i % cols, row = Math.floor(i / cols);
-      return [CACHE.x + col * cw2 + cw2 / 2, CACHE.y + row * 15];
-    };
-    this.heat = this.heat || new Float32Array(CACHE.cols * CACHE.rows);
-    const heat = new Float32Array(CACHE.cols * CACHE.rows), warm = new Float32Array(CACHE.cols * CACHE.rows);
-    for (let i = 0; i < CACHE.cols * CACHE.rows; i++) {
-      const [x, y] = cell(i);
-      const [px, py] = P(x, y, -30);
-      const shared = i < CACHE.cols * 2;                   // rows 0-1: the primed shared prefix
-      c.fillStyle = shared ? "rgba(95,208,203,0.16)" : "rgba(255,255,255,0.03)";
-      c.fillRect(px - 5, py - 4, 10, 8);
-    }
-    // cache plane frame
+    // ── KV cache: a plane with thickness, under prefill. Rows 0-1 hold the primed shared
+    // prefix; rows 2-3 take whatever a unique prompt writes, and it is never read again.
+    const CW = CACHE.w / CACHE.cols;
+    const cell = (i) => [CACHE.x + (i % CACHE.cols) * CW + CW / 2, CACHE.y + Math.floor(i / CACHE.cols) * 16];
     {
-      const a = P(CACHE.x - 14, CACHE.y - 14, -30), b = P(CACHE.x + CACHE.w + 14, CACHE.y - 14, -30);
-      const e = P(CACHE.x + CACHE.w + 14, CACHE.y + 58, -30), f = P(CACHE.x - 14, CACHE.y + 58, -30);
-      c.strokeStyle = "rgba(150,220,215,0.16)";
-      c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.lineTo(...e); c.lineTo(...f); c.closePath(); c.stroke();
+      const z = -30, x0 = CACHE.x - 16, x1 = CACHE.x + CACHE.w + 16, y0 = CACHE.y - 16, y1 = CACHE.y + 62;
+      const top = [P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)];
+      c.fillStyle = rgba("255,255,255", 0.022); pgon(top); c.fill();
+      c.strokeStyle = rgba(CYAN, 0.2 + lean * 0.2); c.lineWidth = hair; c.stroke();
+      // the plate's front edge, for depth
+      c.fillStyle = rgba(CYAN, 0.06);
+      pgon([top[3], top[2], [top[2][0], top[2][1] + 6], [top[3][0], top[3][1] + 6]]); c.fill();
     }
+    const heat = new Float32Array(CACHE.cols * CACHE.rows), warm = new Float32Array(CACHE.cols * CACHE.rows);
 
     // ── requests
-    const cachedPulse = [];
+    const pulses = [];
     REQS.forEach((q) => {
       const ly = LANE[q.lane];
       const cN = this.consumed(q, t);
-      const life = 1 - sm((t - q.done - 1.2) / 0.8);                // outputs linger, then leave
-      for (let i = 0; i < q.n; i++) {
-        const isPrefix = i < PREFIX;
-        const k = i - cN;                                          // >0: still queued
-        let x = IN_X - k * SP, y = ly, a = 1, col, lit = 0;
-        if (k > 0) {
-          // queued: moving toward the engine at the rate it is consumed
-          a = sm((x - 470) / 160);
-          col = q.shared && isPrefix ? "210,236,234" : "236,222,200";
-          if (x < 380) continue;
-        } else if (q.shared && isPrefix) {
-          // cached: drains down into its cell in the cache plane, never entering prefill
-          const u = cl((t - q.t[i]) / 0.38);
-          if (u >= 1) { heat[Math.floor(i * 48 / PREFIX)] += 0.35; continue; }
-          const [tx, ty] = cell(Math.floor(i * 48 / PREFIX));
-          const e = sm(u);
-          x = IN_X - 8 + (tx - IN_X + 8) * e; y = ly + (ty - ly) * e;
-          a = 1 - u * 0.4; col = "95,208,203";
-          const [px, py] = P(x, y, -30 * e);
-          c.fillStyle = "rgba(" + col + "," + (a * env).toFixed(3) + ")";
-          c.fillRect(px - BW * (1 - e * 0.4) / 2, py - BH * (1 - e * 0.55) / 2, BW * (1 - e * 0.4), BH * (1 - e * 0.55));
-          if (i === 0 && u > 0 && u < 1) cachedPulse.push(t - q.t[0]);
-          continue;
-        } else {
-          // computed: crossing the prefill slab, lit, then writing KV below
-          x = IN_X - k * SP;
-          if (x <= OUT_X) {
-            lit = 1; col = "242,190,120";
-            // the layer signal rises through four planes as the block crosses
-            const f = (x - IN_X) / (OUT_X - IN_X);
-            const layer = Math.floor(f * 5);
-            if (layer >= 1 && layer <= 4) {
-              const [sx, sy] = P(x, ly - 12 - layer * 13);
-              c.fillStyle = "rgba(255,214,160," + (0.55 * env).toFixed(3) + ")";
-              c.fillRect(sx - 1, sy - 1, 2.4, 2.4);
-            }
-          } else {
-            const u = cl((x - OUT_X) / 60);
-            if (u >= 1) {
-              const ci = CACHE.cols * 2 + Math.floor((q.shared ? i - PREFIX + 40 : i) * 48 / q.n) % 48;
-              warm[ci] = Math.max(warm[ci], 1 - cl((t - q.done) / 2.5));
-              continue;
-            }
-            const [tx, ty] = cell(CACHE.cols * 2 + Math.floor((q.shared ? i - PREFIX + 40 : i) * 48 / q.n) % 48);
-            const e = sm(u);
-            x = OUT_X + (tx - OUT_X) * e * 0.5; y = ly + (ty - ly) * e;
-            a = 1 - e; col = "242,190,120";
-          }
-        }
-        const [px, py] = P(x, y);
-        if (lit) {
-          c.fillStyle = "rgba(242,190,120," + (0.16 * env) + ")";
-          c.fillRect(px - BW, py - BH, BW * 2, BH * 2);
-        }
-        c.fillStyle = "rgba(" + col + "," + (a * env * (lit ? 1 : 0.78)).toFixed(3) + ")";
-        c.fillRect(px - BW / 2, py - BH / 2, BW, BH);
+      const life = 1 - sm((t - q.done - 1.1) / 0.8);
+      const writeCell = (i) => CACHE.cols * 2 + Math.floor((q.shared ? (i - PREFIX) * 10 : i) * 48 / q.n) % 48;
+
+      // the working column: a soft light behind whatever prefill is computing now
+      if (inPrefill(q)) {
+        const x = IN_X + Math.min(OUT_X - IN_X, Math.max(0, (cN - Math.floor(cN)) * SP));
+        const head = IN_X - (q.n - 1 - cN) * SP;                     // last block's x
+        const [gx, gy] = P(Math.min(OUT_X, Math.max(IN_X, head)), ly - 34);
+        const g = c.createRadialGradient(gx, gy, 0, gx, gy, 110);
+        g.addColorStop(0, rgba(WARM, 0.16)); g.addColorStop(1, rgba(WARM, 0));
+        c.fillStyle = g; c.fillRect(gx - 110, gy - 110, 220, 220);
       }
 
-      // decode: one token per step, same pace in both lanes
+      for (let i = 0; i < q.n; i++) {
+        const isPrefix = i < PREFIX;
+        const k = i - cN;
+        let x = IN_X - k * SP;
+        if (k > 0) {
+          // queued, moving at exactly the rate the engine takes it
+          if (x < 560) continue;
+          const a = sm((x - 640) / 150);                  // born clear of the copy column
+          const [px, py] = P(x, ly);
+          if (i === q.n - 1 || k < 1.5) {                 // a faint streak on the moving head
+            c.fillStyle = rgba(q.shared && isPrefix ? CYAN : WARM, a * 0.08);
+            c.fillRect(px - BW / 2 - SP * 1.4, py - BH / 2 + 2, SP * 1.4, BH - 4);
+          }
+          c.fillStyle = rgba(q.shared && isPrefix ? "206,236,234" : "238,226,206", a * 0.82);
+          c.fillRect(px - BW / 2, py - BH / 2, BW, BH);
+          continue;
+        }
+        if (q.shared && isPrefix) {
+          // cached: an arc down into its own cell; it never enters prefill
+          const u = cl((t - q.t[i]) / 0.42);
+          const ci = Math.floor(i * 48 / PREFIX);
+          if (u >= 1) { heat[ci] = Math.max(heat[ci], 1 - cl((t - q.t[i] - 0.42) / 1.6)); continue; }
+          const [tx, ty] = cell(ci), e = sm(u);
+          const x2 = IN_X - 14 + (tx - IN_X + 14) * e, y2 = ly + (ty - ly) * e;
+          const [px, py] = P(x2, y2, -30 * e);
+          const w = BW * (1 - e * 0.35), h = BH * (1 - e * 0.6);
+          c.fillStyle = rgba(CYAN_HI, 0.95 - e * 0.35);
+          c.fillRect(px - w / 2, py - h / 2, w, h);
+          if (i === 0) pulses.push(t - q.t[0]);
+          continue;
+        }
+        if (x <= OUT_X) {
+          // computing: lit, with its signal rippling up through the layer planes
+          const f = (x - IN_X) / (OUT_X - IN_X);
+          const [px, py] = P(x, ly);
+          c.fillStyle = rgba(WARM, 0.14);
+          c.fillRect(px - BW / 2 - SP, py - BH / 2 + 1, SP, BH - 2);
+          c.fillStyle = rgba(WARM_HI, 1);
+          c.fillRect(px - BW / 2, py - BH / 2, BW, BH);
+          for (let L = 1; L <= 4; L++) {
+            const lag = f * 4.2 - L;                                  // the ripple reaches layer L later
+            if (lag < 0 || lag > 1.6) continue;
+            const [sx, sy] = P(x, ly - 14 - L * 14);
+            c.fillStyle = rgba(WARM_HI, (1 - lag / 1.6) * 0.85);
+            c.fillRect(sx - 1.6, sy - 1.2, 3.2, 2.4);
+            if (L === 1 || lag < 0.5) { c.strokeStyle = rgba(WARM, (1 - lag / 1.6) * 0.35); c.beginPath(); c.moveTo(sx, sy); c.lineTo(...P(x, ly - BH / 2)); c.stroke(); }
+          }
+          continue;
+        }
+        // leaving prefill: its KV goes straight down a data path into the cache
+        const u = cl((x - OUT_X) / 70);
+        const ci = writeCell(i);
+        if (u >= 1) { warm[ci] = Math.max(warm[ci], 1 - cl((t - q.done) / 2.4)); continue; }
+        const [tx, ty] = cell(ci), e = sm(u);
+        const x2 = OUT_X + 10 + (tx - OUT_X - 10) * e * e, y2 = ly + (ty - ly) * e;
+        const [px, py] = P(x2, y2, -30 * e);
+        c.fillStyle = rgba(WARM, 0.8 * (1 - e * 0.6));
+        c.fillRect(px - 1.4, py - 3, 2.8, 6);
+      }
+
+      // the data path from prefill to cache, lit only while this lane writes
+      const writing = t > q.t[q.first] + (OUT_X - IN_X) / (R * SP) && t < q.ttft + 0.3;
+      if (writing) {
+        c.strokeStyle = rgba(WARM, 0.18); c.setLineDash([hair * 3, hair * 4]);
+        c.beginPath(); c.moveTo(...P(OUT_X + 10, ly + BH)); c.lineTo(...P(OUT_X + 10, CACHE.y - 16, -30)); c.stroke();
+        c.setLineDash([]);
+      }
+
+      // the shared prefix, compared against what the cache already holds
+      if (q.shared) {
+        const u = t - q.t[0];
+        const al = bump(u, -0.55, 0.45, 0.3);
+        if (al > 0.01) {
+          c.setLineDash([hair * 2, hair * 5]);
+          for (let j = 0; j < 8; j++) {
+            c.strokeStyle = rgba(CYAN, al * 0.28);
+            c.beginPath(); c.moveTo(...P(IN_X - 24 - j * 36, ly + BH / 2 + 2)); c.lineTo(...P(...cell(j * 3), -30)); c.stroke();
+          }
+          c.setLineDash([]);
+        }
+      }
+
+      // decode: one token per step, the same pace in both lanes
       if (t > q.ttft) {
         const n = Math.min(OUTN, Math.floor((t - q.ttft) / OUT_DT) + 1);
         const running = t < q.done;
-        const [rx, ry] = P(DEC_X, ly - 44);
-        c.strokeStyle = "rgba(150,220,215," + ((running ? 0.35 : 0.1) * env * life).toFixed(3) + ")";
+        const [rx, ry] = P(DEC_X, ly - 46);
+        c.strokeStyle = rgba(CYAN, (running ? 0.4 : 0.12) * life); c.lineWidth = hair;
         c.beginPath(); c.arc(rx, ry, 17, 0, Math.PI * 2); c.stroke();
         if (running) {
-          const ang = ((t - q.ttft) / OUT_DT) * Math.PI * 2 - Math.PI / 2;
-          c.fillStyle = "rgba(200,245,240," + (0.9 * env) + ")";
-          c.fillRect(rx + Math.cos(ang) * 17 - 1.5, ry + Math.sin(ang) * 17 - 1.5, 3, 3);
+          const ph = ((t - q.ttft) / OUT_DT) % 1;
+          c.strokeStyle = rgba(CYAN_HI, 0.9); c.lineWidth = hair * 2;
+          c.beginPath(); c.arc(rx, ry, 17, -Math.PI / 2, -Math.PI / 2 + ph * Math.PI * 2); c.stroke();
+          c.lineWidth = hair;
         }
         for (let k = 0; k < n; k++) {
           const u = sm(cl((t - q.ttft - k * OUT_DT) / 0.45));
-          const x = DEC_X + (RESP_X + k * 9 - DEC_X) * u;
-          const [px, py] = P(x, ly);
-          c.fillStyle = "rgba(" + (q.shared ? "150,232,226" : "240,226,204") + "," + (0.9 * env * life).toFixed(3) + ")";
+          const [px, py] = P(DEC_X + (RESP_X + k * 9 - DEC_X) * u, ly);
+          c.fillStyle = rgba(q.shared ? CYAN_HI : "244,232,212", 0.92 * life);
           c.fillRect(px - 3, py - 5, 6, 10);
         }
-        // the first token: a hairline mark where TTFT lands
-        const m = 1 - cl((t - q.ttft) / 1.4);
+        const m = 1 - cl((t - q.ttft) / 1.4);                          // the first token's mark
         if (m > 0) {
-          const [a1, b1] = P(RESP_X - 6, ly - 22), [a2, b2] = P(RESP_X - 6, ly + 22);
-          c.strokeStyle = "rgba(" + (q.shared ? "95,208,203" : "236,214,184") + "," + (m * 0.8 * env) + ")";
-          c.beginPath(); c.moveTo(a1, b1); c.lineTo(a2, b2); c.stroke();
-        }
-      }
-      // links: the shared prefix, compared against what the cache already holds
-      if (q.shared) {
-        const u = (t - q.t[0]);
-        if (u > -0.5 && u < 0.9) {
-          const al = bump(u, -0.5, 0.5, 0.35);
-          for (let j = 0; j < 7; j++) {
-            const [ax, ay] = P(IN_X - 20 - j * 40, ly + BH / 2 + 2);
-            const [bx, by] = P(...cell(j * 6), -30);
-            c.strokeStyle = "rgba(95,208,203," + (al * 0.22 * env).toFixed(3) + ")";
-            c.setLineDash([2, 4]);
-            c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by); c.stroke();
-            c.setLineDash([]);
-          }
+          c.strokeStyle = rgba(q.shared ? CYAN : WARM, m * 0.9);
+          c.beginPath(); c.moveTo(...P(RESP_X - 7, ly - 20)); c.lineTo(...P(RESP_X - 7, ly + 20)); c.stroke();
         }
       }
     });
 
-    // one restrained pulse where a cache hit lands
-    cachedPulse.forEach((u) => {
-      const [px, py] = P(CACHE.x + CACHE.w / 2, CACHE.y + 8, -30);
-      const k = cl(u / 0.38);
-      c.strokeStyle = "rgba(95,208,203," + ((1 - k) * 0.5 * env).toFixed(3) + ")";
-      c.beginPath(); c.ellipse(px, py, 40 + k * 150, 12 + k * 40, 0, 0, Math.PI * 2); c.stroke();
-    });
-    // cache cells that were just read (cyan) or just written (warm, and never read again)
+    // cache cells: primed, just read (cyan), just written (warm, never read again)
     for (let i = 0; i < CACHE.cols * CACHE.rows; i++) {
-      const [x, y] = cell(i);
-      const [px, py] = P(x, y, -30);
-      if (heat[i] > 0) { c.fillStyle = "rgba(120,230,224," + (Math.min(0.9, heat[i]) * 0.6 * env).toFixed(3) + ")"; c.fillRect(px - 5, py - 4, 10, 8); }
-      if (warm[i] > 0) { c.fillStyle = "rgba(242,190,120," + (warm[i] * 0.35 * env).toFixed(3) + ")"; c.fillRect(px - 5, py - 4, 10, 8); }
+      const [px, py] = P(...cell(i), -30);
+      const primed = i < CACHE.cols * 2;
+      c.fillStyle = primed ? rgba(CYAN, 0.2 + heat[i] * 0.55) : rgba(WARM, 0.04 + warm[i] * 0.4);
+      c.fillRect(px - CW * 0.36, py - 4.5, CW * 0.72, 9);
+    }
+    // one restrained pulse per hit
+    pulses.forEach((u) => {
+      const k = cl(u / 0.9);
+      const [px, py] = P(CACHE.x + CACHE.w * 0.4, CACHE.y + 8, -30);
+      c.strokeStyle = rgba(CYAN, (1 - k) * 0.45);
+      c.beginPath(); c.ellipse(px, py, 30 + k * 190, 10 + k * 46, 0, 0, Math.PI * 2); c.stroke();
+    });
+
+    // ── the instrument: request latency, to scale, filling as it happens. The prefill
+    // segment is the only part that changes between the lanes; decode is the same length.
+    {
+      const x0 = 1110, w = 250, y0 = 640, sec = w / 7.4;
+      const lanes = [
+        { q: REQS[0], pre: 2.653, dec: 7.284 - 2.653, rgb: WARM },
+        { q: REQS[1], pre: 0.585, dec: 5.529 - 0.585, rgb: CYAN }
+      ];
+      c.strokeStyle = rgba(INK, 0.14);
+      c.beginPath(); c.moveTo(...P(x0, y0 - 14)); c.lineTo(...P(x0 + w, y0 - 14)); c.stroke();
+      for (let k = 0; k <= 7; k++) { const [a1, b1] = P(x0 + k * sec, y0 - 14); c.fillStyle = rgba(INK, 0.25); c.fillRect(a1 - hair / 2, b1 - 3, hair, 3); }
+      lanes.forEach((L, j) => {
+        const y = y0 + j * 22, q = L.q;
+        const fp = cl((t - q.t[q.first]) / (q.ttft - q.t[q.first]));
+        const fd = cl((t - q.ttft) / (q.done - q.ttft));
+        const fade = 1 - sm((t - 10.4) / 1);
+        c.fillStyle = rgba("255,255,255", 0.035);
+        c.fillRect(...P(x0, y), w, 7);
+        const [bx, by] = P(x0, y);
+        c.fillStyle = rgba(L.rgb, 0.85 * fade); c.fillRect(bx, by, L.pre * sec * fp, 7);
+        c.fillStyle = rgba(INK, 0.32 * fade); c.fillRect(bx + L.pre * sec, by, L.dec * sec * fd, 7);
+        if (fp >= 1) { c.fillStyle = rgba(L.rgb, fade); c.fillRect(bx + L.pre * sec - hair, by - 4, hair * 2, 15); }
+      });
     }
 
-    // ── faint stage markings (the only type the canvas draws)
+    // ── faint stage markings: the only type the canvas draws
     c.font = "500 9px 'IBM Plex Mono', monospace";
-    c.fillStyle = "rgba(220,230,236," + (0.34 * env) + ")";
-    const mark = (s2, x, y, z = 0) => { const [px, py] = P(x, y, z); c.fillText(s2, px, py); };
+    const mark = (txt, x, y, z = 0, rgb = INK, a = 0.36) => { c.fillStyle = rgba(rgb, a); c.fillText(txt, ...P(x, y, z)); };
+    mark("TOKENIZE", 596, 240);
     mark("PREFILL", IN_X, 226);
     mark("DECODE", DEC_X - 30, 226);
-    mark("KV CACHE", CACHE.x - 14, CACHE.y - 22, -30);
-    mark("TOKENIZE", 612, 238);
-    c.fillStyle = "rgba(236,214,184," + (0.3 * env) + ")"; mark("different prefix", 690, LANE[0] + 24);
-    c.fillStyle = "rgba(95,208,203," + (0.38 * env) + ")"; mark("shared prefix", 690, LANE[1] + 24);
+    mark("KV CACHE", CACHE.x - 16, CACHE.y - 24, -30);
+    mark("different prefix", 700, LANE[0] + 26, 0, WARM, 0.42);
+    mark("shared prefix", 700, LANE[1] + 26, 0, CYAN, 0.5);
+    mark("REQUEST LATENCY  ·  PREFILL | DECODE", 1110, 612, 0, INK, 0.3);
   }
 }
 const cv = (self) => self.canvasRef.current;
