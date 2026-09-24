@@ -27,6 +27,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Script } from "node:vm";
 import { createHash } from "node:crypto";
+import { loadContent, renderPages, homeWriting } from "./src/content.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, "design");
@@ -183,7 +184,14 @@ function inline(name, stack = []) {
   });
 }
 
-const body = inline(ENTRY);
+let body = inline(ENTRY);
+
+/* ── writing: content/ -> the Blog and Notes pages, and the home page's chapter ── */
+
+const content = loadContent(ROOT);
+const SLOT_RE = /<dc-slot name="writing"><\/dc-slot>/;
+if (!SLOT_RE.test(body)) throw new Error(`${ENTRY} has no <dc-slot name="writing"> for the Writing chapter`);
+body = body.replace(SLOT_RE, () => homeWriting(content));
 
 /* ── stylesheet ───────────────────────────────────────────────────────────── */
 
@@ -287,6 +295,7 @@ html,body{max-width:100%;overflow-x:clip}
   }
 }`,
   ...helmetStyles,
+  readFileSync(join(ROOT, "src", "writing.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
 ].join("\n\n");
@@ -392,9 +401,27 @@ writeFileSync(join(OUT, "index.html"), html);
 writeFileSync(join(OUT, "styles.css"), css);
 writeFileSync(join(OUT, "app.js"), app);
 
+// the Blog and Notes pages share one stylesheet and the home page's fonts
+const pagesCss = readFileSync(join(ROOT, "src", "pages.css"), "utf8");
+writeFileSync(join(OUT, "pages.css"), pagesCss);
+const pages = renderPages(content, {
+  cssHref: `/pages.css?v=${stamp(pagesCss)}`,
+  fontHref: [...fontHrefs][0] || "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+});
+for (const [path, text] of pages) {
+  mkdirSync(dirname(join(OUT, path)), { recursive: true });
+  writeFileSync(join(OUT, path), text);
+}
+for (const [from, to] of content.copies) {
+  mkdirSync(dirname(join(OUT, to)), { recursive: true });
+  copyFileSync(from, join(OUT, to));
+}
+
 // assets referenced anywhere in the compiled page, so a missing one is reported
 // rather than discovered as a broken image in the browser
 const wanted = new Set();
+// the sub-pages' ground can be any of the three portrait cuts, picked in the browser
+for (const f of ["day", "night", "storm"]) wanted.add(`plate-${f}-portrait.jpg`);
 for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif)/g)) {
   wanted.add(m[0].slice("assets/".length));
 }
@@ -411,6 +438,13 @@ console.log(`    index.html  ${kb(html)}`);
 console.log(`    styles.css  ${kb(css)}   (${hoverRules.length} hover rules)`);
 console.log(`    app.js      ${kb(app)}`);
 console.log(`    assets/     ${wanted.size - missing.length} of ${wanted.size} copied`);
+const articles = content.posts.filter((p) => p.kind === "article").length;
+console.log(`    blog/       ${articles} article${articles === 1 ? "" : "s"}, ${content.posts.length - articles} LinkedIn post${content.posts.length - articles === 1 ? "" : "s"}`);
+console.log(`    notes/      ${content.notes.length} PDF${content.notes.length === 1 ? "" : "s"}`);
+if (content.warn.length) {
+  console.log(`\n  CONTENT — fix these in content/ and re-run:`);
+  for (const w of content.warn) console.log(`    - ${w}`);
+}
 if (missing.length) {
   console.log(`\n  MISSING ASSETS — drop these into design/assets/ and re-run:`);
   for (const f of missing) console.log(`    - ${f}`);
