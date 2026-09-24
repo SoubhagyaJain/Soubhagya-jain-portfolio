@@ -2006,6 +2006,7 @@ class Component extends DCLogic {
       this.uploadedS = false;
       this.revealed = false;
       canvas.style.opacity = "0";
+      document.querySelectorAll("[data-hero-cover]").forEach((el) => { el.style.visibility = ""; });
       img.src = next.day;
       imgN.src = next.night;
     };
@@ -2108,6 +2109,13 @@ class Component extends DCLogic {
       if (!this.revealed && this.wCur.every((w, i) => w < 0.001 || ready[i])) {
         this.revealed = true;
         canvas.style.opacity = "1";
+        // Once the live scene covers them, the flat photographs underneath only cost
+        // compositing: two huge filtered images cross-fading under the canvas on every
+        // change of weather. They step out of rendering after the canvas has faded in.
+        setTimeout(() => {
+          if (!this.revealed) return;
+          document.querySelectorAll("[data-hero-cover]").forEach((el) => { el.style.visibility = "hidden"; });
+        }, 1800);
       }
       gl.uniform2f(u.uRes, w, h);
       gl.uniform2f(u.uMouse, still ? 0 : this.mouse.x, still ? 0 : this.mouse.y);
@@ -2157,8 +2165,13 @@ class Component extends DCLogic {
       // While a pinned diagram (the Aperture pipeline, Direction) fills the screen, the
       // scene is mostly under its shading and the diagram needs the frame time, so the
       // ground keeps moving at a slower rate rather than competing with it.
-      const budget = this.stageBusy ? (rainy ? 33 : 40) * (this.small ? 1.3 : 1) : (fast ? 16 : 33) * (this.small ? 1.4 : 1);
-      if (now - last < budget) return;
+      // A change of weather is the one thing the reader is watching wherever they are on
+      // the page, so the sweep always runs at the display's rate.
+      const mixing = this.mixK !== undefined && this.mixK < 1;
+      const budget = mixing ? 0 : this.stageBusy ? (rainy ? 33 : 40) * (this.small ? 1.3 : 1) : (fast ? 16 : 33) * (this.small ? 1.4 : 1);
+      // A few ms of tolerance: rAF lands a little early or late every frame, and a strict
+      // test against a 16ms budget on a 60Hz display dropped frames at random.
+      if (now - last < budget - 4) return;
       last = now;
       draw();
     };
