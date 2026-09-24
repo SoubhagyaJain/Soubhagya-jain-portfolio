@@ -57,6 +57,8 @@
 #writing .w-paper .pp-top { font-family: 'IBM Plex Mono', monospace; font-size: 7px; letter-spacing: .18em; text-transform: uppercase; color: rgba(20,21,23,0.55); padding-bottom: 5px; border-bottom: 1px solid rgba(20,21,23,0.18); }
 #writing .w-paper .pp-title { font-family: 'Instrument Serif', Georgia, serif; font-size: 13px; line-height: 1.1; color: #17181a; }
 #writing .w-paper .pp-lines { flex: 1; background: repeating-linear-gradient(180deg, transparent 0 7px, rgba(20,21,23,0.14) 7px 8px); -webkit-mask-image: linear-gradient(#000 40%, transparent); mask-image: linear-gradient(#000 40%, transparent); }
+#writing .w-doc .w-frame img { object-position: top; }
+#writing .w-list a:hover .w-doc .w-frame { transform: translateY(-4px) rotate(-1.5deg); }
 #writing .w-list a:hover .w-paper .w-frame { transform: translateY(-4px) rotate(-1.5deg); }
 
 /* arrival: each thumbnail unmasks upward, a beat after its column lands */

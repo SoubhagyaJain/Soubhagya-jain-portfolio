@@ -413,6 +413,13 @@ export function loadContent(root, { drafts = false } = {}) {
         summary: data.summary || plain(body),
         topics: list(data.topics || data.tags),
         pages: data.pages || "",
+        cover: (() => {
+          if (!data.cover) return "";
+          const rel = data.cover.replace(/^\.\//, "");
+          if (!existsSync(join(nd, rel))) { warn.push(`content/notes/${base}.md: cover not found: ${data.cover}`); return ""; }
+          copies.push([join(nd, rel), `notes/files/${rel}`]);
+          return `/notes/files/${rel}`;
+        })(),
         href: `/notes/files/${file}`, download: file, size: fmtBytes(statSync(join(nd, f)).size)
       });
     }
@@ -459,6 +466,7 @@ function thumb(p) {
 }
 
 function paper(n) {
+  if (n.cover) return `<span class="w-thumb w-doc" aria-hidden="true"><span class="w-frame"><img src="${esc(n.cover)}" alt="" loading="lazy" decoding="async"></span><span class="w-badge">PDF${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span></span>`;
   return `<span class="w-thumb w-paper" aria-hidden="true"><span class="w-frame"><span class="pp-top">PDF${n.pages ? ` &#183; ${esc(n.pages)} pp` : ""}</span><span class="pp-title">${esc(n.title)}</span><span class="pp-lines"></span></span></span>`;
 }
 
