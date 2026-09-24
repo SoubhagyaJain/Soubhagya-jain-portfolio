@@ -238,7 +238,7 @@ function blocks(text, opt) {
       const lang = m[1] ? ` data-lang="${esc(m[1])}"` : "";
       if (opt.anchors) {
         const label = [m[2] && `<span class="cb-file">${esc(m[2])}</span>`, m[1] && `<span class="cb-lang">${esc(m[1])}</span>`].filter(Boolean).join("");
-        out.push(`<div class="codeblock"><div class="cb-bar">${label}<button type="button" class="cb-copy" data-copy hidden>Copy</button></div><pre${lang}><code>${esc(body.join("\n"))}</code></pre></div>`);
+        out.push(`<div class="codeblock"><div class="cb-bar">${label}${m[1] === "text" ? "" : '<button type="button" class="cb-copy" data-copy hidden>Copy</button>'}</div><pre${lang}><code>${esc(body.join("\n"))}</code></pre></div>`);
       } else out.push(`<pre${lang}><code>${esc(body.join("\n"))}</code></pre>`);
       continue;
     }
