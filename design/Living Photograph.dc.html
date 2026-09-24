@@ -175,10 +175,6 @@
         <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-night-portrait.jpg">
         <img data-hero-cover="night" src="assets/plate-night-wide.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); opacity: 0; transition: opacity 1.2s ease">
       </picture>
-      <picture>
-        <source media="(orientation: portrait) and (max-width: 820px)" srcset="assets/plate-storm-portrait.jpg">
-        <img data-hero-cover="storm" src="assets/plate-storm-wide.jpg" alt="" aria-hidden="true" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: max(100vw, 179vh); width: auto; max-width: none; filter: saturate(1.02); opacity: 0; transition: opacity 1.2s ease">
-      </picture>
     </div>
     <canvas ref="{{ canvasRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.6s ease-in-out"></canvas>
 
@@ -228,7 +224,6 @@
           <div data-theme-lens style="position: absolute; left: 3px; top: 3px; bottom: 3px; width: 30px; border-radius: 999px; background: rgba(255,255,255,0.17); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset; transition: transform .62s cubic-bezier(.2,.7,.2,1), background .9s ease; pointer-events: none"></div>
           <button type="button" data-theme="day" aria-label="Daylight" title="Daylight" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9728;</button>
           <button type="button" data-theme="dark" aria-label="Night" title="Night" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9790;</button>
-          <button type="button" data-theme="storm" aria-label="Storm" title="Storm" aria-pressed="false" style="position: relative; z-index: 1; width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 999px; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease" style-hover="color: #ffffff">&#9889;</button>
         </div>
         <div data-nav-status title="Available for AI/ML engineering roles" style="position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-left: clamp(4px, 0.8vw, 12px); padding: 7px clamp(10px, 1vw, 14px); border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset">
           <span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(246,231,199,0.95); box-shadow: 0 0 7px 2px rgba(246,231,199,0.4); flex: 0 0 auto"></span>
@@ -322,32 +317,13 @@
       <header style="display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 30px); padding-bottom: clamp(50px, 9vh, 120px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02</span><span style="opacity: .42; padding-right: .48em">/</span>Work</div>
         <h2 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(44px, 7vw, 104px); text-wrap: balance; line-height: 0.98; letter-spacing: -0.02em; color: #f9fbf6">Selected systems.</h2>
-        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: rgba(238,245,238,0.78)">Two I’ve built and broken, one I’ve measured, one I’ve designed but not built, and one I’m building now.</p>
+        <p style="margin: 0; max-width: 34ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(15px, 1.2vw, 18px); line-height: 1.55; color: rgba(238,245,238,0.78)">One I’ve built and broken, one I’ve measured, one I’ve designed but not built, and one I’m building now.</p>
       </header>
     <div style="position: relative; border-top: 1px solid rgba(214,230,236,0.12)">
       <dc-import name="Aperture RAG Showcase" hint-size="100%,900px"></dc-import>
     </div>
     <article id="prefix-benchmark" style="position: relative; scroll-margin-top: 96px; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12)">
       <dc-import name="Prefix Benchmark" hint-size="100%,1100px"></dc-import>
-    </article>
-    <article style="position: relative; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12); overflow: clip">
-      <div style="position: absolute; inset: -4% 0; pointer-events: none; background: radial-gradient(78% 92% at 50% 46%, rgba(4,12,19,0.35), rgba(4,12,19,0) 76%); filter: blur(14px)"></div>
-      <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: clamp(26px, 3.4vw, 46px); text-align: center">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 60ch; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="0">
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.3</span><span style="opacity: .42; padding-right: .48em">/</span>Agentic AI</div>
-          <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.7vw, 56px); text-wrap: balance; line-height: 1.06; color: #f7faf5">Synapse</h3>
-          <p style="margin: 0; max-width: 46ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16.5px); line-height: 1.62; color: rgba(238,245,238,0.82)">A local multi-agent architecture exploring specialization, tool use, memory and orchestration.</p>
-        </div>
-        <div style="width: min(100%, 780px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
-      <div style="position: relative; display: flex; flex-direction: column; gap: 14px; padding: clamp(20px, 2.4vw, 34px) clamp(16px, 2vw, 30px); border-radius: 18px; background: rgba(6,15,23,0.52); box-shadow: 0 0 0 1px rgba(220,234,240,0.09), 0 1px 0 rgba(255,255,255,0.14) inset, 0 40px 70px -50px rgba(2,6,10,0.9)">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(226,238,232,0.5)"><span>Synapse · orchestration</span><span>local models</span></div>
-        <div data-node="Task in natural language · scoped tools" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">User</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.5s linear infinite"></div></div><div data-node="Decomposition · budget · stop conditions" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Planner</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 6.2s linear infinite"></div></div><div data-node="Specialization gate · picks the fewest agents" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Router</div><div style="position: relative; height: 26px"><div style="position: absolute; left: 12.50%; right: 12.50%; top: 13px; height: 1px; background: linear-gradient(90deg, rgba(206,226,234,0.10), rgba(206,226,234,0.30) 20%, rgba(206,226,234,0.30) 80%, rgba(206,226,234,0.10))"></div><div style="position: absolute; left: 50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 12.50%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 37.50%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 62.50%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 87.50%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: clamp(6px, 0.8vw, 12px); justify-items: center"><div data-node="Retrieval + browse · cited notes" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Research</div><div data-node="Numeric tools · deterministic checks" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Finance</div><div data-node="Shell + API calls · sandboxed" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Tool</div><div data-node="Formatting · final structure" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Publisher</div></div><div style="position: relative; height: 26px"><div style="position: absolute; left: 12.50%; right: 12.50%; top: 13px; height: 1px; background: linear-gradient(90deg, rgba(206,226,234,0.10), rgba(206,226,234,0.30) 20%, rgba(206,226,234,0.30) 80%, rgba(206,226,234,0.10))"></div><div style="position: absolute; left: 50%; top: 13px; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 12.50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 37.50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 62.50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div><div style="position: absolute; left: 87.50%; top: 0; width: 1px; height: 13px; background: rgba(206,226,234,0.30)"></div></div><div data-node="Rubric + self-consistency · retry or refuse" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.68); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,231,199,0.96); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Evaluator</div><div style="position: relative; width: 1px; height: 38px; margin: 0 auto; background: linear-gradient(180deg, rgba(206,226,234,0.06), rgba(206,226,234,0.42), rgba(206,226,234,0.06))"><div style="position: absolute; left: -1.5px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: #f4e3bd; box-shadow: 0 0 8px 2px rgba(244,227,189,0.45); animation: packetS 5.9s linear infinite"></div></div><div data-node="Episodic + semantic · written only on success" style="display: flex; align-items: center; justify-content: center; padding: 11px 15px; border-radius: 11px; background: rgba(9,20,29,0.62); box-shadow: 0 1px 0 rgba(226,238,242,0.16) inset, 0 0 0 1px rgba(226,238,242,0.11), 0 14px 26px -20px rgba(3,8,12,0.85); font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(240,246,240,0.9); white-space: nowrap; cursor: default; transition: box-shadow .35s ease, color .35s ease, background .35s ease" style-hover="color: #ffffff; background: rgba(14,31,44,0.78); box-shadow: 0 1px 0 rgba(226,238,242,0.3) inset, 0 0 0 1px rgba(226,238,242,0.24), 0 16px 30px -16px rgba(3,8,12,0.9)">Memory</div>
-      </div>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center; gap: clamp(18px, 2vw, 26px); max-width: 52ch; opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="2">
-          <p style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(20px, 2.1vw, 30px); line-height: 1.32; text-indent: -0.4em; color: rgba(248,251,244,0.92); text-wrap: pretty">“The challenge wasn’t adding more agents. It was deciding when specialization actually improved reliability.”</p>
-        </div>
-      </div>
     </article>
     <article style="position: relative; padding: clamp(70px, 13vh, 170px) 0; border-top: 1px solid rgba(214,230,236,0.12); overflow: clip">
       <div style="position: absolute; inset: -4% 0; pointer-events: none; background: radial-gradient(74% 96% at 72% 50%, rgba(4,12,19,0.35), rgba(4,12,19,0) 76%); filter: blur(14px)"></div>
@@ -361,7 +337,7 @@
           <div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .24em; text-transform: uppercase; color: rgba(226,178,116,0.78)">Load it is designed for &#183; assumptions, not measurements</div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: clamp(16px, 2vw, 28px)"><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">500M</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">transactions / day</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">25K</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">peak QPS</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">&lt;100ms</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">decision target</div></div><div style="display: flex; flex-direction: column; gap: 6px"><div style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.3vw, 32px); letter-spacing: -0.01em; color: #f6f9f2">0.1%</div><div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(230,240,234,0.56)">assumed fraud rate</div></div></div></div>
         </div>
         <div style="display: flex; flex-direction: column; gap: clamp(16px, 1.8vw, 24px); opacity: 0; transform: translateY(22px); transition: opacity 1.25s cubic-bezier(.2,.7,.2,1), transform 1.25s cubic-bezier(.2,.7,.2,1)" data-reveal2="1">
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.4</span><span style="opacity: .42; padding-right: .48em">/</span>ML System Design &#183; Study</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(228,238,232,0.62)"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">02.3</span><span style="opacity: .42; padding-right: .48em">/</span>ML System Design &#183; Study</div>
           <h3 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(30px, 3.7vw, 56px); text-wrap: balance; line-height: 1.06; letter-spacing: -0.015em; color: #f7faf5">Real-Time Fraud Detection</h3>
           <p style="margin: 0; max-width: 42ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.05vw, 16.5px); line-height: 1.62; color: rgba(238,245,238,0.82)">A design study, not a deployed system. The question it works through: what has to surround a fraud model when every decision gets under 100ms, labels arrive 30&#8211;90 days late, and blocking a real customer costs something different from missing a fraud.</p>
           <div style="display: flex; flex-wrap: wrap; gap: 8px"><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Streaming</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Online Features</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Calibration</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Cost-Sensitive Thresholds</span><span style="padding: 6px 11px; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(234,243,236,0.78); background: rgba(8,18,26,0.34); box-shadow: 0 0 0 1px rgba(222,236,240,0.10)">Drift Monitoring</span></div>
@@ -1395,13 +1371,12 @@ class Component extends DCLogic {
   initTheme() {
     const box = this.themeRef.current;
     if (!box) return;
-    const ORDER = ["day", "dark", "storm"];
-    const ONEHOT = { day: [1, 0, 0], dark: [0, 1, 0], storm: [0, 0, 1] };
+    const ORDER = ["day", "dark"];
+    const ONEHOT = { day: [1, 0, 0], dark: [0, 1, 0] };   // the shader still takes a triple
     const btns = [...box.querySelectorAll("[data-theme]")];
     const lens = box.querySelector("[data-theme-lens]");
 
-    // Scrims per theme. Storm asks for the least: its plate is already dark and the type
-    // sits over cloud rather than over open sky, so the usual veil would only muddy it.
+    // Scrims per theme.
     const CHROME = {
       day: {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%)",
@@ -1412,11 +1387,6 @@ class Component extends DCLogic {
         veil: "radial-gradient(128% 95% at 50% 6%, rgba(5,10,20,0) 26%, rgba(5,10,20,0.68) 100%)",
         dim: "linear-gradient(180deg, rgba(4,7,14,0.74) 0%, rgba(4,7,14,0.88) 100%)",
         lens: "rgba(180,205,255,0.20)"
-      },
-      storm: {
-        veil: "radial-gradient(128% 95% at 50% 6%, rgba(6,12,20,0) 30%, rgba(6,12,20,0.56) 100%)",
-        dim: "linear-gradient(180deg, rgba(5,9,15,0.72) 0%, rgba(5,9,15,0.88) 100%)",
-        lens: "rgba(196,214,246,0.22)"
       }
     };
 
@@ -1447,7 +1417,7 @@ class Component extends DCLogic {
       // The flat plates under the canvas follow too, so a browser with no WebGL — or one
       // still waiting on a texture — answers the switcher with the right photograph.
       ORDER.forEach((k) => {
-        const sel = k === "day" ? "day" : (k === "dark" ? "night" : "storm");
+        const sel = k === "day" ? "day" : "night";
         document.querySelectorAll('[data-hero-cover="' + sel + '"]').forEach((el) => {
           el.style.opacity = k === name ? "1" : "0";
         });
@@ -1457,7 +1427,6 @@ class Component extends DCLogic {
 
     this.setTheme = (name) => {
       if (!ONEHOT[name] || name === this.state.theme) return;
-      if (name === "storm" && this.stormBroken) return;
       this.wFrom = this.wCur.slice();
       this.wTo = ONEHOT[name].slice();
       this.mixK = 0;
@@ -1466,16 +1435,6 @@ class Component extends DCLogic {
       paint(name);
       if (this.applyScroll) this.applyScroll();   // the scrim depth is per plate
       try { localStorage.setItem("lp-theme", name); } catch (e) {}
-    };
-
-    // A storm plate that never arrives should cost the visitor a button, not a broken
-    // hero: the control retires itself and the other two keep working.
-    this.retireStorm = () => {
-      this.stormBroken = true;
-      const b = btns.find((x) => x.dataset.theme === "storm");
-      if (b) { b.disabled = true; b.style.display = "none"; }
-      if (this.state.theme === "storm") { this.state.theme = "dark"; this.wCur = [0, 1, 0]; this.wFrom = [0, 1, 0]; this.wTo = [0, 1, 0]; this.mixK = 1; paint("dark"); }
-      else paint(this.state.theme);
     };
 
     let start = "dark";
@@ -1872,7 +1831,7 @@ class Component extends DCLogic {
       // the hero leaves, but only as far as the type needs, and that depends on the
       // plate: daylight is bright enough that text over it needs more help than a night
       // sky does. Local shading behind each block of text does the rest.
-      const DIM_CAP = { day: 0.66, dark: 0.5, storm: 0.52 };
+      const DIM_CAP = { day: 0.66, dark: 0.5 };
       if (dim) dim.style.opacity = (deep * (DIM_CAP[this.state.theme] || 0.5)).toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
     };
@@ -1996,8 +1955,6 @@ class Component extends DCLogic {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([16, 20, 28]));
     const imgS = new Image();
     imgS.decoding = "async";
-    imgS.addEventListener("error", () => { if (this.retireStorm) this.retireStorm(); });
-    imgS.src = this.cut.storm;
 
     // Rotating the phone changes which cut is right. Re-point both textures and clear
     // the uploaded flags so the draw loop re-uploads them; the canvas fades back in on
@@ -2013,7 +1970,6 @@ class Component extends DCLogic {
       canvas.style.opacity = "0";
       img.src = next.day;
       imgN.src = next.night;
-      imgS.src = next.storm;
     };
     if (tallQuery.addEventListener) tallQuery.addEventListener("change", this.onCut);
     else tallQuery.addListener(this.onCut);

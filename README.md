@@ -47,7 +47,7 @@ dist/             the built site — generated, wiped on every build
 ## The page
 
 The home page reads in this order, and the nav follows it: **About** (intro and a
-three-fact ledger) → **Work** (Aperture, Synapse, the fraud design study, the inference
+three-fact ledger) → **Work** (Aperture, the prefix-caching benchmark, the fraud design study, the inference
 engine) → **How I work** (philosophy, beyond the terminal, direction) → **Background**
 (education, technology) → **Writing** (latest journal entries and notes) → **Contact**.
 The nav's scroll spy lets one item own more than one stretch (`data-spy`), so About
@@ -56,7 +56,7 @@ lights again over Background.
 The living photograph stays visible and moving behind every chapter. Below the hero
 it sinks only as far as each plate needs for legibility (`DIM_CAP` in the Living
 Photograph logic: more for daylight, less for night) and runs at 30fps instead of
-parking; storm keeps the full rate because rain strobes at lower ones. Legibility over
+parking. Legibility over
 the lit ground comes from local shading behind each block of text rather than from
 darkening the whole world.
 
@@ -224,7 +224,7 @@ submit handler already validates and assembles the payload.
 - No build-time dependencies — `build.mjs` is plain Node with only `node:fs` and
   `node:path`. The only network requests the page makes are the Google Fonts
   stylesheet and its font files.
-- The weather switch (day / night / storm) persists in `localStorage` under
+- The weather switch (day / night) persists in `localStorage` under
   `lp-theme`, and night is the default. The journal pages read the same key for their
   reading mode, and their switch writes it back.
 - Every artboard honours `prefers-reduced-motion` and has its own phone layout below
