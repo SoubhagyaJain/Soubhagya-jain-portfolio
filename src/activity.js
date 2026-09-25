@@ -568,7 +568,7 @@
     // stopped; left there the drum sits between two records. Settle onto one.
     window.addEventListener("scroll", function () {
       clearTimeout(W.settle);
-      if (reduced) return;
+      if (reduced || !finePointer) return;   // never pull the page out from under a finger
       W.settle = setTimeout(function () {
         var t = turnFromScroll();
         if (t > 1 && t < cards.length && Math.abs(t - Math.round(t)) > 0.03) scrollToTurn(Math.round(t), true);

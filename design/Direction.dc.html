@@ -8,18 +8,43 @@
 <body>
 <x-dc>
 <helmet>
-<style>html, body { background: #080b0e; }</style>
+<style>html, body { background: #080b0e; }
+  /* On a phone the chapter no longer pins. It reads top to bottom: the statement, then
+     the system itself held just under the nav while the seven stages scroll up beneath
+     it, each one building its part of the graph as it reaches the reading line, then the
+     close. Every stage is on the page as text, and the page never stops moving with the
+     finger. */
+  [data-dir-steps] { display: none; }
+  @media (max-width: 700px) {
+    [data-dir-stage] { position: relative !important; height: auto !important; min-height: 0 !important; overflow: visible !important; display: flex; flex-direction: column; }
+    [data-dir-copy] { display: contents !important; }
+    [data-dir-top] { order: 1; padding: 0 22px 18px; }
+    [data-dir-text] { order: 2; max-width: none !important; padding: 0 22px 26px; }
+    [data-dir-canvas] { order: 3; position: sticky !important; inset: 128px auto auto auto !important; width: 100% !important; height: min(92vw, 42svh) !important; z-index: 2; background: #080c10; box-shadow: 0 -128px 0 0 #080c10, 0 18px 18px -6px #080c10; }
+    [data-dir-steps] { order: 4; display: block; position: relative; list-style: none; margin: 0; padding: 26px 22px 40px 22px; }
+    [data-dir-steps]::before { content: ""; position: absolute; left: 30px; top: 34px; bottom: 60px; width: 1px; background: rgba(214,230,236,0.16); }
+    [data-dir-steps] li { position: relative; padding: 0 0 34px 34px; opacity: .42; transition: opacity .6s ease; }
+    [data-dir-steps] li.on { opacity: 1; }
+    [data-dir-steps] li::before { content: ""; position: absolute; left: 3px; top: 4px; width: 9px; height: 9px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(214,230,236,0.5); background: #0b1117; transition: background .5s ease, border-color .5s ease, box-shadow .5s ease; }
+    [data-dir-steps] li.on::before { background: rgba(232,186,124,0.95); border-color: rgba(232,186,124,0.95); box-shadow: 0 0 0 4px rgba(232,186,124,0.14); }
+    [data-dir-steps] .n { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; text-transform: uppercase; color: rgba(232,186,124,0.9); }
+    [data-dir-steps] .t { display: block; margin: 6px 0; font-family: 'Instrument Serif', Georgia, serif; font-size: 23px; line-height: 1.12; color: #fbfdf8; }
+    [data-dir-steps] .b { display: block; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14.5px; line-height: 1.58; color: rgba(240,246,240,0.8); text-wrap: pretty; }
+    [data-dir-close] { order: 6; position: relative; z-index: 3; padding: 34px 22px 70px; max-width: none !important; background: linear-gradient(180deg, rgba(8,12,16,0), #080c10 34px); }
+    [data-dir-scrim], [data-dir="legend"], [data-dir-barrow] { display: none !important; }
+  }
+</style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 </helmet>
 <div ref="{{ rootRef }}" style="position: relative; color: #f2ece0; background: linear-gradient(90deg, rgba(6,10,14,0) 0%, rgba(6,10,14,0.42) 12%, rgba(6,10,14,0.42) 88%, rgba(6,10,14,0) 100%)">
 
   <div ref="{{ scrollRef }}" style="position: relative; height: 520vh">
-    <div style="position: sticky; top: 0; height: 100vh; min-height: 520px; overflow: hidden">
+    <div data-dir-stage style="position: sticky; top: 0; height: 100vh; min-height: 520px; overflow: hidden">
 
-      <canvas ref="{{ canvasRef }}" style="position: absolute; inset: 0; width: 100%; height: 100%; display: block"></canvas>
+      <canvas ref="{{ canvasRef }}" data-dir-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block"></canvas>
 
-      <div ref="{{ scrimRef }}" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.1s ease; background: linear-gradient(96deg, rgba(6,10,14,0.9) 0%, rgba(6,10,14,0.74) 32%, rgba(6,10,14,0.24) 56%, rgba(6,10,14,0) 72%)"></div>
+      <div ref="{{ scrimRef }}" data-dir-scrim style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.1s ease; background: linear-gradient(96deg, rgba(6,10,14,0.9) 0%, rgba(6,10,14,0.74) 32%, rgba(6,10,14,0.24) 56%, rgba(6,10,14,0) 72%)"></div>
       <div ref="{{ layerRef }}" style="position: absolute; inset: 0; pointer-events: none">
         <div data-word="retrieval" style="position: absolute; left: 56%; top: 12%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Retrieval</div>
         <div data-word="agents" style="position: absolute; left: 47%; top: 30%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Agents</div>
@@ -45,7 +70,7 @@
         </div>
       </div>
 
-      <div style="position: absolute; left: clamp(22px, 4vw, 54px); right: clamp(22px, 4vw, 54px); bottom: clamp(18px, 3vh, 30px); display: flex; align-items: center; gap: 16px; pointer-events: none">
+      <div data-dir-barrow style="position: absolute; left: clamp(22px, 4vw, 54px); right: clamp(22px, 4vw, 54px); bottom: clamp(18px, 3vh, 30px); display: flex; align-items: center; gap: 16px; pointer-events: none">
         <div ref="{{ stepRef }}" data-dir="step" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .24em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.75); white-space: nowrap"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">01</span><span style="opacity: .42; padding-right: .48em">/</span>07</div>
         <div style="flex: 1; position: relative; height: 3px; background: rgba(214,230,236,0.18); border-radius: 3px; overflow: hidden">
           <div ref="{{ barRef }}" data-dir="bar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, rgba(214,230,236,0.55), rgba(232,186,124,0.98)); border-radius: 3px; transition: width .18s linear"></div>
@@ -53,20 +78,20 @@
         <div ref="{{ hintRef }}" data-dir="hint" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(232,240,232,0.5); white-space: nowrap">Scroll to build the system &#8595;</div>
       </div>
 
-      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 5vh, 60px) clamp(22px, 4vw, 54px); box-sizing: border-box; pointer-events: none">
+      <div data-dir-copy style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 5vh, 60px) clamp(22px, 4vw, 54px); box-sizing: border-box; pointer-events: none">
 
-        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap">
+        <div data-dir-top style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap">
           <div ref="{{ eyebrowRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); opacity: 0; transition: opacity 1.2s ease"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">04.3</span><span style="opacity: .42; padding-right: .48em">/</span>Direction</div>
           <div ref="{{ phaseRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.42); transition: opacity .5s ease">Unresolved</div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 26px); max-width: min(560px, 46vw)">
+        <div data-dir-text style="display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 26px); max-width: min(560px, 46vw)">
           <h3 ref="{{ headRef }}" style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(28px, 3.7vw, 56px); text-wrap: balance; line-height: 1.04; letter-spacing: -0.02em; color: #fbfdf8; text-wrap: pretty; opacity: 0; transform: translateY(24px); transition: opacity 1.5s cubic-bezier(.2,.7,.2,1), transform 1.5s cubic-bezier(.2,.7,.2,1)">From making AI work<br />to making AI hold up.</h3>
           <p ref="{{ p1Ref }}" style="margin: 0; max-width: 40ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.82); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I&#8217;m building toward the engineering layer where models meet reality &#8212; retrieval, agents, evaluation, inference, observability, and the infrastructure that keeps them reliable under real load.</p>
           <p ref="{{ p2Ref }}" style="margin: 0; max-width: 38ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.7); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I want to work on systems where quality, latency, cost and failure recovery are designed together &#8212; not patched in later.</p>
         </div>
 
-        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: clamp(20px, 4vw, 60px); flex-wrap: wrap; max-width: min(900px, 92vw)">
+        <div data-dir-close style="display: flex; align-items: flex-end; justify-content: space-between; gap: clamp(20px, 4vw, 60px); flex-wrap: wrap; max-width: min(900px, 92vw)">
           <div ref="{{ closeRef }}" style="display: flex; flex-direction: column; gap: 10px; opacity: 0; transform: translateY(18px); transition: opacity 1.3s ease, transform 1.3s cubic-bezier(.2,.7,.2,1)">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.5)">The direction is simple</div>
             <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(22px, 2.6vw, 38px); line-height: 1.16; color: #f8fbf6">Fewer demos.<br />Deeper systems.</div>
@@ -159,7 +184,8 @@ class Component extends DCLogic {
     // re-read on rotation, so a landscape phone does not keep the portrait treatment
     this.syncBreak = () => {
       this.small = window.matchMedia("(max-width: 860px)").matches;
-      if (sec) sec.style.height = this.small ? "360vh" : "520vh";
+      this.phone = window.matchMedia("(max-width: 700px)").matches;
+      if (sec) sec.style.height = this.phone ? "auto" : this.small ? "360vh" : "520vh";
     };
     window.addEventListener("resize", this.syncBreak);
     this.syncBreak();
@@ -183,6 +209,26 @@ class Component extends DCLogic {
     // the stage panel now carries the explanation, so the floating labels stand down entirely
     this.words = {};
     this.layerRef.current.style.display = "none";
+
+    // the phone's reading of the stages (see the style block): every stage as text
+    const stageBox = sec.querySelector("[data-dir-stage]");
+    const ol = document.createElement("ol");
+    ol.setAttribute("data-dir-steps", "");
+    ol.setAttribute("aria-label", "The seven stages");
+    STAGES.forEach((st) => {
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="n"></span><span class="t"></span><span class="b"></span>';
+      li.children[0].textContent = st[1];
+      li.children[1].textContent = st[2];
+      li.children[2].textContent = st[3];
+      ol.appendChild(li);
+    });
+    stageBox.appendChild(ol);
+    this.stepsEl = ol;
+    this.stepItems = [...ol.children];
+    this.stepOffs = [];
+    this.cacheSteps = () => { this.stepOffs = this.stepItems.map(li => li.offsetTop); };
+    window.addEventListener("resize", () => { this.cacheSteps(); });
 
     if (this.small) {
       const lg = this.legendRef.current;
@@ -208,7 +254,7 @@ class Component extends DCLogic {
       const r = sec.getBoundingClientRect();
       const span = Math.max(1, sec.offsetHeight - window.innerHeight);
       // target only: this.p eases toward it in the loop so the chapter never snaps
-      this.pTarget = Math.min(1, Math.max(0, -r.top / span));
+      this.pTarget = this.phone ? this.phoneP() : Math.min(1, Math.max(0, -r.top / span));
       if (this.reduced) { this.p = this.pTarget; this.draw(); }
       // copy follows scroll, even if the animation loop is paused - while it can be seen
       if (r.bottom > -window.innerHeight * 0.3 && r.top < window.innerHeight * 1.3) this.copy();
@@ -245,6 +291,27 @@ class Component extends DCLogic {
     }
   }
 
+  // phone: the graph is as far built as the stage list has been read. Between two stages
+  // it interpolates, so the build follows the finger continuously rather than in steps.
+  phoneP() {
+    const ol = this.stepsEl;
+    if (!ol) return 0;
+    if (!this.stepOffs.length || !this.stepOffs[this.stepOffs.length - 1]) this.cacheSteps();
+    const line = window.innerHeight * 0.74 - ol.getBoundingClientRect().top;
+    const o = this.stepOffs, n = o.length;
+    let lit = -1;
+    for (let i = 0; i < n; i++) if (o[i] <= line) lit = i;
+    if (lit !== this.lastLit) {
+      this.lastLit = lit;
+      this.stepItems.forEach((li, i) => li.classList.toggle("on", i <= lit));
+    }
+    if (lit < 0) return Math.max(0, Math.min(0.04, 0.04 * (1 + (line - o[0]) / 200)));
+    const a = STAGES[lit][0], b = lit + 1 < n ? STAGES[lit + 1][0] : 1;
+    const next = lit + 1 < n ? o[lit + 1] : ol.offsetHeight - 30;
+    const f = Math.max(0, Math.min(1, (line - o[lit]) / Math.max(1, next - o[lit])));
+    return Math.max(0.045, a + (b - a) * f);
+  }
+
   draw() {
     const cv = this.canvasRef.current, ctx = this.ctx;
     if (!cv || !ctx) return;
@@ -260,9 +327,9 @@ class Component extends DCLogic {
     const cl = (v, a, b) => Math.min(b === undefined ? 1 : b, Math.max(a === undefined ? 0 : a, v));
     const ease = (k) => k * k * (3 - 2 * k);
     // the camera barely moves: the system assembles around the viewer
-    const zoom = (0.9 + 0.12 * ease(cl(p / 0.9))) * (1 - 0.14 * (1 - ease(cl((p - 0.55) / 0.22))));
+    const zoom = (0.9 + 0.12 * ease(cl(p / 0.9))) * (this.phone ? 0.88 : 1 - 0.14 * (1 - ease(cl((p - 0.55) / 0.22))));
     // while the statement holds the left column, the architecture sits to its right
-    const clear = 1 - ease(cl((p - 0.55) / 0.22));
+    const clear = this.phone ? 0 : 1 - ease(cl((p - 0.55) / 0.22));
     const shiftX = 0.16 * clear - 0.02 * p, shiftY = 0.012 * Math.sin(p * 3.14) - 0.03 * clear;
     const X = (nx) => (0.5 + (nx - 0.5 + shiftX) * zoom) * W;
     const Y = (ny) => (0.5 + (ny - 0.5 + shiftY) * zoom) * H;
@@ -469,17 +536,18 @@ class Component extends DCLogic {
       if (el.style.opacity !== o) el.style.opacity = o;
       if (el.style.transform !== tr) el.style.transform = tr;
     };
-    show(this.eyebrowRef, p > 0.01, 0);
-    show(this.headRef, p > 0.05 && p < (this.small ? 0.50 : 0.62), 24);
-    show(this.p1Ref, p > 0.12 && p < (this.small ? 0.46 : 0.55), 16);
-    show(this.p2Ref, p > 0.30 && p < (this.small ? 0.46 : 0.55), 16);
-    show(this.closeRef, p > 0.88, 18);
+    const ph = this.phone;
+    show(this.eyebrowRef, ph || p > 0.01, 0);
+    show(this.headRef, ph || (p > 0.05 && p < (this.small ? 0.50 : 0.62)), 24);
+    show(this.p1Ref, ph || (p > 0.12 && p < (this.small ? 0.46 : 0.55)), 16);
+    show(this.p2Ref, ph || (p > 0.30 && p < (this.small ? 0.46 : 0.55)), 16);
+    show(this.closeRef, ph || p > 0.88, 18);
     const sc = this.scrimRef.current;
     if (sc) {
       const o = String((p > 0.03 && p < 0.60) ? 1 : (p > 0.86 ? 0.55 : 0));
       if (sc.style.opacity !== o) sc.style.opacity = o;
     }
-    show(this.ctaRef, p > 0.90, 14);
+    show(this.ctaRef, ph || p > 0.90, 14);
 
     // ── plain-language stage panel: the part that makes the diagram readable.
     // Nodes are resolved from the live DOM (every match, not a cached ref) and written

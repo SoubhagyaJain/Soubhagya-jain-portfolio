@@ -306,16 +306,18 @@ ${extraHead}</head>
 <a class="skip" href="#main">Skip to content</a>
 <header class="pnav">
   <nav aria-label="Site">
+    <span class="pn-hl" aria-hidden="true"></span><span class="pn-glow" aria-hidden="true"></span>
     <a class="brand" href="/">${AUTHOR}</a>
     <span class="sep" aria-hidden="true"></span>
     <div class="links">
-      ${NAV.map(([l, h]) => `<a href="${h}"${l === active ? ' aria-current="page"' : ""}>${l}</a>`).join("\n      ")}
+      ${NAV.map(([l, h]) => (l === active ? `<a href="${h}" aria-current="page"><span class="pn-lens" aria-hidden="true"></span>${l}</a>` : `<a href="${h}">${l}</a>`)).join("\n      ")}
     </div>
     <div class="mode" role="group" aria-label="Reading mode">
       <span class="mode-lens" aria-hidden="true"></span>
       <button type="button" data-set-mode="light" aria-label="Light" title="Light">&#9728;</button>
       <button type="button" data-set-mode="dark" aria-label="Dark" title="Dark">&#9790;</button>
     </div>
+    <a class="status" href="/#contact" title="Available for AI/ML engineering roles"><span class="dot" aria-hidden="true"></span><span class="lbl">Available</span></a>
   </nav>
 </header>
 ${ctx.drafts ? `<div class="draft-note" role="note">Draft preview &#183; built with --drafts &#183; drafts are never published</div>` : ""}

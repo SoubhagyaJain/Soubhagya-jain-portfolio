@@ -110,33 +110,60 @@ button { font: inherit; color: inherit; }
 .arr { display: inline-block; transition: transform .5s var(--ease); }
 .empty { margin: 0; padding: 28px 0 clamp(120px, 20vh, 220px); border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 17px; }
 
-/* ── nav: the home page's glass pill, plus a reading-mode switch ─────────── */
-.pnav { position: fixed; top: clamp(14px, 3vh, 28px); left: 50%; transform: translateX(-50%); z-index: 40; max-width: calc(100% - 24px); }
+/* ── nav: the home page's glass pill, value for value ──────────────────────
+   The same dark glass on every page and in both reading modes, so moving between
+   the home page and the journal the nav does not change under the reader's hand:
+   58px pill, the lit top edge and the warm underglow, mono type at the same sizes,
+   the weather switch as the reading-mode switch, and the Available badge. */
+.pnav { position: fixed; top: clamp(16px, 3.4vh, 36px); left: 50%; transform: translateX(-50%); z-index: 40; max-width: calc(100% - 28px); }
 .pnav nav {
-  display: flex; align-items: center; gap: clamp(8px, 1.2vw, 18px); height: 52px; padding: 0 8px 0 20px; border-radius: 999px;
-  background: var(--nav-bg); color: var(--nav-ink);
-  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 0 0 1px var(--rule), 0 22px 44px -28px rgba(5,12,20,0.55);
+  position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px);
+  height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px;
+  overflow: hidden; isolation: isolate; color: rgba(255,255,255,0.9);
+  background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%), rgba(10,16,22,0.55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34);
 }
-.pnav .brand { font: 500 11px var(--mono); letter-spacing: .24em; text-transform: uppercase; white-space: nowrap; }
-.pnav .sep { width: 1px; height: 18px; background: var(--rule-2); }
-.pnav .links { display: flex; align-items: center; gap: 2px; }
-.pnav .links a { padding: 9px 12px; border-radius: 999px; font: 400 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; transition: background .4s ease; }
-.pnav .links a:hover { background: var(--tint); }
-.pnav .links a[aria-current="page"] { background: var(--nav-on); box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset; }
-.mode { position: relative; display: flex; padding: 3px; border-radius: 999px; background: var(--tint); }
-.mode button { position: relative; z-index: 1; width: 32px; height: 32px; border: 0; border-radius: 999px; background: transparent; cursor: pointer; font-size: 13px; opacity: .6; transition: opacity .3s ease; }
-.mode button[aria-pressed="true"] { opacity: 1; }
-.mode-lens { position: absolute; top: 3px; left: 3px; width: 32px; height: 32px; border-radius: 999px; background: var(--nav-on); box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset; transition: transform .5s var(--ease); }
-[data-mode="dark"] .mode-lens { transform: translateX(32px); }
-@media (max-width: 700px) {
-  .pnav { top: 10px; width: calc(100% - 20px); }
-  .pnav nav { display: grid; grid-template-columns: 1fr auto; grid-template-rows: 40px 44px; height: auto; padding: 5px 6px 5px 14px; border-radius: 24px; row-gap: 2px; }
+.pnav .pn-hl { position: absolute; top: 0; left: 7%; right: 7%; height: 1px; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 26%, rgba(255,255,255,0.38) 58%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0) 100%); }
+.pnav .pn-glow { position: absolute; bottom: 0; left: 12%; right: 12%; height: 10px; pointer-events: none; background: radial-gradient(64% 120% at 50% 118%, rgba(255,244,222,0.26), rgba(255,244,222,0) 72%); }
+.pnav .brand { position: relative; z-index: 2; display: flex; align-items: center; font: 500 clamp(10.5px, 0.8vw, 11.5px) var(--mono); letter-spacing: .24em; text-transform: uppercase; color: rgba(255,255,255,0.96); white-space: nowrap; text-shadow: 0 1px 8px rgba(4,10,16,.4); }
+.pnav .brand:hover { color: #fff; }
+.pnav .sep { position: relative; z-index: 2; flex: 0 0 auto; width: 1px; height: 18px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.34), rgba(255,255,255,0)); }
+.pnav .links { position: relative; z-index: 2; display: flex; align-items: center; gap: 2px; }
+.pnav .links a { padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font: 400 clamp(10px, 0.74vw, 11px) var(--mono); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; color: rgba(255,255,255,0.9); transition: color .4s ease, background .45s ease, box-shadow .45s ease; }
+.pnav .links a:hover { color: #fff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset; }
+/* the current page wears the home page's lens — the same named element, so a page
+   change slides it from one link to the other instead of cutting */
+.pnav .links a[aria-current="page"] { position: relative; color: #fff; }
+.pnav .pn-lens { position: absolute; inset: 0; z-index: -1; border-radius: 999px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.18)); box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 -1px 1px rgba(255,255,255,0.18) inset, 0 6px 14px -8px rgba(4,10,16,0.45); view-transition-name: nav-lens; }
+.pnav nav { view-transition-name: site-nav; }
+/* the reading-mode switch is the weather switch: Light is Daylight, Dark is Night */
+.mode { position: relative; z-index: 2; display: flex; align-items: center; gap: 1px; margin-left: clamp(4px, 0.8vw, 10px); padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset; }
+.mode button { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 22px; border: 0; border-radius: 999px; background: none; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease; }
+.mode button:hover, .mode button[aria-pressed="true"] { color: #fff; }
+.mode-lens { position: absolute; left: 3px; top: 3px; bottom: 3px; width: 30px; border-radius: 999px; background: rgba(255,255,255,0.17); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset; transition: transform .62s var(--ease), background .9s ease; pointer-events: none; }
+[data-mode="dark"] .mode-lens { transform: translateX(31px); background: rgba(180,205,255,0.20); }
+.pnav .status { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-left: clamp(4px, 0.8vw, 12px); padding: 7px clamp(10px, 1vw, 14px); border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset; }
+.pnav .status .dot { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: rgba(246,231,199,0.95); box-shadow: 0 0 7px 2px rgba(246,231,199,0.4); }
+.pnav .status .lbl { font: 400 10px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.88); white-space: nowrap; }
+/* on a phone: the same two-storey glass control as the home page */
+@media (max-width: 660px) {
+  .pnav { top: 12px; width: calc(100% - 24px); max-width: none; }
+  .pnav nav { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: 44px 44px; column-gap: 6px; row-gap: 4px; width: 100%; height: 104px; padding: 6px 8px; border-radius: 30px; -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
+  .pnav .brand { min-width: 0; min-height: 44px; padding: 0 8px; overflow: hidden; text-overflow: ellipsis; }
   .pnav .sep { display: none; }
-  .pnav .links { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .pnav .links a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 2px; font-size: 10px; letter-spacing: .1em; }
-  .mode button { width: 38px; height: 34px; } .mode-lens { width: 38px; height: 34px; }
-  [data-mode="dark"] .mode-lens { transform: translateX(38px); }
+  .pnav .links { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; width: 100%; }
+  .pnav .links a { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; padding: 0 4px; font-size: 10px; letter-spacing: .1em; }
+  .mode { grid-column: 2; grid-row: 1; height: 44px; min-height: 44px; margin-left: 0; box-sizing: border-box; }
+  .mode button { width: 34px; height: 38px; font-size: 13px; }
+  .mode-lens { width: 34px; }
+  [data-mode="dark"] .mode-lens { transform: translateX(35px); }
+  .pnav .status { grid-column: 3; grid-row: 1; min-height: 44px; margin-left: 0; padding: 0 10px; box-sizing: border-box; }
+}
+@media (max-width: 440px) {
+  .pnav .status { padding: 0 12px; }
+  .pnav .status .lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .pnav .brand { letter-spacing: .2em; }
 }
 
 .draft-note { position: fixed; left: 14px; bottom: 14px; z-index: 50; padding: 8px 12px; border-radius: 8px; background: #2a1f10; color: #f4d8ae; font: 500 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 0 0 1px rgba(226,178,116,.4); }
@@ -778,8 +805,14 @@ html.js:not(.still) .hero-vis { animation: settle 2.6s var(--ease) both; }
 .split.in .w > span { transform: none; }
 /* changing reading mode: the browser cross-fades a snapshot of the page (see
    journal.js) instead of animating every colour on it */
+/* Page to page (home included) the nav is one object: the pill stays put, the lens
+   slides to the new page's link, and only the page beneath cross-fades. */
+@view-transition { navigation: auto; }
+::view-transition-group(site-nav), ::view-transition-group(nav-lens) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(site-nav) { display: none; }
+::view-transition-new(site-nav) { animation: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; transition-delay: 0s !important; }
 }

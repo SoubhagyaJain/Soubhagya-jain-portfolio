@@ -404,7 +404,7 @@ ${favicon}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
 <link rel="stylesheet" href="styles.css?v=${stamp(css)}">
-<script>document.documentElement.classList.add("js-act")</script>
+<script>document.documentElement.classList.add("js-act");try{if(document.referrer&&new URL(document.referrer).origin===location.origin)document.documentElement.classList.add("from-site")}catch(e){}</script>
 </head>
 <body>
 <div id="dc-root" data-dc-component="${escapeAttr(ENTRY)}">${body}</div>
