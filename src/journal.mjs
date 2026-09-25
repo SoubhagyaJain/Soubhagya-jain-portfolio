@@ -306,6 +306,7 @@ ${extraHead}</head>
 <a class="skip" href="#main">Skip to content</a>
 <header class="pnav">
   <nav aria-label="Site">
+    <span class="pn-hl" aria-hidden="true"></span><span class="pn-glow" aria-hidden="true"></span>
     <a class="brand" href="/">${AUTHOR}</a>
     <span class="sep" aria-hidden="true"></span>
     <div class="links">
@@ -316,6 +317,7 @@ ${extraHead}</head>
       <button type="button" data-set-mode="light" aria-label="Light" title="Light">&#9728;</button>
       <button type="button" data-set-mode="dark" aria-label="Dark" title="Dark">&#9790;</button>
     </div>
+    <a class="status" href="/#contact" title="Available for AI/ML engineering roles"><span class="dot" aria-hidden="true"></span><span class="lbl">Available</span></a>
   </nav>
 </header>
 ${ctx.drafts ? `<div class="draft-note" role="note">Draft preview &#183; built with --drafts &#183; drafts are never published</div>` : ""}
