@@ -162,6 +162,8 @@
   [data-mobile-nav-pill] { clip-path: inset(0px 0px 0px 0px round 999px); }
   [data-portfolio-nav][data-island="mini"] [data-mobile-nav-pill] {
     clip-path: inset(var(--it, 9px) var(--ir, 40%) var(--ib, 9px) var(--il, 40%) round 999px);
+    /* the ink is opaque, so blurring the moving scene behind it every frame bought nothing */
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
   }
   [data-island-ink] { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0;
     background: radial-gradient(120% 140% at 50% 0%, #15181c 0%, #050608 60%); transition: opacity .34s ease .08s; }
@@ -174,15 +176,18 @@
   [data-island-label] { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
     font: 500 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); }
   [data-island-label].swap { animation: islandSwap .42s cubic-bezier(.2,.7,.2,1); }
-  @keyframes islandSwap { from { opacity: 0; transform: translateY(7px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
-  [data-island-dot] { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #f6d79e; box-shadow: 0 0 0 0 rgba(246,215,158,0.5); animation: islandPulse 2.4s ease-out infinite; }
-  @keyframes islandPulse { 0% { box-shadow: 0 0 0 0 rgba(246,215,158,0.55); } 70%, 100% { box-shadow: 0 0 0 7px rgba(246,215,158,0); } }
+  @keyframes islandSwap { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  /* the pulse is a ring that scales and fades: transform and opacity only, so it runs on
+     the compositor instead of repainting the nav every frame as a box-shadow did */
+  [data-island-dot] { position: relative; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #f6d79e; }
+  [data-island-dot]::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(246,215,158,0.55); animation: islandPulse 2.4s ease-out infinite; }
+  @keyframes islandPulse { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(3); opacity: 0; } }
   [data-portfolio-nav][data-island="mini"] [data-island-ink] { opacity: 1; transition-delay: 0s; transition-duration: .22s; }
   [data-portfolio-nav][data-island="mini"] [data-island-mini] { opacity: 1; pointer-events: auto; transition: opacity .3s ease .2s; }
-  [data-portfolio-nav]:not([data-island="mini"]) [data-island-dot] { animation: none; }
+  [data-portfolio-nav]:not([data-island="mini"]) [data-island-dot]::before { animation: none; }
   @media (prefers-reduced-motion: reduce) {
     [data-mobile-nav-pill], [data-island-ink], [data-island-mini] { transition: none !important; }
-    [data-island-dot], [data-island-label].swap { animation: none !important; }
+    [data-island-dot]::before, [data-island-label].swap { animation: none !important; }
   }
   /* Daylight: the centred copy sits over the sun and the sea, the brightest part of the
      plate, where white type washed out. A soft shade of the sea's own blue gathers behind
@@ -1484,11 +1489,18 @@ class Component extends DCLogic {
       s.vy += (s.ty - s.y) * 0.16; s.vy *= 0.74; s.y += s.vy;
       s.vw += (s.tw - s.w) * 0.16; s.vw *= 0.74; s.w += s.vw;
       const squish = Math.min(0.05, Math.abs(s.vx) * 0.0035);
+      // at rest the spring wrote the same width and transform every frame, forever;
+      // each write re-dirtied the nav under its backdrop blur. Idle means no writes.
+      const moving = Math.abs(s.tx - s.x) + Math.abs(s.ty - s.y) + Math.abs(s.tw - s.w) + Math.abs(s.vx) + Math.abs(s.vw) > 0.02;
+      const sheenMoving = Math.abs(s.tsx - s.sx) + Math.abs(s.tsy - s.sy) * 26 > 0.05;
+      if (!moving && !sheenMoving) return;
+      if (moving) {
       lens.style.width = s.w.toFixed(2) + "px";
       lens.style.transform = compact()
         ? "translate3d(" + s.x.toFixed(2) + "px," + s.y.toFixed(2) + "px,0) scaleX(" + (1 + squish).toFixed(4) + ") scaleY(" + (1 - squish * 0.6).toFixed(4) + ")"
         : "translateX(" + s.x.toFixed(2) + "px) scaleX(" + (1 + squish).toFixed(4) + ") scaleY(" + (1 - squish * 0.6).toFixed(4) + ")";
-      if (sheen) {
+      }
+      if (sheen && sheenMoving) {
         s.sx += (s.tsx - s.sx) * 0.055;
         s.sy += (s.tsy - s.sy) * 0.055;
         sheen.style.transform = "translate3d(" + s.sx.toFixed(1) + "px," + (s.sy * 26).toFixed(1) + "px,0)";
@@ -1765,7 +1777,8 @@ class Component extends DCLogic {
     document.querySelectorAll("section, article").forEach((sec, i) => {
       sec.querySelectorAll(":scope > div[style*='radial-gradient'], :scope > div[style*='pointer-events: none']").forEach((el, j) => {
         if (el.querySelector("canvas")) return;
-        layers.push({ el: el, rate: -34 - (j % 2) * 18, scale: 0 });
+        // (the full-width atmosphere planes stay still: drifting them made each one a
+        // full-screen compositor layer, a GPU pass per frame for a few pixels of motion)
       });
       // chapter eyebrows ride slightly against the scroll, giving the page its 3D read
       sec.querySelectorAll("[data-reveal2] > div:first-child").forEach((el) => {
@@ -2399,7 +2412,7 @@ class Component extends DCLogic {
       // A change of weather is the one thing the reader is watching wherever they are on
       // the page, so the sweep always runs at the display's rate.
       const mixing = (this.mixK !== undefined && this.mixK < 1) || (this.gliding && ground > 0.02);
-      const budget = mixing ? 0 : this.stageBusy ? (rainy ? 33 : 40) * (this.small ? 1.3 : 1) : (fast ? 16 : 33) * (this.small ? 1.4 : 1);
+      const budget = mixing ? 16 : this.stageBusy ? (rainy ? 33 : 40) * (this.small ? 1.3 : 1) : (fast ? 16 : 33) * (this.small ? 1.4 : 1);
       // A few ms of tolerance: rAF lands a little early or late every frame, and a strict
       // test against a 16ms budget on a 60Hz display dropped frames at random.
       if (now - last < budget - 4) return;
