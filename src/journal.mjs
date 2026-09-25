@@ -307,6 +307,8 @@ ${extraHead}</head>
 <header class="pnav">
   <nav aria-label="Site">
     <span class="pn-hl" aria-hidden="true"></span><span class="pn-glow" aria-hidden="true"></span>
+    <span class="isl-ink" aria-hidden="true"></span>
+    <button type="button" class="isl-mini" tabindex="-1" aria-hidden="true" aria-label="Open navigation"><span class="isl-mark">SJ</span><span class="isl-label">${active || "Journal"}</span><span class="isl-dot" aria-hidden="true"></span></button>
     <a class="brand" href="/">${AUTHOR}</a>
     <span class="sep" aria-hidden="true"></span>
     <div class="links">

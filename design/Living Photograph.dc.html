@@ -153,6 +153,37 @@
     [data-nav-brand] { letter-spacing: .2em !important; }
   }
   [data-br="narrow"] { display: none; }
+  /* The nav as a Dynamic Island. Past the hero, scrolling down folds the whole pill into
+     a small black capsule at its top centre that says where you are; scrolling up,
+     hovering, tapping it or tabbing in unfolds it again. The morph is one clip-path on
+     the pill (a composited animation, with a slight spring past the target), a black
+     ink that rises over the glass, and the capsule's own line fading in on top. Nothing
+     is laid out again while it moves. */
+  [data-mobile-nav-pill] { clip-path: inset(0px 0px 0px 0px round 999px); }
+  [data-portfolio-nav][data-island="mini"] [data-mobile-nav-pill] {
+    clip-path: inset(var(--it, 9px) var(--ir, 40%) var(--ib, 9px) var(--il, 40%) round 999px);
+  }
+  [data-island-ink] { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0;
+    background: radial-gradient(120% 140% at 50% 0%, #15181c 0%, #050608 60%); transition: opacity .34s ease .08s; }
+  [data-island-mini] { position: absolute !important; z-index: 4; top: var(--it, 9px); left: var(--il, 40%); width: var(--iw, 200px); height: var(--ih, 40px);
+    display: flex; align-items: center; gap: 10px; box-sizing: border-box; margin: 0; padding: 0 14px 0 8px; border: 0; border-radius: 999px;
+    background: none; color: #fff; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .14s ease; -webkit-tap-highlight-color: transparent; }
+  [data-island-mark] { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f6e7c7, #c89254 70%, #8a5a2c); color: #1a1208;
+    font: 600 9.5px/1 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+  [data-island-label] { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+    font: 500 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); }
+  [data-island-label].swap { animation: islandSwap .42s cubic-bezier(.2,.7,.2,1); }
+  @keyframes islandSwap { from { opacity: 0; transform: translateY(7px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+  [data-island-dot] { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #f6d79e; box-shadow: 0 0 0 0 rgba(246,215,158,0.5); animation: islandPulse 2.4s ease-out infinite; }
+  @keyframes islandPulse { 0% { box-shadow: 0 0 0 0 rgba(246,215,158,0.55); } 70%, 100% { box-shadow: 0 0 0 7px rgba(246,215,158,0); } }
+  [data-portfolio-nav][data-island="mini"] [data-island-ink] { opacity: 1; transition-delay: 0s; transition-duration: .22s; }
+  [data-portfolio-nav][data-island="mini"] [data-island-mini] { opacity: 1; pointer-events: auto; transition: opacity .3s ease .2s; }
+  [data-portfolio-nav]:not([data-island="mini"]) [data-island-dot] { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-mobile-nav-pill], [data-island-ink], [data-island-mini] { transition: none !important; }
+    [data-island-dot], [data-island-label].swap { animation: none !important; }
+  }
   /* Daylight: the centred copy sits over the sun and the sea, the brightest part of the
      plate, where white type washed out. A soft shade of the sea's own blue gathers behind
      the block, painted once as a flat gradient (no blur, no backdrop filter), and the
@@ -247,12 +278,14 @@
     </svg>
 
     <nav ref="{{ navRef }}" data-portfolio-nav style="position: fixed; top: clamp(16px, 3.4vh, 36px); left: 50%; transform: translateX(-50%); z-index: 20; max-width: calc(100% - 28px); opacity: 0; transition: opacity 1.9s cubic-bezier(.2,.7,.2,1), transform 1.9s cubic-bezier(.2,.7,.2,1)">
-      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .6s cubic-bezier(.22,.7,.2,1), background .6s ease, backdrop-filter .6s ease, box-shadow .6s ease">
+      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .6s cubic-bezier(.22,.7,.2,1), background .6s ease, backdrop-filter .6s ease, box-shadow .6s ease, clip-path .62s cubic-bezier(.32,1.22,.42,1)">
         <div style="position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; opacity: .9; background: linear-gradient(196deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.05) 100%)"></div>
         <div ref="{{ sheenRef }}" style="position: absolute; top: -110%; left: -30%; width: 60%; height: 320%; background: radial-gradient(closest-side, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0) 100%); mix-blend-mode: screen; pointer-events: none; will-change: transform"></div>
         <div style="position: absolute; top: 0; left: 7%; right: 7%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 26%, rgba(255,255,255,0.38) 58%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0) 100%); pointer-events: none"></div>
         <div style="position: absolute; bottom: 0; left: 12%; right: 12%; height: 10px; background: radial-gradient(64% 120% at 50% 118%, rgba(255,244,222,0.26), rgba(255,244,222,0) 72%); filter: blur(2.5px); pointer-events: none"></div>
         <div ref="{{ lensRef }}" data-vt-lens style="position: absolute; top: 50%; left: 0; height: 36px; width: 84px; margin-top: -18px; border-radius: 999px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.18));  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 -1px 1px rgba(255,255,255,0.18) inset, 0 6px 14px -8px rgba(4,10,16,0.45); will-change: transform, width; opacity: 0; transition: opacity .7s ease"></div>
+        <span data-island-ink aria-hidden="true"></span>
+        <button type="button" data-island-mini tabindex="-1" aria-label="Open navigation"><span data-island-mark>SJ</span><span data-island-label>About</span><span data-island-dot aria-hidden="true"></span></button>
 
         <a href="#" data-nav-brand style="position: relative; z-index: 2; display: flex; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: clamp(10.5px, 0.8vw, 11.5px); font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: rgba(255,255,255,0.96); white-space: nowrap; text-shadow: 0 1px 8px rgba(4,10,16,.4)" style-hover="color: #ffffff">Soubhagya Jain</a>
         <span data-nav-separator style="position: relative; z-index: 2; width: 1px; height: 18px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.34), rgba(255,255,255,0)); flex: 0 0 auto"></span>
@@ -1398,6 +1431,7 @@ class Component extends DCLogic {
       if (best < 0) best = 0;
       if (best === active) return;
       active = best;
+      if (this.islandLabel) this.islandLabel();
       paint();
       measure();
       if (this.reduced) { s.x = s.tx; s.y = s.ty; s.w = s.tw; settle(); }
@@ -1414,6 +1448,8 @@ class Component extends DCLogic {
 
     this.onNavResize = () => { measure(); if (this.reduced) { s.x = s.tx; s.y = s.ty; s.w = s.tw; settle(); } };
     window.addEventListener("resize", this.onNavResize);
+
+    this.initIsland(nav, pill, items, () => active);
 
     measure();
     // Coming from another page of this site, the nav was already on screen a moment ago:
@@ -1815,6 +1851,77 @@ class Component extends DCLogic {
       el.addEventListener("pointerenter", () => { ln.style.width = "42px"; });
       el.addEventListener("pointerleave", () => { ln.style.width = "0"; });
     });
+  }
+
+  // The Dynamic Island: see the style block. One state, "mini" or open, decided by
+  // where the reader is, which way they are going, and whether they are reaching for it.
+  initIsland(nav, pill, items, activeIx) {
+    const mini = pill.querySelector("[data-island-mini]");
+    const label = pill.querySelector("[data-island-label]");
+    if (!mini || !label) return;
+    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    let state = "open", lastY = window.scrollY, hover = false, holdUntil = 0, idle = 0;
+
+    // the capsule is as wide as what it has to say, like the real one
+    const fit = () => {
+      const phone = window.matchMedia("(max-width: 660px)").matches;
+      const W = pill.offsetWidth, H = pill.offsetHeight;
+      const ih = phone ? 42 : 40;
+      label.style.flex = "none";
+      const want = Math.ceil(label.scrollWidth) + 26 + 7 + 10 * 2 + 22;
+      label.style.flex = "";
+      const iw = Math.min(W - 16, 420, Math.max(phone ? 176 : 188, want));
+      const it = phone ? 6 : Math.max(0, (H - ih) / 2);
+      const il = Math.max(0, (W - iw) / 2);
+      const st = pill.style;
+      st.setProperty("--iw", iw.toFixed(1) + "px"); st.setProperty("--ih", ih + "px");
+      st.setProperty("--il", il.toFixed(1) + "px"); st.setProperty("--ir", il.toFixed(1) + "px");
+      st.setProperty("--it", it.toFixed(1) + "px"); st.setProperty("--ib", Math.max(0, H - it - ih).toFixed(1) + "px");
+    };
+    this.islandLabel = () => {
+      const el = items[activeIx()];
+      const t = el ? el.textContent.trim() : "";
+      if (!t || label.textContent === t) return;
+      label.textContent = t;
+      label.classList.remove("swap"); void label.offsetWidth; label.classList.add("swap");
+      if (state === "mini") fit();
+    };
+    const set = (next) => {
+      if (next === state) return;
+      state = next;
+      if (next === "mini") { fit(); nav.setAttribute("data-island", "mini"); }
+      else nav.removeAttribute("data-island");
+      mini.setAttribute("aria-hidden", next === "mini" ? "false" : "true");
+    };
+    this.islandLabel();
+
+    let queued = false;
+    const decide = () => {
+      queued = false;
+      const y = window.scrollY, dy = y - lastY, vh = window.innerHeight;
+      lastY = y;
+      if (y < vh * 0.6) return set("open");
+      if (hover || nav.contains(document.activeElement) && document.activeElement !== mini) return set("open");
+      if (performance.now() < holdUntil) return;
+      if (dy > 3) set("mini");
+      else if (dy < -10) set("open");
+    };
+    this.onIsland = () => { if (!queued) { queued = true; requestAnimationFrame(decide); } };
+    window.addEventListener("scroll", this.onIsland, { passive: true });
+
+    // reaching for it opens it; a tap on the capsule holds it open until the next scroll down
+    mini.addEventListener("click", () => { holdUntil = performance.now() + 700; set("open"); });
+    nav.addEventListener("focusin", (e) => { if (e.target !== mini) set("open"); });
+    if (fine) {
+      nav.addEventListener("pointerenter", () => { hover = true; clearTimeout(idle); set("open"); });
+      nav.addEventListener("pointerleave", () => {
+        hover = false;
+        clearTimeout(idle);
+        idle = setTimeout(() => { if (!hover && window.scrollY > window.innerHeight * 0.6) set("mini"); }, 900);
+      });
+    }
+    this.onIslandResize = () => { if (state === "mini") fit(); };
+    window.addEventListener("resize", this.onIslandResize);
   }
 
   navScroll(t) {
@@ -2312,6 +2419,7 @@ class Component extends DCLogic {
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.navRaf);
     window.removeEventListener("pointermove", this.onNavMove);
+    if (this.onIsland) { window.removeEventListener("scroll", this.onIsland); window.removeEventListener("resize", this.onIslandResize); }
     window.removeEventListener("pointermove", this.onPortrait);
     window.removeEventListener("resize", this.onNavResize);
     window.removeEventListener("resize", this.onThemeResize);

@@ -137,6 +137,30 @@ button { font: inherit; color: inherit; }
 .pnav .links a[aria-current="page"] { position: relative; color: #fff; }
 .pnav .pn-lens { position: absolute; inset: 0; z-index: -1; border-radius: 999px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.18)); box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 -1px 1px rgba(255,255,255,0.18) inset, 0 6px 14px -8px rgba(4,10,16,0.45); view-transition-name: nav-lens; }
 .pnav nav { view-transition-name: site-nav; }
+/* The nav as a Dynamic Island, as on the home page: past the top, scrolling down folds
+   the pill into a black capsule that says where you are (on an article, the section and
+   a ring of how far through it you are); scrolling up, hovering, tapping or tabbing in
+   unfolds it. One composited clip-path morph with a slight spring, a black ink over the
+   glass, and the capsule's line on top. */
+.pnav nav { clip-path: inset(0px 0px 0px 0px round 999px); transition: clip-path .62s cubic-bezier(.32,1.22,.42,1); }
+.pnav[data-island="mini"] nav { clip-path: inset(var(--it, 9px) var(--ir, 40%) var(--ib, 9px) var(--il, 40%) round 999px); }
+.pnav .isl-ink { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0; background: radial-gradient(120% 140% at 50% 0%, #15181c 0%, #050608 60%); transition: opacity .34s ease .08s; }
+.pnav .isl-mini { position: absolute !important; z-index: 4; top: var(--it, 9px); left: var(--il, 40%); width: var(--iw, 200px); height: var(--ih, 40px); display: flex; align-items: center; gap: 10px; box-sizing: border-box; margin: 0; padding: 0 14px 0 8px; border: 0; border-radius: 999px; background: none; color: #fff; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .14s ease; -webkit-tap-highlight-color: transparent; }
+.pnav .isl-mark { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f6e7c7, #c89254 70%, #8a5a2c); color: #1a1208; font: 600 9.5px/1 var(--mono); letter-spacing: .04em; }
+.pnav .isl-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font: 500 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); }
+.pnav .isl-label.swap { animation: islandSwap .42s cubic-bezier(.2,.7,.2,1); }
+@keyframes islandSwap { from { opacity: 0; transform: translateY(7px); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
+.pnav .isl-dot { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #f6d79e; animation: islandPulse 2.4s ease-out infinite; }
+@keyframes islandPulse { 0% { box-shadow: 0 0 0 0 rgba(246,215,158,0.55); } 70%, 100% { box-shadow: 0 0 0 7px rgba(246,215,158,0); } }
+/* on an article the dot becomes a ring that fills as the reader goes */
+.pnav .isl-dot.ring { width: 16px; height: 16px; animation: none; background: conic-gradient(#f6d79e calc(var(--p, 0) * 1turn), rgba(255,255,255,0.16) 0); -webkit-mask: radial-gradient(circle, transparent 5px, #000 5.5px); mask: radial-gradient(circle, transparent 5px, #000 5.5px); }
+.pnav[data-island="mini"] .isl-ink { opacity: 1; transition-delay: 0s; transition-duration: .22s; }
+.pnav[data-island="mini"] .isl-mini { opacity: 1; pointer-events: auto; transition: opacity .3s ease .2s; }
+.pnav:not([data-island="mini"]) .isl-dot { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pnav nav, .pnav .isl-ink, .pnav .isl-mini { transition: none !important; }
+  .pnav .isl-dot, .pnav .isl-label.swap { animation: none !important; }
+}
 /* the reading-mode switch is the weather switch: Light is Daylight, Dark is Night */
 .mode { position: relative; z-index: 2; display: flex; align-items: center; gap: 1px; margin-left: clamp(4px, 0.8vw, 10px); padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset; }
 .mode button { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 22px; border: 0; border-radius: 999px; background: none; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease; }
