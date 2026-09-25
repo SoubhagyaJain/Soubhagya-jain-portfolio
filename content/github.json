@@ -15,6 +15,19 @@
       "plate": "rag"
     },
     {
+      "repo": "ridgepoint",
+      "name": "Ridgepoint",
+      "category": "ML Systems · Inference Engine",
+      "description": "A single-GPU LLM inference engine built and measured from the scheduler down — Qwen2.5-1.5B in BF16 on a 6 GB laptop GPU. Phase 1 of 7, hardware characterisation, is measured.",
+      "technologies": [
+        "Python",
+        "PyTorch",
+        "CUDA"
+      ],
+      "liveUrl": "",
+      "plate": "inference"
+    },
+    {
       "repo": "shared-prefix-benchmark",
       "name": "Shared-Prefix Benchmark",
       "category": "ML Systems · Benchmark",
