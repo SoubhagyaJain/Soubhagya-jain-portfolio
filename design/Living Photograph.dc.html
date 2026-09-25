@@ -256,8 +256,8 @@
 
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(6,12,18,0.62) 0%, rgba(6,12,18,0.3) 30%, rgba(6,12,18,0.04) 58%, rgba(6,12,18,0) 70%)"></div>
     <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(5,9,12,0.4) 0%, rgba(5,9,12,0) 38%)"></div>
-    <div ref="{{ veilRef }}" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%); opacity: 0"></div>
-    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%); opacity: 0"></div>
+    <div ref="{{ veilRef }}" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%); opacity: 0; will-change: opacity"></div>
+    <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%); opacity: 0; will-change: opacity"></div>
   </div>
 
   <div style="position: relative; z-index: 2; overflow: clip">
@@ -1791,6 +1791,11 @@ class Component extends DCLogic {
       const rects = layers.map(L => L.el.getBoundingClientRect());
       layers.forEach((L, i) => {
         const r = rects[i];
+        // A transform written to an element that is not its own layer repaints whatever it
+        // sits in — here the whole page, every scroll frame. Each plane is promoted only
+        // while it is near the screen, so the promotion costs no memory the rest of the time.
+        const near = !(r.bottom < -H || r.top > H * 2);
+        if (near !== L.on) { L.on = near; L.el.style.willChange = near ? "transform" : "auto"; }
         if (r.bottom < -200 || r.top > H + 200) return;
         // -1 .. 1 across the viewport, so each layer's travel is centred on its own passage
         const p = ((r.top + r.height / 2) / H - 0.5) * 2;
