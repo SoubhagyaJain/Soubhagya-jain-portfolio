@@ -153,6 +153,25 @@
     [data-nav-brand] { letter-spacing: .2em !important; }
   }
   [data-br="narrow"] { display: none; }
+  /* Daylight: the centred copy sits over the sun and the sea, the brightest part of the
+     plate, where white type washed out. A soft shade of the sea's own blue gathers behind
+     the block, painted once as a flat gradient (no blur, no backdrop filter), and the
+     type gets a tighter shadow. Night needs neither. */
+  [data-hero-stack]::before {
+    content: ""; position: absolute; left: 50%; top: 50%; z-index: -1; pointer-events: none;
+    width: min(1180px, 160%); height: 165%; transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(6,20,34,0.5), rgba(6,20,34,0.3) 52%, rgba(6,20,34,0.1) 78%, rgba(6,20,34,0));
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  [data-scene="day"] [data-hero-stack]::before { opacity: 1; }
+  [data-scene="day"] [data-hero-stack] h1, [data-scene="day"] [data-hero-stack] > div:nth-child(2) {
+    text-shadow: 0 1px 2px rgba(6,16,26,0.4), 0 2px 22px rgba(6,16,26,0.55) !important;
+  }
+  [data-scene="day"] [data-hero-stack] > div:first-child { text-shadow: 0 1px 3px rgba(6,16,26,0.7), 0 0 18px rgba(6,16,26,0.6) !important; }
+  [data-scene="day"] [data-hero-stack] p { color: #ffffff !important; text-shadow: 0 1px 3px rgba(6,16,26,0.65), 0 1px 16px rgba(6,16,26,0.6) !important; }
+  [data-scene="day"] [data-hero-stack] span[style*="e2b274"] { color: #ffcf8e !important; }
+  [data-scene="day"] [data-hero-secondary] { color: #ffffff !important; border-bottom-color: rgba(255,255,255,0.7) !important; }
+  [data-scene="day"] [data-social-pill] { background: linear-gradient(178deg, rgba(255,255,255,0.14) 0%, rgba(8,18,26,0.62) 46%, rgba(255,255,255,0.06) 100%), rgba(8,16,24,0.62) !important; }
   [data-ledger-link]:hover [data-ledger-arrow], [data-ledger-link]:focus-visible [data-ledger-arrow] { transform: translateY(3px); }
   /* Portrait screens cannot crop-to-fill a 16:9 panorama without discarding the
      bench and bicycle. Keep the moving cover as atmosphere, then lay a wider,
@@ -260,7 +279,7 @@
 
     <div style="position: relative; height: 100vh; min-height: 460px">
     <div ref="{{ copyRef }}" data-hero-copy style="position: absolute; inset: 0; display: grid; will-change: transform, opacity; grid-template-rows: 1fr auto; padding: clamp(104px, 15vh, 168px) clamp(22px, 4vw, 54px) clamp(22px, 4vw, 54px); box-sizing: border-box; will-change: transform, opacity">
-      <div data-hero-stack style="align-self: start; margin-top: clamp(12px, 4.5vh, 56px); justify-self: center; width: 100%; max-width: min(860px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(16px, 2vw, 26px)">
+      <div data-hero-stack style="position: relative; align-self: start; margin-top: clamp(12px, 4.5vh, 56px); justify-self: center; width: 100%; max-width: min(860px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(16px, 2vw, 26px)">
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #ffffff; text-shadow: 0 1px 10px rgba(4,10,16,.85), 0 0 26px rgba(4,10,16,.7); display: flex; align-items: center; gap: clamp(14px, 1.6vw, 24px); opacity: 0; transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="0"><span aria-hidden="true" style="width: clamp(36px, 6vw, 92px); height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.55))"></span>AI / ML Engineer<span aria-hidden="true" style="width: clamp(36px, 6vw, 92px); height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.55), rgba(255,255,255,0))"></span></div>
         <div style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(36px, 4.3vw, 68px); line-height: 1.04; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: balance; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">Soubhagya <span style="color: #e2b274">Jain</span></div>
         <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(34px, 3.9vw, 64px); text-wrap: balance; line-height: 1.08; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: pretty; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">I engineer AI systems<br />that hold up <span style="color: #e2b274; white-space: nowrap">beyond the demo.</span></h1>
@@ -275,7 +294,7 @@
       </div>
 
       <div data-hero-foot style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; opacity: 0; transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="4">
-        <div data-social-pill style="position: relative; display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22); overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34)">
+        <div data-social-pill style="position: relative; display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22); overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%), rgba(10,16,22,0.5); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34)">
           <div style="position: absolute; top: 0; left: 8%; right: 8%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 26%, rgba(255,255,255,0.36) 58%, rgba(255,255,255,0.7) 78%, rgba(255,255,255,0) 100%); pointer-events: none"></div>
           <div style="position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; opacity: .9; background: linear-gradient(196deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.05) 100%)"></div>
           <div style="position: relative; z-index: 2; display: flex; align-items: center; gap: 6px">
@@ -2236,8 +2255,11 @@ class Component extends DCLogic {
         // on screen it sits at 60% of the (eased) scroll, i.e. translate = y - 0.6 * yEased
         const cap = window.innerHeight * 1.2;
         const lag = this.reduced ? 0 : Math.min(this.scrollY || 0, cap) - 0.6 * Math.min(this.scrollYS || 0, cap);
-        copyEl.style.transform = "translateY(" + lag.toFixed(2) + "px) translate3d(" +
-          (this.mouse.x * -5).toFixed(2) + "px," + (this.mouse.y * -3).toFixed(2) + "px,0)";
+        // written only when it changes: an identical write still invalidates style, and
+        // this runs every frame for as long as the scene does
+        const tf = "translateY(" + lag.toFixed(1) + "px) translate3d(" +
+          (this.mouse.x * -5).toFixed(1) + "px," + (this.mouse.y * -3).toFixed(1) + "px,0)";
+        if (tf !== this.copyTf) { this.copyTf = tf; copyEl.style.transform = tf; }
       }
     };
     this.draw = draw;
