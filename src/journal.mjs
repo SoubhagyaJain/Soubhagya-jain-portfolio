@@ -310,7 +310,7 @@ ${extraHead}</head>
     <a class="brand" href="/">${AUTHOR}</a>
     <span class="sep" aria-hidden="true"></span>
     <div class="links">
-      ${NAV.map(([l, h]) => `<a href="${h}"${l === active ? ' aria-current="page"' : ""}>${l}</a>`).join("\n      ")}
+      ${NAV.map(([l, h]) => (l === active ? `<a href="${h}" aria-current="page"><span class="pn-lens" aria-hidden="true"></span>${l}</a>` : `<a href="${h}">${l}</a>`)).join("\n      ")}
     </div>
     <div class="mode" role="group" aria-label="Reading mode">
       <span class="mode-lens" aria-hidden="true"></span>

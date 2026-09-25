@@ -132,8 +132,11 @@ button { font: inherit; color: inherit; }
 .pnav .links { position: relative; z-index: 2; display: flex; align-items: center; gap: 2px; }
 .pnav .links a { padding: 9px clamp(10px, 1vw, 15px); border-radius: 999px; font: 400 clamp(10px, 0.74vw, 11px) var(--mono); letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; color: rgba(255,255,255,0.9); transition: color .4s ease, background .45s ease, box-shadow .45s ease; }
 .pnav .links a:hover { color: #fff; background: rgba(255,255,255,0.10); box-shadow: 0 1px 0 rgba(255,255,255,0.32) inset; }
-/* the current page wears the home page's lens */
-.pnav .links a[aria-current="page"] { color: #fff; background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.18)); box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 -1px 1px rgba(255,255,255,0.18) inset, 0 6px 14px -8px rgba(4,10,16,0.45); }
+/* the current page wears the home page's lens — the same named element, so a page
+   change slides it from one link to the other instead of cutting */
+.pnav .links a[aria-current="page"] { position: relative; color: #fff; }
+.pnav .pn-lens { position: absolute; inset: 0; z-index: -1; border-radius: 999px; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.18)); box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 -1px 1px rgba(255,255,255,0.18) inset, 0 6px 14px -8px rgba(4,10,16,0.45); view-transition-name: nav-lens; }
+.pnav nav { view-transition-name: site-nav; }
 /* the reading-mode switch is the weather switch: Light is Daylight, Dark is Night */
 .mode { position: relative; z-index: 2; display: flex; align-items: center; gap: 1px; margin-left: clamp(4px, 0.8vw, 10px); padding: 3px; border-radius: 999px; background: rgba(255,255,255,0.07); box-shadow: 0 1px 0 rgba(255,255,255,0.24) inset; }
 .mode button { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 22px; border: 0; border-radius: 999px; background: none; cursor: pointer; font-size: 11px; line-height: 1; color: rgba(255,255,255,0.72); transition: color .45s ease; }
@@ -802,8 +805,14 @@ html.js:not(.still) .hero-vis { animation: settle 2.6s var(--ease) both; }
 .split.in .w > span { transform: none; }
 /* changing reading mode: the browser cross-fades a snapshot of the page (see
    journal.js) instead of animating every colour on it */
+/* Page to page (home included) the nav is one object: the pill stays put, the lens
+   slides to the new page's link, and only the page beneath cross-fades. */
+@view-transition { navigation: auto; }
+::view-transition-group(site-nav), ::view-transition-group(nav-lens) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(site-nav) { display: none; }
+::view-transition-new(site-nav) { animation: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   *, *::before, *::after { transition-duration: .001ms !important; animation-duration: .001ms !important; transition-delay: 0s !important; }
 }
