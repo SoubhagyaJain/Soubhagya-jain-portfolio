@@ -43,9 +43,9 @@ export function eventsList(events) {
 }
 
 function repos(config, data) {
-  const live = new Map(data.repos.map((r) => [r.name, r]));
+  const live = new Map(data.repos.map((r) => [r.name.toLowerCase(), r]));
   const rows = config.featured.map((f, i) => {
-    const r = live.get(f.repo);
+    const r = live.get(f.repo.toLowerCase());
     const url = r ? r.url : `https://github.com/${config.username}/${f.repo}`;
     const stack = f.technologies && f.technologies.length ? f.technologies : (r && r.language ? [r.language] : []);
     const demo = f.liveUrl || "";

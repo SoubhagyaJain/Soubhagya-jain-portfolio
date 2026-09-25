@@ -354,9 +354,9 @@
     var f = root.querySelector('[data-f="followers"]');
     if (f) f.textContent = d.user.followers + " follower" + (d.user.followers === 1 ? "" : "s");
     var byName = {};
-    d.repos.forEach(function (r) { byName[r.name] = r; });
+    d.repos.forEach(function (r) { byName[r.name.toLowerCase()] = r; });
     Array.prototype.forEach.call(root.querySelectorAll(".gx-repo"), function (li) {
-      var r = byName[li.getAttribute("data-repo")];
+      var r = byName[(li.getAttribute("data-repo") || "").toLowerCase()];
       if (!r) return;
       var s = li.querySelector('[data-f="stars"]'), u = li.querySelector('[data-f="updated"]');
       if (s) s.textContent = r.stars ? "★ " + r.stars : "";
