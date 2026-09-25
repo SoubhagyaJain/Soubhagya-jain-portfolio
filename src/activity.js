@@ -440,6 +440,9 @@
 
   var CARD_H = 0.38, CARD_RATIO = 1.414, STEP = 40, DRUM = 2.22, LENS = 2.7, BOW = 1.82, TITLE = 0.124, CULL = 1.6, EASE = 0.12, SETTLE = 180;
   var W = { turn: 0, target: 0, active: 0, m: {}, live: false, raf: 0, settle: 0 };
+  // phones get a sideways row instead of the pinned wheel (see activity.css)
+  var phoneMQ = window.matchMedia("(max-width: 700px)");
+  var isPhone = function () { return phoneMQ.matches; };
   var rad = function (d) { return d * Math.PI / 180; };
   var lerp = function (a, b, t) { return a + (b - a) * t; };
 
@@ -506,6 +509,7 @@
   var last = { z: [], vis: [], op: -1, m: -1 };
   function drawWheel() {
     W.raf = 0;
+    if (isPhone()) return;
     var n = cards.length, M = W.m;
     var gap = W.target - W.turn;
     if (Math.abs(gap) < 0.0005) W.turn = W.target; else W.turn += gap * (reduced ? 1 : EASE);
@@ -545,12 +549,35 @@
   }
   // scroll moves the target; the loop runs only until the wheel catches up
   function wheelKick() {
-    if (!W.live) return;
+    if (!W.live || isPhone()) return;
     W.target = turnFromScroll();
     if (!W.raf && W.target !== W.turn) W.raf = requestAnimationFrame(drawWheel);
   }
 
+  // the phone row: the record nearest the row's centre is the one in front
+  function rowTo(i, smooth) {
+    var c = cards[i];
+    wView.scrollTo({ left: c.offsetLeft + c.offsetWidth / 2 - wView.clientWidth / 2, behavior: smooth && !reduced ? "smooth" : "auto" });
+  }
+  var rowQ = false;
+  function rowPick() {
+    rowQ = false;
+    if (!isPhone()) return;
+    var mid = wView.scrollLeft + wView.clientWidth / 2, best = 0, bd = Infinity;
+    for (var i = 0; i < cards.length; i++) {
+      var d = Math.abs(cards[i].offsetLeft + cards[i].offsetWidth / 2 - mid);
+      if (d < bd) { bd = d; best = i; }
+    }
+    setActive(best);
+  }
+
   if (track && cards.length) {
+    wView.addEventListener("scroll", function () { if (!rowQ) { rowQ = true; requestAnimationFrame(rowPick); } }, { passive: true });
+    var onMQ = function () {
+      if (isPhone()) { cards.forEach(function (c) { c.style.transform = ""; c.style.visibility = ""; }); rowPick(); }
+      else { last.m = -1; last.z = []; last.vis = []; W.target = turnFromScroll(); if (!W.raf) W.raf = requestAnimationFrame(drawWheel); }
+    };
+    if (phoneMQ.addEventListener) phoneMQ.addEventListener("change", onMQ);
     wheelMetrics();
     W.target = W.turn = turnFromScroll();
     drawWheel();
@@ -568,7 +595,7 @@
     // stopped; left there the drum sits between two records. Settle onto one.
     window.addEventListener("scroll", function () {
       clearTimeout(W.settle);
-      if (reduced) return;
+      if (reduced || isPhone() || !finePointer) return;   // never pull the page out from under a finger
       W.settle = setTimeout(function () {
         var t = turnFromScroll();
         if (t > 1 && t < cards.length && Math.abs(t - Math.round(t)) > 0.03) scrollToTurn(Math.round(t), true);
@@ -578,6 +605,7 @@
     cards.forEach(function (el, i) {
       el.addEventListener("click", function () {
         // the front record opens; any other turns the wheel to it
+        if (isPhone()) { if (i === W.active) open(i); else rowTo(i, true); return; }
         if (i === W.active && W.turn > 0.9) open(i); else scrollToTurn(i + 1, true);
       });
       if (finePointer && !reduced) {
@@ -592,6 +620,14 @@
     wIndex.forEach(function (b) { b.addEventListener("click", function () { scrollToTurn(+b.getAttribute("data-cxw-to") + 1, true); }); });
     track.querySelector('[data-cxw="open"]').addEventListener("click", function () { open(W.active); });
     wView.addEventListener("keydown", function (e) {
+      if (isPhone()) {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown") rowTo(Math.min(cards.length - 1, W.active + 1), true);
+        else if (e.key === "ArrowLeft" || e.key === "ArrowUp") rowTo(Math.max(0, W.active - 1), true);
+        else if (e.key === "Enter" || e.key === " ") open(W.active);
+        else return;
+        e.preventDefault();
+        return;
+      }
       var t = Math.round(turnFromScroll());
       if (e.key === "ArrowDown" || e.key === "ArrowRight") scrollToTurn(Math.min(cards.length, Math.max(1, t + 1)), true);
       else if (e.key === "ArrowUp" || e.key === "ArrowLeft") scrollToTurn(Math.max(0, t - 1), true);
