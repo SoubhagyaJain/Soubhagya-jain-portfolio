@@ -73,10 +73,67 @@
     sync();
   });
 
+  /* ── the nav as a Dynamic Island (see pages.css) ───────────────────────── */
+  var island = (function () {
+    var bar = document.querySelector(".pnav"), nav = bar && bar.querySelector("nav");
+    var mini = nav && nav.querySelector(".isl-mini"), label = nav && nav.querySelector(".isl-label"), dot = nav && nav.querySelector(".isl-dot");
+    if (!mini || !label) return null;
+    var fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    var state = "open", lastY = window.scrollY, hover = false, holdUntil = 0, idle = 0, queued = false;
+    function fit() {
+      var phone = window.matchMedia("(max-width: 660px)").matches;
+      var W = nav.offsetWidth, H = nav.offsetHeight, ih = phone ? 42 : 40;
+      label.style.flex = "none";
+      var want = Math.ceil(label.scrollWidth) + 26 + 16 + 20 + 22;
+      label.style.flex = "";
+      var iw = Math.min(W - 16, 420, Math.max(phone ? 176 : 188, want));
+      var it = phone ? 6 : Math.max(0, (H - ih) / 2), il = Math.max(0, (W - iw) / 2);
+      nav.style.setProperty("--iw", iw.toFixed(1) + "px"); nav.style.setProperty("--ih", ih + "px");
+      nav.style.setProperty("--il", il.toFixed(1) + "px"); nav.style.setProperty("--ir", il.toFixed(1) + "px");
+      nav.style.setProperty("--it", it.toFixed(1) + "px"); nav.style.setProperty("--ib", Math.max(0, H - it - ih).toFixed(1) + "px");
+    }
+    function set(next) {
+      if (next === state) return;
+      state = next;
+      if (next === "mini") { fit(); bar.setAttribute("data-island", "mini"); } else bar.removeAttribute("data-island");
+      mini.setAttribute("aria-hidden", next === "mini" ? "false" : "true");
+    }
+    function decide() {
+      queued = false;
+      var y = window.scrollY, dy = y - lastY;
+      lastY = y;
+      if (y < 160) return set("open");
+      if (hover || (nav.contains(document.activeElement) && document.activeElement !== mini)) return set("open");
+      if (performance.now() < holdUntil) return;
+      if (dy > 3) set("mini"); else if (dy < -10) set("open");
+    }
+    window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(decide); } }, { passive: true });
+    window.addEventListener("resize", function () { if (state === "mini") fit(); });
+    mini.addEventListener("click", function () { holdUntil = performance.now() + 700; set("open"); });
+    nav.addEventListener("focusin", function (e) { if (e.target !== mini) set("open"); });
+    if (fine) {
+      nav.addEventListener("pointerenter", function () { hover = true; clearTimeout(idle); set("open"); });
+      nav.addEventListener("pointerleave", function () {
+        hover = false; clearTimeout(idle);
+        idle = setTimeout(function () { if (!hover && window.scrollY > 160) set("mini"); }, 900);
+      });
+    }
+    return {
+      label: function (t) {
+        if (!t || label.textContent === t) return;
+        label.textContent = t;
+        label.classList.remove("swap"); void label.offsetWidth; label.classList.add("swap");
+        if (state === "mini") fit();
+      },
+      progress: function (p) { if (dot) { dot.classList.add("ring"); dot.style.setProperty("--p", p.toFixed(3)); } }
+    };
+  })();
+
   /* ── the article: place in the text, contents, notes, code, maths ───────── */
   var post = document.querySelector(".post .prose");
   if (post) {
     var bar = document.querySelector(".read-progress span");
+    if (island) island.label("Reading");
     var links = [].slice.call(document.querySelectorAll("[data-toc]"));
     var heads = links.map(function (a) { return document.getElementById(a.getAttribute("data-toc")); }).filter(Boolean);
     var left = document.querySelector("[data-read-left]");
@@ -87,6 +144,7 @@
       var r = post.getBoundingClientRect(), vh = window.innerHeight;
       var p = Math.min(1, Math.max(0, (vh * 0.3 - r.top) / Math.max(1, r.height - vh * 0.5)));
       if (bar) bar.style.setProperty("--p", p.toFixed(4));
+      if (island) island.progress(p);
       if (left && minutes) {
         var m = Math.ceil(minutes * (1 - p));
         left.textContent = p > 0.985 ? "Finished" : p < 0.01 ? minutes + " min read" : m + " min left";
@@ -95,6 +153,7 @@
       for (var i = 0; i < heads.length; i++) { if (heads[i].getBoundingClientRect().top < vh * 0.28) on = heads[i]; else break; }
       if (on !== current) {
         current = on;
+        if (island) island.label(on ? on.textContent.replace(/^\s*\d+[.)]?\s*/, "").replace(/\s*#\s*$/, "").trim() : "Reading");
         links.forEach(function (a) {
           if (on && a.getAttribute("data-toc") === on.id) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
         });
