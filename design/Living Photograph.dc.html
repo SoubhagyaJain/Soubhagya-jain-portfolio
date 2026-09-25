@@ -133,7 +133,7 @@
     }
     [data-hero-copy] { padding-top: 146px !important; }
     /* the column is centred, so the links row under it is too */
-    [data-hero-stack] { align-self: center !important; margin-top: 0 !important; }
+
     [data-hero-foot] { justify-content: center !important; flex-direction: column; gap: 14px !important; }
     /* The desktop's three lines leave "systems" alone on a line at phone width; four
        short lines of near-equal length read as the same sentence, set for the column. */
@@ -193,17 +193,34 @@
      plate, where white type washed out. A soft shade of the sea's own blue gathers behind
      the block, painted once as a flat gradient (no blur, no backdrop filter), and the
      type gets a tighter shadow. Night needs neither. */
-  [data-hero-stack]::before {
-    content: ""; position: absolute; left: 50%; top: 50%; z-index: -1; pointer-events: none;
-    width: min(1180px, 160%); height: 165%; transform: translate(-50%, -50%);
-    background: radial-gradient(closest-side, rgba(6,20,34,0.5), rgba(6,20,34,0.3) 52%, rgba(6,20,34,0.1) 78%, rgba(6,20,34,0));
+  /* ── The name on the horizon ────────────────────────────────────────────────
+     The hero's one idea: the name stands exactly on the sea's horizon, and the living
+     water below carries its reflection — drawn in the scene's own shader, broken by
+     the same swell and chop that move the bay, lit by the sun path by day and the moon
+     by night. The sky holds the eyebrow; the sea, below the reflection, holds the rest.
+     initHorizon() places the three bands from the numbers the shader uses, so the name
+     stays on the waterline on every screen and follows it when the weather changes. */
+  [data-hero-stack] { position: static; }
+  [data-hero-sky], [data-hero-name], [data-hero-sea] { position: absolute; left: clamp(16px, 4vw, 54px); right: clamp(16px, 4vw, 54px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  [data-hero-sky] { top: var(--sky-top, 30vh); gap: clamp(12px, 1.6vw, 18px); }
+  [data-hero-name] { display: block; top: var(--name-top, 32vh); margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(46px, 13vw, 152px); line-height: 1; letter-spacing: -0.02em; white-space: nowrap; color: #fbfdfa; text-shadow: 0 2px 30px rgba(4,10,16,.45); }
+  [data-hz-base] { display: inline-block; width: 0; height: 0; }
+  [data-hero-sea] { top: var(--sea-top, 55vh); gap: clamp(14px, 1.8vw, 22px); }
+  [data-hero-sea] > p { max-width: 58ch !important; }
+  [data-hero-copy][data-compact] [data-hero-sea] > p, [data-hero-copy][data-compact] [data-hero-foot] > :last-child { display: none; }
+  [data-hero-copy][data-compact] h1 { font-size: clamp(20px, 2.2vw, 30px) !important; }
+  [data-hero-sea]::before {
+    content: ""; position: absolute; left: 50%; top: 45%; z-index: -1; pointer-events: none;
+    width: min(1100px, 150%); height: 170%; transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(6,20,34,0.5), rgba(6,20,34,0.28) 55%, rgba(6,20,34,0));
     opacity: 0; transition: opacity 1.2s ease;
   }
-  [data-scene="day"] [data-hero-stack]::before { opacity: 1; }
-  [data-scene="day"] [data-hero-stack] h1, [data-scene="day"] [data-hero-stack] > div:nth-child(2) {
+  [data-scene="day"] [data-hero-sea]::before { opacity: 1; }
+  [data-scene="day"] [data-hero-name] { text-shadow: 0 1px 2px rgba(6,16,26,0.35), 0 2px 26px rgba(6,16,26,0.5); }
+  [data-scene="day"] [data-hero-stack] h1 {
     text-shadow: 0 1px 2px rgba(6,16,26,0.4), 0 2px 22px rgba(6,16,26,0.55) !important;
   }
-  [data-scene="day"] [data-hero-stack] > div:first-child { text-shadow: 0 1px 3px rgba(6,16,26,0.7), 0 0 18px rgba(6,16,26,0.6) !important; }
+  [data-scene="day"] [data-hero-sky] { text-shadow: 0 1px 3px rgba(6,16,26,0.7), 0 0 18px rgba(6,16,26,0.6) !important; }
   [data-scene="day"] [data-hero-stack] p { color: #ffffff !important; text-shadow: 0 1px 3px rgba(6,16,26,0.65), 0 1px 16px rgba(6,16,26,0.6) !important; }
   [data-scene="day"] [data-hero-stack] span[style*="e2b274"] { color: #ffcf8e !important; }
   [data-scene="day"] [data-hero-secondary] { color: #ffffff !important; border-bottom-color: rgba(255,255,255,0.7) !important; }
@@ -317,10 +334,13 @@
 
     <div style="position: relative; height: 100vh; min-height: 460px">
     <div ref="{{ copyRef }}" data-hero-copy style="position: absolute; inset: 0; display: grid; will-change: transform, opacity; grid-template-rows: 1fr auto; padding: clamp(104px, 15vh, 168px) clamp(22px, 4vw, 54px) clamp(22px, 4vw, 54px); box-sizing: border-box; will-change: transform, opacity">
-      <div data-hero-stack style="position: relative; align-self: start; margin-top: clamp(12px, 4.5vh, 56px); justify-self: center; width: 100%; max-width: min(860px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(16px, 2vw, 26px)">
+      <div data-hero-stack>
+        <div data-hero-sky>
         <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #ffffff; text-shadow: 0 1px 10px rgba(4,10,16,.85), 0 0 26px rgba(4,10,16,.7); display: flex; align-items: center; gap: clamp(14px, 1.6vw, 24px); opacity: 0; transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="0"><span aria-hidden="true" style="width: clamp(36px, 6vw, 92px); height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.55))"></span>AI / ML Engineer<span aria-hidden="true" style="width: clamp(36px, 6vw, 92px); height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.55), rgba(255,255,255,0))"></span></div>
-        <div style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(36px, 4.3vw, 68px); line-height: 1.04; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: balance; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">Soubhagya <span style="color: #e2b274">Jain</span></div>
-        <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(34px, 3.9vw, 64px); text-wrap: balance; line-height: 1.08; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: pretty; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">I engineer AI systems<br />that hold up <span style="color: #e2b274; white-space: nowrap">beyond the demo.</span></h1>
+        </div>
+        <div data-hero-name style="opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1"><span data-w="0">Soubhagya</span> <span data-w="1" style="color: #e2b274">Jain</span><span data-hz-base aria-hidden="true"></span></div>
+        <div data-hero-sea>
+        <h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(24px, 2.7vw, 42px); text-wrap: balance; line-height: 1.08; letter-spacing: -0.015em; color: #fbfdfa; text-wrap: pretty; text-shadow: 0 2px 34px rgba(4,10,16,.5); opacity: 0; transform: translateY(18px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="1">I engineer AI systems<br />that hold up <span style="color: #e2b274; white-space: nowrap">beyond the demo.</span></h1>
         <p style="margin: 0 auto; max-width: 62ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14.5px, 1.1vw, 17px); line-height: 1.55; color: rgba(240,246,240,0.9); text-shadow: 0 1px 16px rgba(4,10,16,.6); opacity: 0; transform: translateY(16px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="2">I work on the parts of AI that decide whether a system survives production &#8212; retrieval, agents, evaluation, inference, and the engineering behind reliability.</p>
         <div style="display: flex; align-items: center; justify-content: center; gap: clamp(18px, 2.6vw, 34px); flex-wrap: wrap; opacity: 0; transform: translateY(14px); transition: opacity 1.7s cubic-bezier(.2,.7,.2,1), transform 1.7s cubic-bezier(.2,.7,.2,1)" data-reveal="3">
           <a href="#selected-systems" data-hero-cta="1" style="display: inline-flex; align-items: center; gap: 12px; padding: 15px 26px; border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: #141a1f; background: linear-gradient(180deg, #fbf1dc, #f1dfbd); box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 0 0 1px rgba(255,236,200,0.5), 0 10px 30px -8px rgba(246,214,160,0.55), 0 4px 12px -6px rgba(4,10,16,0.6); transition: gap .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s ease, transform .5s cubic-bezier(.2,.7,.2,1)" style-hover="gap: 18px; transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 0 0 1px rgba(255,236,200,0.7), 0 14px 38px -8px rgba(246,214,160,0.75), 0 4px 12px -6px rgba(4,10,16,0.6)">
@@ -328,6 +348,7 @@
             <span data-hero-arrow="1" style="font-size: 13px; transition: transform .5s cubic-bezier(.2,.7,.2,1)">&#8594;</span>
           </a>
           <a href="#thinking" data-hero-secondary style="display: inline-flex; align-items: center; gap: 10px; padding: 8px 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: #efcf9c; border-bottom: 1px solid rgba(239,207,156,0.45); text-shadow: 0 1px 10px rgba(4,10,16,.7); transition: color .45s ease, gap .45s cubic-bezier(.2,.7,.2,1), border-color .45s ease" style-hover="color: #f8e3bf; gap: 16px; border-color: rgba(248,227,191,0.9)">How I work <span style="font-size: 12px">&#8594;</span></a>
+        </div>
         </div>
       </div>
 
@@ -539,6 +560,11 @@ uniform float uNightW, uStormW;
 // photosensitive reader, and "it happens to be dark at t=6" is not an accessibility
 // guarantee.
 uniform float uStill;
+// The name on the water: the hero's name rendered once into a texture (screen space),
+// the horizon's height on screen, the reflection's length, and where the name has moved.
+uniform sampler2D uName;
+uniform float uNameA, uHz, uNameH;
+uniform vec2 uNameShift;
 
 // The plate comes in two cuts: a landscape panorama stored rotated 90deg CCW, and an
 // upright portrait composition for phones — a cover fit of the panorama into a tall
@@ -1310,6 +1336,35 @@ void main(){
     float against = 1.0 - smoothstep(0.30, 0.75, luma(col));
     col += rain * vec3(0.62, 0.70, 0.80) * (0.30 + 0.70 * against) * (1.0 + 2.4 * fN) * gStorm * detail;
   }
+  // ---- the name on the water --------------------------------------------------------
+  // The hero's name stands on the horizon; this is its reflection, in the sea itself.
+  // Mirrored about the waterline in screen space, then broken by the same swell and chop
+  // that move the bay (magnified, as a reflection's always are), streaked sideways in
+  // rows the way wind-ruffled water breaks a reflection, and lit by whatever light is on
+  // the water: warm by day, moon-cold by night. Only the band under the name pays for it.
+  if (uNameA > 0.004) {
+    float yTop = 1.0 - frag.y;
+    float dy = yTop - uHz;
+    if (dy > 0.0 && dy < uNameH) {
+      float nr = dy / uNameH;
+      vec2 q = vec2(frag.x, uHz - dy) - uNameShift;
+      // each row of water tilts its own way: an irregular sideways wobble per row that
+      // drifts with time, larger further from the horizon, plus the sea's own swell
+      float rowN = fbm(vec2(yTop * uRes.y * 0.045, t * 0.35)) - 0.5;
+      float rowF = sin(yTop * uRes.y * 0.21 - t * 1.3) * 0.25;
+      q.x += off.x * 6.0 + (rowN * 1.6 + rowF) * (0.0022 + 0.0085 * nr);
+      q.y += off.y * 9.0;
+      // and a reflection on moving water is stretched downward, not merely shifted
+      float sp = 0.0010 + 0.0030 * nr, sv = 0.0015 + 0.0060 * nr;
+      vec4 nm = texture2D(uName, q) * 0.36
+              + (texture2D(uName, q + vec2(sp, 0.0)) + texture2D(uName, q - vec2(sp, 0.0))) * 0.16
+              + (texture2D(uName, q + vec2(0.0, sv)) + texture2D(uName, q - vec2(0.0, sv))) * 0.16;
+      float f = uNameA * water * (1.0 - smoothstep(0.1, 1.0, nr)) * smoothstep(0.0, 0.004, dy);
+      vec3 light = mix(vec3(1.0, 0.95, 0.86), vec3(0.78, 0.87, 1.0), gNight);
+      col = col * (1.0 - nm.a * f * 0.30) + nm.rgb * light * f * mix(0.46, 0.60, gNight) * (1.1 - 0.5 * nr);
+    }
+  }
+
   // Exposure breath. dayOccl is the share of the sun currently reaching the scene; when a
   // bank edges it the whole frame loses a little light and cools slightly, the way a real
   // exposure does when the key drops. The travel is under 3% and takes minutes to cycle,
@@ -1942,6 +1997,78 @@ class Component extends DCLogic {
     window.addEventListener("resize", this.onIslandResize);
   }
 
+  // The name stands on the horizon. The three bands of the hero are placed from the same
+  // numbers the shader uses — each cut's measured horizon, blended across the current
+  // weather, through the same cover fit and the same intro push — so the name sits on the
+  // waterline on any screen, and rides it when the weather changes the plate.
+  initHorizon() {
+    const copy = this.copyRef.current;
+    if (!copy) return;
+    const name = copy.querySelector("[data-hero-name]"), base = name && name.querySelector("[data-hz-base]");
+    const sky = copy.querySelector("[data-hero-sky]"), sea = copy.querySelector("[data-hero-sea]");
+    if (!name || !base || !sky || !sea) return;
+    const TABLE = { wide: { a: 2133 / 1200, hz: [0.415, 0.43, 0.407] }, tall: { a: 941 / 1672, hz: [0.441, 0.503, 0.445] } };
+    const tallQ = window.matchMedia("(orientation: portrait) and (max-width: 820px)");
+    const vw = () => document.documentElement.clientWidth || window.innerWidth;
+    const m = {};
+    const h1 = copy.querySelector("[data-hero-stack] h1");
+    const measure = () => {
+      // A phone's horizon sits near half height: below it there is no room for the
+      // headline and the paragraph and the links, and above it the sky is empty. There the
+      // headline goes up into the sky, over the name; on a wide screen it stays on the sea.
+      if (h1) {
+        if (tallQ.matches && h1.parentNode !== sky) sky.appendChild(h1);
+        else if (!tallQ.matches && h1.parentNode !== sea) sea.insertBefore(h1, sea.firstChild);
+      }
+      // The name is as large as the room allows: the sea below it has to hold the
+      // reflection and the rest of the copy above the links, in whichever weather puts
+      // the horizon lowest. On a short screen it gives up size rather than overlap.
+      name.style.fontSize = "";
+      copy.removeAttribute("data-compact");
+      const cssFs = parseFloat(getComputedStyle(name).fontSize) || 80;
+      const foot = copy.querySelector("[data-hero-foot]");
+      const H = this.pinH || window.innerHeight;
+      const hzLow = Math.max(this.hzFrac([1, 0, 0]), this.hzFrac([0, 1, 0])) * H;
+      const fit = () => Math.floor(((foot ? foot.offsetTop : H) - 16 - hzLow - sea.offsetHeight) / 1.03);
+      let fs = Math.min(cssFs, fit());
+      // on a short screen the paragraph and the scroll cue step aside before the name
+      // gives up its size: the name and its reflection are the point of the hero
+      if (fs < (tallQ.matches ? 46 : 104)) { copy.setAttribute("data-compact", ""); fs = Math.min(cssFs, fit()); }
+      fs = Math.max(34, fs);
+      if (fs < cssFs) name.style.fontSize = fs + "px";
+      m.fs = fs;
+      m.base = base.offsetTop;
+      m.sky = sky.offsetHeight;
+      m.left = name.offsetLeft;
+      m.words = [...name.querySelectorAll("[data-w]")].map(w => w.offsetLeft);
+    };
+    this.hzFrac = (wOverride) => {
+      const t = tallQ.matches ? TABLE.tall : TABLE.wide;
+      const w = wOverride || this.wCur || [0, 1, 0];
+      const hz = t.hz[0] * w[0] + t.hz[1] * w[1] + t.hz[2] * w[2];
+      const k = Math.min(1, (performance.now() - (this.t0 || 0)) / 9000);
+      const zoom = 1 + 0.028 * (this.reduced ? 1 : 1 - Math.pow(1 - k, 3));
+      const uvY = 0.5 + (hz - 0.5) * zoom;
+      const ca = vw() / (this.pinH || window.innerHeight);
+      return ca > t.a ? (uvY - 0.5) * (ca / t.a) + 0.5 : uvY;
+    };
+    let last = {};
+    this.placeHorizon = () => {
+      const H = this.pinH || window.innerHeight;
+      const hz = this.hzFrac() * H;
+      const nameTop = hz - m.base - m.fs * 0.02;
+      const refl = m.fs * 0.95;
+      const vals = { "--name-top": nameTop, "--sky-top": nameTop - m.sky - Math.max(10, m.fs * 0.12), "--sea-top": hz + refl + Math.max(10, m.fs * 0.08) };
+      for (const k in vals) { const v = Math.round(vals[k] * 2) / 2; if (last[k] !== v) { last[k] = v; copy.style.setProperty(k, v + "px"); } }
+      this.nameGeom = { top: nameTop, base: nameTop + m.base, left: m.left, words: m.words, fs: m.fs, refl: refl, H: H, W: vw() };
+    };
+    const refresh = () => { measure(); last = {}; this.placeHorizon(); if (this.buildName) this.buildName(); };
+    refresh();
+    this.onHorizonResize = refresh;
+    window.addEventListener("resize", refresh);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { refresh(); setTimeout(refresh, 400); });
+  }
+
   navScroll(t) {
     const pill = this.pillRef.current;
     if (!pill) return;
@@ -2009,7 +2136,7 @@ class Component extends DCLogic {
 
     const reveals = this.copyRef.current ? [...this.copyRef.current.querySelectorAll('[data-reveal]')] : [];
     reveals.forEach((el, i) => {
-      const go = () => { el.style.opacity = '1'; el.style.transform = 'none'; };
+      const go = () => { el.style.opacity = '1'; el.style.transform = 'none'; if (el.hasAttribute("data-hero-name")) this.nameShown = true; };
       this.reduced ? go() : setTimeout(go, 500 + i * 360);
     });
 
@@ -2078,6 +2205,7 @@ class Component extends DCLogic {
     this.initTheme();
     this.onScroll();
 
+    this.initHorizon();
     const canvas = this.canvasRef.current;
     if (!canvas) return;
     const gl = canvas.getContext("webgl", { antialias: false, alpha: false, preserveDrawingBuffer: true, powerPreference: "high-performance" });
@@ -2104,10 +2232,44 @@ class Component extends DCLogic {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
+    // the name's reflection: the name drawn once, in screen space, into its own texture
+    const texName = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, texName);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+    const nameCv = document.createElement("canvas");
+    this.buildName = () => {
+      const g = this.nameGeom, copy = this.copyRef.current;
+      if (!g || !copy) return;
+      const words = [...copy.querySelectorAll("[data-hero-name] [data-w]")];
+      const W = Math.max(1, g.W), H = Math.max(1, Math.round(g.H));
+      // the water breaks it up anyway, so it needs no more than about a CSS pixel
+      const k = Math.min(1, window.devicePixelRatio || 1);
+      nameCv.width = Math.round(W * k); nameCv.height = Math.round(H * k);
+      const c = nameCv.getContext("2d");
+      c.setTransform(k, 0, 0, k, 0, 0);
+      c.clearRect(0, 0, W, H);
+      c.font = "400 " + g.fs + "px 'Instrument Serif', Georgia, serif";
+      if ("letterSpacing" in c) c.letterSpacing = (-0.02 * g.fs).toFixed(2) + "px";
+      c.textBaseline = "alphabetic";
+      words.forEach((w, i) => { c.fillStyle = i ? "#e2b274" : "#fbfdfa"; c.fillText(w.textContent, g.left + g.words[i], g.base); });
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, texName);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, nameCv);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      this.nameBuiltTop = g.top;
+    };
+    this.buildName();
+
     const u = {};
     ["uTex", "uTexN", "uTexS", "uRes", "uMouse", "uT", "uWind", "uWater", "uDrift", "uGlint", "uHaze",
      "uScroll", "uIntro", "uQ", "uGust", "uLife", "uDetail", "uMix", "uWFrom", "uWTo", "uNightW", "uStormW", "uStill",
-     "TEX_ASPECT", "HZ", "uRot"].forEach(n => { u[n] = gl.getUniformLocation(prog, n); });
+     "TEX_ASPECT", "HZ", "uRot", "uName", "uNameA", "uHz", "uNameH", "uNameShift"].forEach(n => { u[n] = gl.getUniformLocation(prog, n); });
 
     // Two cuts of the same place. The panorama is stored rotated and framed for a wide
     // screen; cover-fitting it into a phone's portrait viewport keeps only ~26% of its
@@ -2299,6 +2461,7 @@ class Component extends DCLogic {
       gl.uniform1i(u.uTex, 0);
       gl.uniform1i(u.uTexN, 1);
       gl.uniform1i(u.uTexS, 2);
+      gl.uniform1i(u.uName, 3);
       // Weather on a real clock: a fixed 2.6s with an ease at both ends, identical at 30,
       // 60 or 120Hz. The sweep in the shader needs the full travel to read, so it is
       // unhurried. Carrying weights as a triple is what lets any theme reach any other -
@@ -2326,6 +2489,20 @@ class Component extends DCLogic {
       // with the plates rather than jumping when the weather turns
       const cut = this.cut;
       gl.uniform1f(u.HZ, cut.hzDay * this.wCur[0] + cut.hzNight * this.wCur[1] + cut.hzStorm * this.wCur[2]);
+      // the name follows the waterline (it moves with the weather on a phone), and its
+      // reflection follows the name: its reveal, the hero's scroll fade, the cursor drift
+      if (this.hzFrac) {
+        this.placeHorizon();
+        const g = this.nameGeom;
+        const H = g ? g.H : (this.pinH || window.innerHeight), W = g ? g.W : window.innerWidth;
+        gl.uniform1f(u.uHz, this.hzFrac());
+        gl.uniform1f(u.uNameH, g ? g.refl / H : 0);
+        const tgt = this.nameShown ? Math.max(0, 1 - (this.copyOut || 0) * 1.6) : 0;
+        this.nameA = (this.nameA || 0) + (tgt - (this.nameA || 0)) * (this.reduced ? 1 : 0.06);
+        gl.uniform1f(u.uNameA, this.nameA);
+        const sx = this.mouse.x * -5, sy = (this.copyLag || 0) + this.mouse.y * -3 + (g && this.nameBuiltTop !== undefined ? g.top - this.nameBuiltTop : 0);
+        gl.uniform2f(u.uNameShift, sx / W, sy / H);
+      }
 
       // Reveal the living scene only once the plate the visitor is actually looking at is
       // on the GPU. The flat photograph underneath is already showing the right theme.
@@ -2380,6 +2557,7 @@ class Component extends DCLogic {
         // on screen it sits at 60% of the (eased) scroll, i.e. translate = y - 0.6 * yEased
         const cap = window.innerHeight * 1.2;
         const lag = this.reduced ? 0 : Math.min(this.scrollY || 0, cap) - 0.6 * Math.min(this.scrollYS || 0, cap);
+        this.copyLag = lag;
         // written only when it changes: an identical write still invalidates style, and
         // this runs every frame for as long as the scene does
         const tf = "translateY(" + lag.toFixed(1) + "px) translate3d(" +
@@ -2437,6 +2615,7 @@ class Component extends DCLogic {
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.navRaf);
     window.removeEventListener("pointermove", this.onNavMove);
+    if (this.onHorizonResize) window.removeEventListener("resize", this.onHorizonResize);
     if (this.onIsland) { window.removeEventListener("scroll", this.onIsland); window.removeEventListener("resize", this.onIslandResize); }
     window.removeEventListener("pointermove", this.onPortrait);
     window.removeEventListener("resize", this.onNavResize);
