@@ -77,7 +77,12 @@
   var island = (function () {
     var bar = document.querySelector(".pnav"), nav = bar && bar.querySelector("nav");
     var mini = nav && nav.querySelector(".isl-mini"), label = nav && nav.querySelector(".isl-label"), dot = nav && nav.querySelector(".isl-dot");
-    if (!mini || !label) return null;
+    var ink = nav && nav.querySelector(".isl-ink");
+    if (!mini || !label || !ink) return null;
+    // the shape and the capsule sit beside the pill so the pill can fade away beneath them
+    ink.innerHTML = '<i data-c="l"></i><i data-c="m"></i><i data-c="r"></i>';
+    bar.appendChild(ink); bar.appendChild(mini);
+    var capL = ink.children[0], mid = ink.children[1], capR = ink.children[2];
     var fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     var state = "open", lastY = window.scrollY, hover = false, holdUntil = 0, idle = 0, queued = false;
     function fit() {
@@ -88,14 +93,26 @@
       label.style.flex = "";
       var iw = Math.min(W - 16, 420, Math.max(phone ? 176 : 188, want));
       var it = phone ? 6 : Math.max(0, (H - ih) / 2), il = Math.max(0, (W - iw) / 2);
-      nav.style.setProperty("--iw", iw.toFixed(1) + "px"); nav.style.setProperty("--ih", ih + "px");
-      nav.style.setProperty("--il", il.toFixed(1) + "px"); nav.style.setProperty("--ir", il.toFixed(1) + "px");
-      nav.style.setProperty("--it", it.toFixed(1) + "px"); nav.style.setProperty("--ib", Math.max(0, H - it - ih).toFixed(1) + "px");
+      var px = nav.offsetLeft, py = nav.offsetTop, cx = px + il, cy = py + it, k = ih / H;
+      var st = bar.style;
+      st.setProperty("--iw", iw.toFixed(1) + "px"); st.setProperty("--ih", ih + "px");
+      st.setProperty("--il", cx.toFixed(1) + "px"); st.setProperty("--it", cy.toFixed(1) + "px");
+      // pill outline -> capsule outline, as transforms of two caps and a bar
+      var f = function (n) { return n.toFixed(2); };
+      ink.style.setProperty("--h", H + "px");
+      capL.style.setProperty("--open", "translate(" + f(px) + "px," + f(py) + "px)");
+      capL.style.setProperty("--mini", "translate(" + f(cx) + "px," + f(cy) + "px) scale(" + f(k) + ")");
+      capR.style.setProperty("--open", "translate(" + f(px + W - H) + "px," + f(py) + "px)");
+      capR.style.setProperty("--mini", "translate(" + f(cx + iw - ih) + "px," + f(cy) + "px) scale(" + f(k) + ")");
+      mid.style.setProperty("--open", "translate(" + f(px + H / 2) + "px," + f(py) + "px) scaleX(" + f(Math.max(0, W - H) / 100) + ")");
+      mid.style.setProperty("--mini", "translate(" + f(cx + ih / 2) + "px," + f(cy) + "px) scale(" + f(Math.max(0, iw - ih) / 100) + "," + f(k) + ")");
     }
     function set(next) {
       if (next === state) return;
       state = next;
-      if (next === "mini") { fit(); bar.setAttribute("data-island", "mini"); } else bar.removeAttribute("data-island");
+      // measured as it is now, settled on that outline before the flip
+      fit(); void ink.offsetWidth;
+      if (next === "mini") bar.setAttribute("data-island", "mini"); else bar.removeAttribute("data-island");
       mini.setAttribute("aria-hidden", next === "mini" ? "false" : "true");
     }
     function decide() {
@@ -108,12 +125,14 @@
       if (dy > 3) set("mini"); else if (dy < -10) set("open");
     }
     window.addEventListener("scroll", function () { if (!queued) { queued = true; requestAnimationFrame(decide); } }, { passive: true });
-    window.addEventListener("resize", function () { if (state === "mini") fit(); });
+    window.addEventListener("resize", function () { fit(); });
+    fit();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
     mini.addEventListener("click", function () { holdUntil = performance.now() + 700; set("open"); });
     nav.addEventListener("focusin", function (e) { if (e.target !== mini) set("open"); });
     if (fine) {
-      nav.addEventListener("pointerenter", function () { hover = true; clearTimeout(idle); set("open"); });
-      nav.addEventListener("pointerleave", function () {
+      bar.addEventListener("pointerenter", function () { hover = true; clearTimeout(idle); set("open"); });
+      bar.addEventListener("pointerleave", function () {
         hover = false; clearTimeout(idle);
         idle = setTimeout(function () { if (!hover && window.scrollY > 160) set("mini"); }, 900);
       });
