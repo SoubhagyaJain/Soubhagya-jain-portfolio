@@ -158,6 +158,9 @@
      plates and canvas stand down, the valley takes the stage, and the hero copy sits
      in the design's left column. Phones never set it and keep the bay. */
   html[data-alpine] [data-alpine-stage] { display: block !important; }
+  html[data-alpine-lite] [data-alpine-img] { object-position: 50% 50% !important; animation: alpDrift 48s ease-in-out infinite alternate; }
+  @keyframes alpDrift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(0, -1.4%, 0); } }
+  @media (prefers-reduced-motion: reduce) { html[data-alpine-lite] [data-alpine-img] { animation: none; } }
   html[data-alpine] [data-hero-cover], html[data-alpine] [data-scene-canvas], html[data-alpine] [data-bay-only] { display: none !important; }
   html[data-alpine] [data-hero-stack] { position: static; align-self: center; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(16px, 2.2vh, 24px); max-width: min(620px, 100%); margin-left: clamp(0px, 1.4vw, 22px); }
   html[data-alpine] [data-hero-sky], html[data-alpine] [data-hero-name], html[data-alpine] [data-hero-sea] { position: static; left: auto; right: auto; top: auto; align-items: flex-start; text-align: left; }
@@ -1453,6 +1456,7 @@ void main(){
 // the ground of the whole page; phones keep the bay. Shader and choreography as designed.
 const ALPINE_SRC = {
   day: "assets/alpine-day.jpg", night: "assets/alpine-night.jpg",
+  dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
@@ -2188,6 +2192,21 @@ class Component extends DCLogic {
     const imgs = { day: stage.querySelector('[data-alpine-img="day"]'), night: stage.querySelector('[data-alpine-img="night"]') };
     const cv = stage.querySelector("[data-alpine-canvas]"), wild = stage.querySelector("[data-alpine-wild]");
     const scrim = { day: stage.querySelector('[data-alpine-scrim="day"]'), night: stage.querySelector('[data-alpine-scrim="night"]') };
+    // Phones and tablets: the same valley as portrait plates, held still under a slow CSS
+    // drift, crossfading with the theme. No shader, no animals, no loop: nothing to cost
+    // a frame while a phone scrolls.
+    if (root.hasAttribute("data-alpine-lite")) {
+      imgs.day.src = ALPINE_SRC.dayM; imgs.night.src = ALPINE_SRC.nightM;
+      if (cv) cv.style.display = "none";
+      this.alpineTheme = (name) => {
+        const day = name === "day";
+        scrim.day.style.opacity = day ? "1" : "0";
+        scrim.night.style.opacity = day ? "0" : "1";
+        imgs.day.style.opacity = day ? "1" : "0";
+        imgs.night.style.opacity = day ? "0" : "1";
+      };
+      return true;
+    }
     imgs.day.src = ALPINE_SRC.day; imgs.night.src = ALPINE_SRC.night;
     const reduced = this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const A0 = 1535 / 1025;

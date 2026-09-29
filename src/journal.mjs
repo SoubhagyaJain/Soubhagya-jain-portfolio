@@ -280,11 +280,11 @@ const NAV = [["About", "/#about"], ["Work", "/#selected-systems"], ["Blog", "/bl
 // set before first paint, so the page never flashes the other palette.
 const HEAD_SCRIPT = `(function(){var m="dark";try{var t=localStorage.getItem("lp-theme");if(t==="day")m="light";else if(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)m="light";}catch(e){}var d=document.documentElement;d.setAttribute("data-mode",m);d.className+=" js";setTimeout(function(){if(!window.__jr)d.className+=" still";},3000);})();`;
 
-/* The home page's living ground, held still: the alpine valley on a desktop, the bay on a
-   phone, day or night with the reading mode. Behind everything, under a scrim for reading. */
+/* The home page's living ground, held still: the alpine valley, landscape on a desktop and
+   portrait on a phone, day or night with the reading mode. Behind everything, under a scrim for reading. */
 const SCENE_BG = `<div class="scene-bg" aria-hidden="true">
-  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/alpine-night.jpg"><img src="/assets/plate-night-portrait.jpg" alt="" decoding="async" fetchpriority="low"></picture>
-  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><img src="/assets/plate-day-portrait.jpg" alt="" loading="lazy" decoding="async"></picture>
+  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/alpine-night.jpg"><img src="/assets/alpine-night-m.jpg" alt="" decoding="async" fetchpriority="low"></picture>
+  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><img src="/assets/alpine-day-m.jpg" alt="" loading="lazy" decoding="async"></picture>
 </div>`;
 
 function Shell({ title, description, path, active, main, ctx, type = "website", extraHead = "", scene = false }) {
