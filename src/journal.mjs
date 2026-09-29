@@ -287,6 +287,35 @@ const SCENE_BG = `<div class="scene-bg" aria-hidden="true">
   <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><img src="/assets/alpine-day-m.jpg" alt="" loading="lazy" decoding="async"></picture>
 </div>`;
 
+/* The Journal's ground on a desktop: a forest, moonlit or at sunrise with the reading
+   mode. Light falls through it from the sun in the plate — shafts that breathe, and motes
+   drifting through them — and the reader walks slowly into that light as the page
+   scrolls (a scroll timeline, on the compositor). All of it is CSS: nothing runs per
+   frame on the main thread. Phones keep the plain page and never fetch the plates. */
+const PIXEL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const FOREST_MOTES = (() => {
+  let seed = 11;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const out = [];
+  for (let i = 0; i < 26; i++) {
+    // mostly inside the fan of light, a few out in the dark to give it depth
+    const inBeam = i < 20;
+    const x = inBeam ? 14 + r() * 50 : 4 + r() * 92;
+    const y = inBeam ? 22 + r() * 62 : 10 + r() * 85;
+    const s = (1.6 + r() * 2.8).toFixed(1);
+    const d = (14 + r() * 18).toFixed(1), dl = (-r() * 30).toFixed(1), tw = (2.6 + r() * 3.4).toFixed(1);
+    const dx = Math.round(-40 + r() * 100), dy = Math.round(-30 - r() * 90);
+    out.push(`<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--s:${s}px;--d:${d}s;--dl:${dl}s;--tw:${tw}s;--dx:${dx}px;--dy:${dy}px"></i>`);
+  }
+  return out.join("");
+})();
+const FOREST_BG = `<div class="scene-bg scene-forest" aria-hidden="true">
+  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/forest-night.jpg"><img src="${PIXEL}" alt="" decoding="async" fetchpriority="low"></picture>
+  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/forest-day.jpg"><img src="${PIXEL}" alt="" loading="lazy" decoding="async"></picture>
+  <div class="sf-rays"><span></span><span></span></div>
+  <div class="sf-motes">${FOREST_MOTES}</div>
+</div>`;
+
 function Shell({ title, description, path, active, main, ctx, type = "website", extraHead = "", scene = false }) {
   const full = title ? `${title} — ${AUTHOR}` : AUTHOR;
   return `<!DOCTYPE html>
@@ -309,8 +338,8 @@ function Shell({ title, description, path, active, main, ctx, type = "website", 
 <link rel="stylesheet" href="${esc(ctx.fontHref)}">
 <link rel="stylesheet" href="${ctx.cssHref}">
 ${extraHead}</head>
-<body${scene ? ' class="has-scene"' : ""}>
-${scene ? SCENE_BG + "\n" : ""}<a class="skip" href="#main">Skip to content</a>
+<body${scene === "forest" ? ' class="has-scene has-forest"' : scene === "forest-read" ? ' class="has-scene has-forest forest-read"' : scene ? ' class="has-scene"' : ""}>
+${String(scene).startsWith("forest") ? FOREST_BG + "\n" : scene ? SCENE_BG + "\n" : ""}<a class="skip" href="#main">Skip to content</a>
 <header class="pnav">
   <nav aria-label="Site">
     <span class="pn-hl" aria-hidden="true"></span><span class="pn-glow" aria-hidden="true"></span>
@@ -546,13 +575,13 @@ export function renderJournal(content, ctx) {
   const page = (path, url, opts) => pages.push([path, Shell({ path: url, ctx, ...opts })]);
 
   page("blog/index.html", "/blog", {
-    title: "Engineering Journal", active: "Blog", main: BlogPage(content, ctx),
+    title: "Engineering Journal", active: "Blog", main: BlogPage(content, ctx), scene: "forest",
     description: "Experiments, failures, benchmarks and design decisions from building AI systems — by Soubhagya Jain."
   });
   for (const d of DOMAINS) {
     if (!articles.some((p) => p.domain === d)) continue;
     page(`blog/topic/${d.slug}/index.html`, `/blog/topic/${d.slug}`, {
-      title: `${d.name} — Engineering Journal`, active: "Blog", main: TopicPage(d, content), description: d.blurb
+      title: `${d.name} — Engineering Journal`, active: "Blog", main: TopicPage(d, content), description: d.blurb, scene: "forest"
     });
   }
   for (const p of articles) {
@@ -562,7 +591,7 @@ export function renderJournal(content, ctx) {
     });
   }
   page("blog/linkedin/index.html", "/blog/linkedin", {
-    title: "Shorter notes — Engineering Journal", active: "Blog", main: LinkedInPage(content),
+    title: "Shorter notes — Engineering Journal", active: "Blog", main: LinkedInPage(content), scene: "forest-read",
     description: "Posts by Soubhagya Jain, first published on LinkedIn, kept here in full."
   });
   page("notes/index.html", "/notes", {
