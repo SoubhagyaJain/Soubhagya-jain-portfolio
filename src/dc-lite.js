@@ -131,7 +131,9 @@ var dc = (function () {
     // app.js is deferred, so an image that 404s has usually already fired its error
     // event by the time we get here. Check the ones that have finished, and listen
     // only for the ones still in flight.
+    // An image with no src yet is deferred on purpose (it is filled in later), not missing.
     Array.prototype.forEach.call(document.images, function (img) {
+      if (!img.getAttribute("src")) return;
       if (img.complete) {
         if (!img.naturalWidth) plateMissing(img);
       } else {
