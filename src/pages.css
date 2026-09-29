@@ -862,3 +862,60 @@ body.has-scene { background: transparent; }
 }
 @keyframes sb-drift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(-1.2%, -0.8%, 0); } }
 @media (prefers-reduced-motion: reduce) { .scene-bg img { animation: none; } }
+
+/* ── the Journal's forest (desktop) ─────────────────────────────────────────
+   The plates, then shafts of light fanned from the sun in the photograph (two layers
+   of soft stripes crossfading, so the light seems to shift without anything rotating),
+   then motes drifting through them, then the reading scrim. Every animation here is
+   opacity or transform only. */
+.scene-forest { --sun-x: 19%; --sun-y: 24%; --ray: 178, 204, 255; --mote: 200, 236, 196; }
+[data-mode="light"] .scene-forest { --ray: 255, 220, 146; --mote: 255, 228, 164; }
+.scene-forest img { object-position: 30% 40%; transform-origin: var(--sun-x) var(--sun-y); }
+@supports (animation-timeline: scroll()) {
+  /* walking into the light as the page is read */
+  .scene-forest img { animation: sf-dolly linear both; animation-timeline: scroll(root); }
+  @keyframes sf-dolly { from { transform: scale(1.04); } to { transform: scale(1.16); } }
+}
+.sf-rays, .sf-motes { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.sf-rays { mix-blend-mode: screen; }
+.sf-rays span { position: absolute; inset: 0; filter: blur(5px); will-change: opacity;
+  background: repeating-conic-gradient(from 90deg at var(--sun-x) var(--sun-y), rgba(var(--ray), 0) 0deg, rgba(var(--ray), .5) 1.3deg, rgba(var(--ray), 0) 3.4deg, rgba(var(--ray), 0) 7.4deg);
+  -webkit-mask-image: conic-gradient(from 88deg at var(--sun-x) var(--sun-y), transparent 0deg, #000 14deg, #000 66deg, transparent 90deg), radial-gradient(circle at var(--sun-x) var(--sun-y), #000 0, rgba(0,0,0,.6) 28vmax, transparent 78vmax);
+  -webkit-mask-composite: source-in;
+  mask-image: conic-gradient(from 88deg at var(--sun-x) var(--sun-y), transparent 0deg, #000 14deg, #000 66deg, transparent 90deg), radial-gradient(circle at var(--sun-x) var(--sun-y), #000 0, rgba(0,0,0,.6) 28vmax, transparent 78vmax);
+  mask-composite: intersect;
+  animation: sf-breathe 9s ease-in-out infinite alternate; }
+.sf-rays span + span {
+  background: repeating-conic-gradient(from 92.5deg at var(--sun-x) var(--sun-y), rgba(var(--ray), 0) 0deg, rgba(var(--ray), .42) 1.8deg, rgba(var(--ray), 0) 4.2deg, rgba(var(--ray), 0) 9.1deg);
+  animation-duration: 13s; animation-delay: -6s; }
+@keyframes sf-breathe { from { opacity: .08; } to { opacity: .34; } }
+[data-mode="light"] .sf-rays span { animation-name: sf-breathe-day; }
+@keyframes sf-breathe-day { from { opacity: .12; } to { opacity: .38; } }
+.sf-motes i { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; will-change: transform, opacity;
+  background: radial-gradient(circle, rgba(var(--mote), 1) 0, rgba(var(--mote), .55) 38%, rgba(var(--mote), 0) 72%);
+  box-shadow: 0 0 calc(var(--s) * 3) rgba(var(--mote), .55);
+  animation: sf-float var(--d) ease-in-out var(--dl) infinite alternate, sf-twinkle var(--tw) ease-in-out var(--dl) infinite alternate; }
+@keyframes sf-float { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--dx), var(--dy), 0); } }
+@keyframes sf-twinkle { from { opacity: .12; } to { opacity: .85; } }
+/* the scrim: open around the light, deepening toward the edges and the foot of the page */
+.scene-forest::after { z-index: 0;
+  background: radial-gradient(120% 95% at var(--sun-x) var(--sun-y), rgba(6,9,8,.18) 0%, rgba(6,9,8,.5) 55%, rgba(6,9,8,.76) 100%), linear-gradient(180deg, rgba(6,9,8,.3), rgba(6,9,8,0) 28%, rgba(6,9,8,.35)); }
+[data-mode="light"] .scene-forest::after {
+  background: radial-gradient(120% 95% at var(--sun-x) var(--sun-y), rgba(246,242,234,.36) 0%, rgba(246,242,234,.58) 55%, rgba(246,242,234,.72) 100%), linear-gradient(180deg, rgba(246,242,234,.82) 0%, rgba(246,242,234,.6) 16%, rgba(246,242,234,0) 38%); }
+/* the bay band steps aside for the forest on a desktop; its own scrim still carries its type */
+@media (min-width: 900px) {
+  .has-forest .band { background: transparent; }
+  .has-forest .band-bg img { visibility: hidden; }
+  /* feathered top and bottom, so the band is a shadow in the forest rather than a slab */
+  .has-forest .band-bg { -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%); }
+}
+/* long-form pages: the same forest, quieter behind the text */
+.forest-read .sf-rays { opacity: .5; }
+.forest-read .scene-forest::after { background: rgba(6,9,8,.62); }
+[data-mode="light"] .forest-read .scene-forest::after { background: rgba(246,242,234,.8); }
+@media (max-width: 899px) { .scene-forest { display: none; } body.has-forest { background: var(--bg); } }
+@media (prefers-reduced-motion: reduce) {
+  .scene-forest img, .sf-rays span { animation: none; }
+  .sf-rays span { opacity: .22; }
+  .sf-motes { display: none; }
+}
