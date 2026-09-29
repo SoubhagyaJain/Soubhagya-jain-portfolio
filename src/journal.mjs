@@ -280,7 +280,14 @@ const NAV = [["About", "/#about"], ["Work", "/#selected-systems"], ["Blog", "/bl
 // set before first paint, so the page never flashes the other palette.
 const HEAD_SCRIPT = `(function(){var m="dark";try{var t=localStorage.getItem("lp-theme");if(t==="day")m="light";else if(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)m="light";}catch(e){}var d=document.documentElement;d.setAttribute("data-mode",m);d.className+=" js";setTimeout(function(){if(!window.__jr)d.className+=" still";},3000);})();`;
 
-function Shell({ title, description, path, active, main, ctx, type = "website", extraHead = "" }) {
+/* The home page's living ground, held still: the alpine valley on a desktop, the bay on a
+   phone, day or night with the reading mode. Behind everything, under a scrim for reading. */
+const SCENE_BG = `<div class="scene-bg" aria-hidden="true">
+  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/alpine-night.jpg"><img src="/assets/plate-night-portrait.jpg" alt="" decoding="async" fetchpriority="low"></picture>
+  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><img src="/assets/plate-day-portrait.jpg" alt="" loading="lazy" decoding="async"></picture>
+</div>`;
+
+function Shell({ title, description, path, active, main, ctx, type = "website", extraHead = "", scene = false }) {
   const full = title ? `${title} — ${AUTHOR}` : AUTHOR;
   return `<!DOCTYPE html>
 <html lang="en" data-mode="dark">
@@ -302,8 +309,8 @@ function Shell({ title, description, path, active, main, ctx, type = "website", 
 <link rel="stylesheet" href="${esc(ctx.fontHref)}">
 <link rel="stylesheet" href="${ctx.cssHref}">
 ${extraHead}</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
+<body${scene ? ' class="has-scene"' : ""}>
+${scene ? SCENE_BG + "\n" : ""}<a class="skip" href="#main">Skip to content</a>
 <header class="pnav">
   <nav aria-label="Site">
     <span class="pn-hl" aria-hidden="true"></span><span class="pn-glow" aria-hidden="true"></span>
@@ -559,7 +566,7 @@ export function renderJournal(content, ctx) {
     description: "Posts by Soubhagya Jain, first published on LinkedIn, kept here in full."
   });
   page("notes/index.html", "/notes", {
-    title: "Notes", active: "Notes", main: NotesPage(content),
+    title: "Notes", active: "Notes", main: NotesPage(content), scene: true,
     description: "Study notes and write-ups by Soubhagya Jain, free to download as PDFs."
   });
   pages.push(["blog/feed.xml", Feed_xml(content)]);
