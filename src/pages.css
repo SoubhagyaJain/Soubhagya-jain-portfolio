@@ -900,8 +900,23 @@ body.has-scene { background: transparent; }
 /* the scrim: open around the light, deepening toward the edges and the foot of the page */
 .scene-forest::after { z-index: 0;
   background: radial-gradient(120% 95% at var(--sun-x) var(--sun-y), rgba(6,9,8,.18) 0%, rgba(6,9,8,.5) 55%, rgba(6,9,8,.76) 100%), linear-gradient(180deg, rgba(6,9,8,.3), rgba(6,9,8,0) 28%, rgba(6,9,8,.35)); }
+/* By day the forest is a photograph, not paper: a paper wash over it only greyed it out.
+   The type turns light (the same ink as the night) and a thin, warm-green shade does the
+   reading work, open around the sun so the morning still pours through. */
 [data-mode="light"] .scene-forest::after {
-  background: radial-gradient(120% 95% at var(--sun-x) var(--sun-y), rgba(246,242,234,.36) 0%, rgba(246,242,234,.58) 55%, rgba(246,242,234,.72) 100%), linear-gradient(180deg, rgba(246,242,234,.82) 0%, rgba(246,242,234,.6) 16%, rgba(246,242,234,0) 38%); }
+  background: radial-gradient(120% 95% at var(--sun-x) var(--sun-y), rgba(12,20,10,.06) 0%, rgba(12,20,10,.3) 50%, rgba(10,16,9,.52) 100%), linear-gradient(180deg, rgba(10,16,9,.42) 0%, rgba(10,16,9,.1) 22%, rgba(10,16,9,0) 40%, rgba(10,16,9,.25) 100%); }
+@media (min-width: 900px) {
+  [data-mode="light"] body.has-forest {
+    --ink: #f6f4ec; --ink-2: rgba(246, 244, 236, 0.86); --ink-3: rgba(246, 244, 236, 0.7); --ink-4: rgba(246, 244, 236, 0.56);
+    --rule: rgba(246, 244, 236, 0.2); --rule-2: rgba(246, 244, 236, 0.34);
+    --acc-ink: #f2c07a; --tint: rgba(255, 255, 255, 0.1);
+    color: var(--ink);
+  }
+  /* light type over a lit photograph needs a whisper of shadow to hold its edge */
+  [data-mode="light"] .has-forest .li-text { color: rgba(246, 244, 236, 0.9); }
+  [data-mode="light"] .has-forest main { text-shadow: 0 1px 14px rgba(8, 14, 8, 0.45); }
+  [data-mode="light"] .has-forest main :is(.hero, .cat, .sheet, .ac-vis) { text-shadow: none; }
+}
 /* the bay band steps aside for the forest on a desktop; its own scrim still carries its type */
 @media (min-width: 900px) {
   .has-forest .band { background: transparent; }
@@ -912,7 +927,7 @@ body.has-scene { background: transparent; }
 /* long-form pages: the same forest, quieter behind the text */
 .forest-read .sf-rays { opacity: .5; }
 .forest-read .scene-forest::after { background: rgba(6,9,8,.62); }
-[data-mode="light"] .forest-read .scene-forest::after { background: rgba(246,242,234,.8); }
+[data-mode="light"] .forest-read .scene-forest::after { background: rgba(10,16,9,.5); }
 @media (max-width: 899px) { .scene-forest { display: none; } body.has-forest { background: var(--bg); } }
 @media (prefers-reduced-motion: reduce) {
   .scene-forest img, .sf-rays span { animation: none; }
