@@ -69,6 +69,11 @@
       var v = G.exact ? (d.count ? 0.2 + 0.8 * Math.sqrt(d.count / G.max) : 0) : d.level / 4;
       return { d: d, c: Math.floor(k / 7), r: k % 7, v: v, lift: 0, glow: 0 };
     });
+    // paint back row to front row, and left to right within a row: the plane is seen from
+    // above and to the right, so a tall block only ever covers blocks that are behind it
+    G.order = G.cells.map(function (_, i) { return i; }).sort(function (a, b) {
+      return (G.cells[a].r - G.cells[b].r) || (G.cells[a].c - G.cells[b].c);
+    });
     G.cols = G.cells.length ? G.cells[G.cells.length - 1].c + 1 : 53;
     figure.classList.toggle("is-empty", !cal);
     layout();
@@ -90,8 +95,12 @@
     G.padL = narrow ? 30 : 40;
     // fill the measure on a desktop; on a phone keep blocks readable and let it scroll
     G.p = clamp((avail - G.padL - G.padR) / (cols + 7 * G.SH), narrow ? 14 : 12, 26);
-    var rowH = G.p * 0.62, hMax = G.p * 1.35;
-    G.padT = hMax + 8;
+    var rowH = G.p * 0.62;
+    // the plane grows upward to hold its tallest block, so a busy day raises the figure
+    // instead of being clipped or rescaling every other day down
+    var reach = G.p * 0.6;
+    G.cells.forEach(function (cell) { reach = Math.max(reach, rise(cell) + G.p * 0.22 - cell.r * rowH); });
+    G.padT = Math.ceil(reach + 10);
     G.W = Math.ceil(G.padL + cols * G.p + 7 * G.p * G.SH + G.padR);
     G.H = Math.ceil(G.padT + 7 * rowH + 30);
     G.dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -99,6 +108,14 @@
     canvas.style.width = G.W + "px"; canvas.style.height = G.H + "px";
     if (G.W > avail) scroller.scrollLeft = G.W;          // start at the most recent weeks
     draw();
+  }
+
+  // a block's height is set by its own count, not by the busiest day: more contributions
+  // always mean a taller block, and a new record never shrinks the rest of the year
+  function rise(cell) {
+    if (!(cell.v > 0)) return 0;
+    var n = G.exact ? cell.d.count : [0, 1, 3, 7, 14][cell.d.level] || 1;
+    return G.p * Math.min(4.2, 0.3 + 0.34 * Math.sqrt(n));
   }
 
   function geom(cell, h) {
@@ -121,15 +138,16 @@
     c.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
     c.clearRect(0, 0, G.W, G.H);
     var cells = G.cells.length ? G.cells : ghostCells();
-    var hMax = G.p * 1.35, now = G.scan;
+    var order = G.cells.length ? G.order : null, now = G.scan;
 
-    for (var i = 0; i < cells.length; i++) {
+    for (var j = 0; j < cells.length; j++) {
+      var i = order ? order[j] : j;
       var cell = cells[i];
       // emergence: the scan has passed this week, or is passing it now
       var e = G.revealed ? 1 : sm((now - cell.c) / 5);
       var beam = G.revealed && !reduced ? Math.exp(-Math.pow((now - cell.c) / 2.2, 2)) : 0;
       var lift = cell.lift;
-      var h = cell.v > 0 ? (1.2 + cell.v * hMax) * e + lift * G.p * 0.22 : lift * G.p * 0.12;
+      var h = cell.v > 0 ? rise(cell) * e + lift * G.p * 0.22 : lift * G.p * 0.12;
       var g = geom(cell, h);
       var light = 1 + beam * 0.35 + cell.glow * 0.3;
       var col, a;
@@ -225,9 +243,9 @@
       ? (cell.d.count ? cell.d.count + " contribution" + (cell.d.count === 1 ? "" : "s") : "No contributions")
       : (cell.d.level ? "Activity level " + cell.d.level + " of 4" : "No contributions");
     tip.innerHTML = "<b>" + what + "</b><span>" + when + "</span>";
-    var g = geom(cell, 0);
+    var g = geom(cell, rise(cell));
     var stage = tip.parentElement.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
-    var x = cr.left - stage.left + g.cx, y = cr.top - stage.top + g.cy - G.p * 1.6;
+    var x = cr.left - stage.left + g.cx, y = cr.top - stage.top + g.cy - G.p * 0.8;
     var tw = tip.offsetWidth || 150;
     tip.style.setProperty("--tx", clamp(x - tw / 2, 0, stage.width - tw) + "px");
     tip.style.setProperty("--ty", Math.max(0, y - 52) + "px");
@@ -238,7 +256,7 @@
     var best = -1, bd = G.p * G.p * 0.9;
     for (var i = 0; i < G.cells.length; i++) {
       var cell = G.cells[i];
-      var h = cell.v > 0 ? 1.2 + cell.v * G.p * 1.35 : 0;
+      var h = rise(cell);
       var g = geom(cell, h);
       var dx = mx - g.cx, dy = (my - g.cy) * 1.4;
       var dd = dx * dx + dy * dy;
