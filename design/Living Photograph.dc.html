@@ -153,6 +153,33 @@
     [data-nav-brand] { letter-spacing: .2em !important; }
   }
   [data-br="narrow"] { display: none; }
+  /* ── PC: the Alpine valley (from the Claude Design project "Alpine Hero") ──────
+     html[data-alpine] is set before the first paint on a PC-sized screen. The bay's
+     plates and canvas stand down, the valley takes the stage, and the hero copy sits
+     in the design's left column. Phones never set it and keep the bay. */
+  html[data-alpine] [data-alpine-stage] { display: block !important; }
+  html[data-alpine] [data-hero-cover], html[data-alpine] [data-scene-canvas], html[data-alpine] [data-bay-only] { display: none !important; }
+  html[data-alpine] [data-hero-stack] { position: static; align-self: center; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(16px, 2.2vh, 24px); max-width: min(620px, 100%); margin-left: clamp(0px, 1.4vw, 22px); }
+  html[data-alpine] [data-hero-sky], html[data-alpine] [data-hero-name], html[data-alpine] [data-hero-sea] { position: static; left: auto; right: auto; top: auto; align-items: flex-start; text-align: left; }
+  html[data-alpine] [data-hero-sky] > div { justify-content: flex-start; }
+  html[data-alpine] [data-hero-sky] > div > span:last-child { display: none; }
+  html[data-alpine] [data-hero-name] { font-size: clamp(56px, 8.6vw, 136px) !important; line-height: .96; white-space: normal; }
+  html[data-alpine] [data-hero-sea] { gap: clamp(16px, 2.2vh, 24px); }
+  html[data-alpine] [data-hero-sea] h1 { font-size: clamp(24px, 2.6vw, 40px) !important; }
+  html[data-alpine] [data-hero-sea] > p { margin: 0 !important; max-width: 46ch !important; }
+  html[data-alpine] [data-hero-sea] > div { justify-content: flex-start !important; margin-top: 6px; }
+  html[data-alpine] [data-hero-sea]::before { display: none; }
+  html[data-alpine] [data-hero-copy] { padding-left: clamp(22px, 5vw, 76px) !important; padding-right: clamp(22px, 5vw, 76px) !important; }
+  /* the valley by day is bright: the copy switches to the design's ink */
+  html[data-alpine] [data-hero-stack] * { transition: color 1.6s ease, text-shadow 1.6s ease, background 1.6s ease, border-color 1.6s ease; }
+  html[data-alpine][data-scene="day"] [data-hero-sky] > div,
+  html[data-alpine][data-scene="day"] [data-hero-name],
+  html[data-alpine][data-scene="day"] [data-hero-stack] h1 { color: #15212c !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
+  html[data-alpine][data-scene="day"] [data-hero-sky] > div > span { background: rgba(21,33,44,0.5) !important; }
+  html[data-alpine][data-scene="day"] [data-hero-stack] span[style*="e2b274"] { color: #9a5716 !important; }
+  html[data-alpine][data-scene="day"] [data-hero-sea] > p { color: rgba(21,33,44,0.84) !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
+  html[data-alpine][data-scene="day"] [data-hero-cta] { color: #f6efe2 !important; background: linear-gradient(180deg, #243241, #141e29) !important; }
+  html[data-alpine][data-scene="day"] [data-hero-secondary] { color: #8a4c12 !important; border-bottom-color: #8a4c12 !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
   /* The nav as a Dynamic Island. Past the hero, scrolling down folds the whole pill into
      a small black capsule at its top centre that says where you are; scrolling up,
      hovering, tapping it or tabbing in unfolds it again. The morph is one clip-path on
@@ -276,8 +303,17 @@
     </div>
     <canvas ref="{{ canvasRef }}" data-scene-canvas style="position: absolute; left: 0; top: 0; width: 100%; height: 100vh; display: block; opacity: 0; transition: opacity 1.6s ease-in-out"></canvas>
 
-    <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(6,12,18,0.62) 0%, rgba(6,12,18,0.3) 30%, rgba(6,12,18,0.04) 58%, rgba(6,12,18,0) 70%)"></div>
-    <div style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(5,9,12,0.4) 0%, rgba(5,9,12,0) 38%)"></div>
+    <div data-alpine-stage aria-hidden="true" style="position: absolute; inset: 0; display: none">
+      <img data-alpine-img="day" data-src="assets/alpine-day.jpg" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; transform: scale(1.03); opacity: 0; transition: opacity 1.6s ease" />
+      <img data-alpine-img="night" data-src="assets/alpine-night.jpg" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; transform: scale(1.03); opacity: 0; transition: opacity 1.6s ease" />
+      <canvas data-alpine-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s ease"></canvas>
+      <div data-alpine-wild style="position: absolute; inset: 0; pointer-events: none; overflow: hidden"></div>
+      <div data-alpine-scrim="day" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 64% 62% at 16% 58%, rgba(250,244,232,0.7) 0%, rgba(250,244,232,0.42) 50%, rgba(250,244,232,0) 100%)"></div>
+      <div data-alpine-scrim="night" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 62% 58% at 16% 60%, rgba(5,10,24,0.6) 0%, rgba(5,10,24,0.34) 50%, rgba(5,10,24,0) 100%)"></div>
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 22vh; pointer-events: none; background: linear-gradient(180deg, rgba(5,10,20,0.28), rgba(5,10,20,0))"></div>
+    </div>
+    <div data-bay-only style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, rgba(6,12,18,0.62) 0%, rgba(6,12,18,0.3) 30%, rgba(6,12,18,0.04) 58%, rgba(6,12,18,0) 70%)"></div>
+    <div data-bay-only style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to top, rgba(5,9,12,0.4) 0%, rgba(5,9,12,0) 38%)"></div>
     <div ref="{{ veilRef }}" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(128% 95% at 50% 6%, rgba(7,16,24,0) 26%, rgba(7,16,24,0.62) 100%); opacity: 0; will-change: opacity"></div>
     <div ref="{{ dimRef }}" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(6,11,16,0.76) 0%, rgba(6,11,16,0.90) 100%); opacity: 0; will-change: opacity"></div>
   </div>
@@ -1393,6 +1429,134 @@ void main(){
 }
 `;
 
+// ── The Alpine valley (PC) ──────────────────────────────────────────────────────
+// Imported from the Claude Design project "Alpine Hero": a golden-hour / moonlit alpine
+// valley, living in a WebGL2 shader (meadow sway, river ripples, valley mist, sky drift,
+// stars), with its wildlife placed and animated on top. On a PC it replaces the bay as
+// the ground of the whole page; phones keep the bay. Shader and choreography as designed.
+const ALPINE_SRC = {
+  day: "assets/alpine-day.jpg", night: "assets/alpine-night.jpg",
+  "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
+  "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
+  "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
+  "night-deer-1": "assets/wild-night-deer-1.webp", "night-deer-2": "assets/wild-night-deer-2.webp",
+  "night-owl": "assets/wild-night-owl.webp", "night-fox": "assets/wild-night-fox.webp", "night-birds": "assets/wild-night-birds.webp"
+};
+const ALPINE_VS = `#version 300 es
+in vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }`;
+const ALPINE_FS = `#version 300 es
+precision highp float;
+uniform sampler2D uDay, uNight;
+uniform vec2 uRes, uMouse;
+uniform float uT, uProg, uAmt, uMist, A;
+out vec4 o;
+const float R[17] = float[17](.37,.385,.415,.42,.395,.36,.325,.30,.25,.235,.20,.25,.27,.265,.25,.215,.205);
+float ridge(float x){ float f = clamp(x,0.,1.)*16.; int i = int(min(floor(f),15.)); return mix(R[i], R[i+1], f-float(i)); }
+float hash(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
+float noise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x), u.y); }
+float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<4;i++){ v+=a*noise(p); p=p*2.03+17.1; a*=.5; } return v; }
+float ell(vec2 p, vec2 c, vec2 r){ vec2 d=(p-c)/r; return 1.-smoothstep(.55,1.,dot(d,d)); }
+float lum(vec3 c){ return dot(c, vec3(.299,.587,.114)); }
+
+vec3 scene(sampler2D tex, vec2 p, float night){
+  float t = uT, k = uAmt;
+  float rg = ridge(p.x);
+  // foreground meadow sway (calmer on the left)
+  float fl = smoothstep(.60,.98,p.y) + smoothstep(.52,.72,p.y)*smoothstep(.88,.97,p.x)*.8;
+  fl = clamp(fl,0.,1.); fl *= fl * mix(.55,1.,smoothstep(.08,.5,p.x));
+  float gust = .65 + .35*noise(vec2(t*.07, 3.1));
+  float sw = sin(t*1.05 + p.x*7. + fbm(p*vec2(6.,3.) + t*.12)*4.);
+  float sw2 = noise(p*vec2(18.,9.) + vec2(t*.45, 0.)) - .5;
+  vec2 d = vec2(sw*.0026 + sw2*.0022, sw2*.0009) * fl * gust;
+  // pines: barely perceptible
+  float tr = smoothstep(.46,.52,p.y)*(1.-smoothstep(.60,.66,p.y)) + smoothstep(rg+.04,rg+.12,p.y)*smoothstep(.74,.84,p.x)*(1.-smoothstep(.60,.68,p.y));
+  d.x += (noise(p*vec2(42.,22.) + t*.55) - .5) * .0006 * clamp(tr,0.,1.);
+  // river
+  float rv = max(max(ell(p, vec2(.47,.726), vec2(.17,.045)), ell(p, vec2(.575,.672), vec2(.12,.024))), ell(p, vec2(.53,.648), vec2(.07,.012)));
+  float rip = sin(p.x*150. - t*1.3 + noise(p*vec2(28.,120.) + t*.25)*6.);
+  d.y += (rip*.0008 + (noise(p*vec2(60.,220.) + vec2(t*.5,0.)) - .5)*.0012) * rv;
+  vec2 q = p + d*k;
+  // sky drift (flow map, two phases); clouds only at night so stars stay put
+  vec2 moon = vec2(.254,.200), sun = vec2(.03,.37);
+  float sky = smoothstep(rg-.012, rg-.06, p.y);
+  float blur = lum(textureLod(tex, p, 4.5).rgb);
+  float cloud = mix(1., smoothstep(.15,.3,blur), night);
+  float body = mix(length((p-sun)*vec2(A,1.)), length((p-moon)*vec2(A,1.)), night);
+  sky *= cloud * smoothstep(.04,.09,body);
+  float P = 36., ph = fract(t/P), ph2 = fract(t/P + .5);
+  vec2 fdir = vec2(-.009, .0006) * sky * k;
+  float wa = 1. - abs(2.*ph - 1.);
+  vec3 c = mix(texture(tex, q - fdir*ph2).rgb, texture(tex, q - fdir*ph).rgb, wa);
+  float L = lum(c);
+  // light on the mountain faces
+  float mtn = smoothstep(rg-.005, rg+.03, p.y) * (1. - smoothstep(.50,.62,p.y));
+  if (night < .5) {
+    float band = .5 + .5*sin(dot(p, vec2(4.2,2.6)) - t*.11);
+    band = smoothstep(.2,1.,band);
+    c *= mix(vec3(1.), vec3(1.07,1.035,.97), band*mtn*smoothstep(.3,.8,L)*k);
+  } else {
+    float sh = noise(p*vec2(90.,45.) + vec2(t*.18, -t*.07));
+    c += c * L*L * .09 * (sh - .35) * mtn * k;
+    float pass = smoothstep(.55,.9, noise(vec2(t*.045, 7.3)));
+    c *= 1. - .035*pass*k*smoothstep(.03,.2,length((p-moon)*vec2(A,1.)));
+    float star = smoothstep(.06,.18, L - blur) * smoothstep(rg-.02, rg-.08, p.y) * (1.-cloud*.0);
+    c *= 1. + star * .22 * (noise(p*260. + t*.6) - .5) * k;
+  }
+  // water glints
+  float sp = pow(noise(p*vec2(170.,520.) + vec2(t*.7, t*.08)), 9.);
+  c += sp * rv * smoothstep(.3,.7,L) * .5 * mix(vec3(1.,.94,.82), vec3(.78,.85,1.), night) * k;
+  // valley mist
+  vec2 mp = p*vec2(3.,10.) + vec2(t*.012, 0.);
+  float m = fbm(mp + fbm(mp*1.3 - t*.01));
+  float mb = smoothstep(.40,.53,p.y) * (1. - smoothstep(.56,.66,p.y)) * smoothstep(.22,.44,p.x) * (1. - smoothstep(.86,1.,p.x));
+  c = mix(c, mix(vec3(1.,.95,.88), vec3(.52,.6,.8), night), mb * smoothstep(.38,.82,m) * mix(.13,.16,night) * uMist);
+  return c;
+}
+
+void main(){
+  vec2 f = gl_FragCoord.xy / uRes; f.y = 1. - f.y;
+  float ca = uRes.x / uRes.y;
+  vec2 p = f;
+  if (ca > A) { p.y = (p.y - .5) * (A/ca) + .5; }
+  else { float hw = .5*ca/A; float cx = clamp(.6, hw, 1.-hw); p.x = (p.x - .5) * (ca/A) + cx; }
+  // camera: slow push-in / release, layered by depth
+  float cyc = .5 - .5*cos(6.28318 * uT / 30.);
+  float near = smoothstep(.5, 1.05, p.y);
+  vec2 cc = vec2(.58, .5);
+  float z = 1.035 + .016*cyc*(.55 + .9*near)*uAmt;
+  p = cc + (p - cc) / z;
+  p += uMouse * (.0018 + .0055*near) * uAmt;
+  p = clamp(p, .002, .998);
+  // day -> night sweeps from the sky down
+  float g = p.y*.7 + (1. - p.x)*.1 + (noise(p*6.) - .5)*.15;
+  float mx = smoothstep(g - .12, g + .12, uProg*1.5 - .3);
+  vec3 c;
+  if (mx < .002) c = scene(uDay, p, 0.);
+  else if (mx > .998) c = scene(uNight, p, 1.);
+  else c = mix(scene(uDay, p, 0.), scene(uNight, p, 1.), mx);
+  vec2 v = f - .5; c *= 1. - .12*dot(v,v);
+  o = vec4(c, 1.);
+}`;
+
+const ALPINE_G = 'linear-gradient(to top, transparent 0%, #000 ';
+const ALPINE_WILD = [
+  { id: 'day-deer-1', set: 'day', kind: 'graze', x: .70, y: .705, h: .032, ar: 1.14, ground: 1, shadow: 1, filter: 'saturate(.9) contrast(.94) brightness(1.02)', mask: ALPINE_G + '8%)' },
+  { id: 'day-deer-2', set: 'day', kind: 'stand', x: .762, y: .70, h: .052, ar: .692, ground: 1, shadow: 1, filter: 'saturate(.9) contrast(.94) brightness(1.02)', mask: ALPINE_G + '6%)' },
+  { id: 'day-marmot', set: 'day', kind: 'marmot', x: .612, y: .872, h: .055, ar: 1.44, ground: 1, shadow: 1, filter: 'saturate(.95) contrast(.97)', mask: ALPINE_G + '24%)' },
+  { id: 'day-butterfly-1', set: 'day', kind: 'fly', x: .74, y: .77, rx: .035, ry: .025, h: .034, ar: 1.095, filter: 'saturate(.92)' },
+  { id: 'day-butterfly-2', set: 'day', kind: 'fly', x: .9, y: .74, rx: .03, ry: .03, h: .03, ar: 1.116, filter: 'saturate(.92)' },
+  { id: 'day-birds', set: 'day', kind: 'birds', x: .62, x1: .84, y: .15, h: .045, ar: 1.44, filter: 'contrast(.9) brightness(1.05)' },
+  { id: 'night-deer-1', set: 'night', kind: 'graze', x: .69, y: .705, h: .03, ar: 1.29, ground: 1, shadow: 1, filter: 'brightness(.78) saturate(.7) contrast(.95)', mask: ALPINE_G + '8%)' },
+  { id: 'night-deer-2', set: 'night', kind: 'stand', x: .75, y: .70, h: .05, ar: .748, ground: 1, shadow: 1, filter: 'brightness(.76) saturate(.7) contrast(.95)', mask: ALPINE_G + '6%)' },
+  { id: 'night-owl', set: 'night', kind: 'owl', x: .94, y: .545, h: .048, ar: .617, ground: 1, filter: 'brightness(.72) saturate(.65)' },
+  { id: 'night-fox', set: 'night', kind: 'fox', x: .78, x1: .9, y: .735, h: .022, ar: 1.977, ground: 1, shadow: 1, filter: 'brightness(.78) saturate(.72)', mask: ALPINE_G + '16%)' },
+  { id: 'night-birds', set: 'night', kind: 'birds', x: .48, x1: .72, y: .1, h: .04, ar: 1.44, filter: 'brightness(1.3)' }
+];
+const alpSS = (a, b, x) => { const u = Math.min(Math.max((x - a) / (b - a), 0), 1); return u * u * (3 - 2 * u); };
+const alpPulse = (t, P, s) => Math.pow(.5 + .5 * Math.sin(t * 6.2832 / P + s), 6);
+
+
 class Component extends DCLogic {
   constructor(props) {
     super(props);
@@ -1603,6 +1767,7 @@ class Component extends DCLogic {
     };
 
     const paint = (name) => {
+      if (this.alpineTheme) this.alpineTheme(name);
       const c = CHROME[name] || CHROME.dark;
       // chapter 03 draws its own canvases and styles its paper per plate
       document.documentElement.dataset.scene = name === "day" ? "day" : "dark";
@@ -1997,6 +2162,175 @@ class Component extends DCLogic {
     window.addEventListener("resize", this.onIslandResize);
   }
 
+  // ── the Alpine valley: see ALPINE_* above. Returns true when it has the stage. ─────
+  initAlpine() {
+    const root = document.documentElement;
+    if (!root.hasAttribute("data-alpine")) return false;
+    const stage = document.querySelector("[data-alpine-stage]");
+    if (!stage) { root.removeAttribute("data-alpine"); return false; }
+    const imgs = { day: stage.querySelector('[data-alpine-img="day"]'), night: stage.querySelector('[data-alpine-img="night"]') };
+    const cv = stage.querySelector("[data-alpine-canvas]"), wild = stage.querySelector("[data-alpine-wild]");
+    const scrim = { day: stage.querySelector('[data-alpine-scrim="day"]'), night: stage.querySelector('[data-alpine-scrim="night"]') };
+    imgs.day.src = ALPINE_SRC.day; imgs.night.src = ALPINE_SRC.night;
+    const reduced = this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const A0 = 1535 / 1025;
+    const st = { prog: 1, target: 1, mouse: [0, 0], mouseT: [0, 0], A: A0, time: 4, amt: 1, gl: null, u: null, ok: {} };
+
+    // the wildlife: one node per animal, positioned every frame from the scene's own camera
+    const nodes = ALPINE_WILD.map((a) => {
+      const el = document.createElement("div");
+      el.style.cssText = "position:absolute;left:0;top:0;width:0;height:0;opacity:0;will-change:transform,opacity;transform-origin:" + (a.ground ? "center bottom" : "center center");
+      if (a.shadow) {
+        const sh = document.createElement("div");
+        sh.style.cssText = "position:absolute;left:8%;right:8%;bottom:-5%;height:12%;border-radius:50%;background:" +
+          (a.set === "day" ? "radial-gradient(closest-side, rgba(34,28,10,0.42), rgba(34,28,10,0))" : "radial-gradient(closest-side, rgba(0,4,12,0.5), rgba(0,4,12,0))");
+        el.appendChild(sh);
+      }
+      const im = document.createElement("img");
+      im.alt = ""; im.decoding = "async";
+      im.style.cssText = "position:absolute;left:50%;bottom:0;height:100%;width:auto;max-width:none;transform:translateX(-50%);display:none;filter:" + (a.filter || "none") +
+        ";mask-image:" + (a.mask || "none") + ";-webkit-mask-image:" + (a.mask || "none");
+      im.onload = () => { im.style.display = "block"; st.ok[a.id] = true; };
+      el.appendChild(im);
+      wild.appendChild(el);
+      return { a, el, im };
+    });
+    // the animals come after the scene: they are the last thing the eye needs
+    const loadWild = () => nodes.forEach((n) => { n.im.src = ALPINE_SRC[n.a.id]; });
+    if (document.readyState === "complete") setTimeout(loadWild, 600); else window.addEventListener("load", () => setTimeout(loadWild, 600), { once: true });
+
+    const updateWild = () => {
+      const W = wild.clientWidth, H = wild.clientHeight;
+      if (!W || !H) return;
+      const ca = W / H, A = st.A, t = st.time, k = st.amt, still = k === 0;
+      const cyc = .5 - .5 * Math.cos(6.2832 * t / 30);
+      const per = ca > A ? W / A : H;
+      const hw = .5 * ca / A, cx = Math.min(Math.max(.6, hw), 1 - hw);
+      const dayA = 1 - alpSS(.25, .75, st.prog), nightA = alpSS(.25, .75, st.prog);
+      nodes.forEach(({ a, el }, i) => {
+        const vis = a.set === "day" ? dayA : nightA;
+        if (vis < 0.002 || !st.ok[a.id]) { if (el.style.opacity !== "0") el.style.opacity = "0"; return; }
+        const s = i * 1.7;
+        let x = a.x, y = a.y, rot = 0, sx = 1, sy = 1, dy = 0, al = 1;
+        if (!still) {
+          if (a.kind === "graze") { rot = -0.9 * alpPulse(t, 11, s); sy = 1 + .006 * Math.sin(t * 1.1 + s); x += .0015 * Math.sin(t * 6.2832 / 50 + s); }
+          else if (a.kind === "stand") { rot = .6 * alpPulse(t, 13, s); sy = 1 + .006 * Math.sin(t * 1.2 + s); }
+          else if (a.kind === "marmot") { sy = 1 + .015 * Math.sin(t * 1.7 + s); dy = -.8 * alpPulse(t, 9, s); }
+          else if (a.kind === "owl") { rot = 1.4 * (alpPulse(t, 13, s) - alpPulse(t, 17, s + 2)); sy = 1 + .008 * Math.sin(t * 1.3 + s); }
+          else if (a.kind === "fox") { const uu = (t / 64 + .3) % 1; x = a.x + (a.x1 - a.x) * uu; al = alpSS(0, .08, uu) * (1 - alpSS(.92, 1, uu)); dy = -.5 * Math.abs(Math.sin(t * 6.6)); }
+          else if (a.kind === "fly") {
+            x += a.rx * (.6 * Math.sin(t * .53 + s) + .4 * Math.sin(t * 1.31 + 2 * s)) * k;
+            y += a.ry * (.6 * Math.sin(t * .71 + 3 * s) + .4 * Math.cos(t * 1.7 + s)) * k;
+            sx = .55 + .45 * Math.abs(Math.sin(t * 9 + s)); rot = 12 * Math.sin(t * .9 + s);
+          }
+          else if (a.kind === "birds") { const uu = (t / 80 + s * .1) % 1; x = a.x + (a.x1 - a.x) * uu; y += .006 * Math.sin(t * .4 + s); al = alpSS(0, .1, uu) * (1 - alpSS(.9, 1, uu)); sy = .92 + .08 * Math.sin(t * 5 + s); }
+        } else if (a.kind === "birds" || a.kind === "fox") { x = (a.x + a.x1) / 2; }
+        const near = alpSS(.5, 1.05, y);
+        const z = 1.035 + .016 * cyc * (.55 + .9 * near) * k;
+        const par = (.0018 + .0055 * near) * k;
+        const px = .58 + (x - st.mouse[0] * par - .58) * z, py = .5 + (y - st.mouse[1] * par - .5) * z;
+        let fx, fy; if (ca > A) { fx = px; fy = (py - .5) * (ca / A) + .5; } else { fx = (px - cx) * (A / ca) + .5; fy = py; }
+        const hp = a.h * per * z, wp = hp * a.ar;
+        el.style.width = wp.toFixed(1) + "px"; el.style.height = hp.toFixed(1) + "px";
+        el.style.transform = "translate(" + (fx * W - wp / 2).toFixed(1) + "px," + (fy * H - (a.ground ? hp : hp / 2) + dy).toFixed(1) + "px) rotate(" + rot.toFixed(2) + "deg) scale(" + sx.toFixed(3) + "," + sy.toFixed(3) + ")";
+        el.style.opacity = (al * vis).toFixed(3);
+      });
+    };
+
+    // the scene: the design's WebGL2 shader over the two plates
+    const initGL = () => {
+      const gl = cv.getContext("webgl2", { antialias: false, premultipliedAlpha: false, powerPreference: "high-performance" });
+      if (!gl) return;
+      const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(x)); return x; };
+      const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, ALPINE_VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, ALPINE_FS)); gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(pr)); return; }
+      gl.useProgram(pr);
+      const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(pr, "a"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const u = {}; ["uDay", "uNight", "uRes", "uMouse", "uT", "uProg", "uAmt", "uMist", "A"].forEach((n) => { u[n] = gl.getUniformLocation(pr, n); });
+      const load = (img, unit) => new Promise((res) => {
+        const go = () => {
+          const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); gl.generateMipmap(gl.TEXTURE_2D);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); res(img);
+        };
+        if (img.complete && img.naturalWidth) go(); else img.addEventListener("load", go, { once: true });
+      });
+      Promise.all([load(imgs.day, 0), load(imgs.night, 1)]).then(([d]) => {
+        gl.uniform1i(u.uDay, 0); gl.uniform1i(u.uNight, 1);
+        st.A = d.naturalWidth / d.naturalHeight; gl.uniform1f(u.A, st.A);
+        // capped at 1.25 device pixels: the valley is a painting, and on a 4K or
+        // high-DPI laptop the extra pixels cost GPU time the page needs for scrolling
+        const resize = () => {
+          const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+          const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+          if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; gl.viewport(0, 0, w, h); }
+          gl.uniform2f(u.uRes, w, h);
+        };
+        this.alpineRO = new ResizeObserver(resize); this.alpineRO.observe(cv); resize();
+        st.gl = gl; st.u = u;
+      });
+    };
+    initGL();
+
+    // day <-> night: the shader sweeps the valley over; chrome and scrims follow
+    this.alpineTheme = (name) => {
+      const day = name === "day";
+      st.target = day ? 0 : 1;
+      if (!this.alpineThemed) { st.prog = st.target; this.alpineThemed = true; }
+      scrim.day.style.opacity = day ? "1" : "0";
+      scrim.night.style.opacity = day ? "0" : "1";
+      if (!st.gl) { imgs.day.style.opacity = day ? "1" : "0"; imgs.night.style.opacity = day ? "0" : "1"; }
+    };
+
+    if (window.matchMedia("(pointer: fine)").matches) {
+      this.onAlpineMove = (e) => { st.mouseT = [(e.clientX / window.innerWidth - .5) * 2, (e.clientY / window.innerHeight - .5) * 2]; };
+      window.addEventListener("pointermove", this.onAlpineMove, { passive: true });
+    }
+
+    // One loop: the valley, its animals, and the hero copy's glide. At most ~60fps while
+    // the valley is what you are looking at, 30fps once it sits dimmed behind a chapter.
+    const t0 = performance.now();
+    let last = t0, lastDraw = 0, first = true, yS;
+    const frame = (now) => {
+      this.alpineRaf = requestAnimationFrame(frame);
+      if (document.hidden) { last = now; return; }
+      const dt = Math.min((now - last) / 1000, .1); last = now;
+      st.prog += (st.target - st.prog) * (1 - Math.exp(-dt * 1.4)); if (Math.abs(st.target - st.prog) < .0005) st.prog = st.target;
+      const km = 1 - Math.exp(-dt * 1.2);
+      st.mouse[0] += (st.mouseT[0] - st.mouse[0]) * km; st.mouse[1] += (st.mouseT[1] - st.mouse[1]) * km;
+      st.amt = reduced ? 0 : 1;
+      st.time = reduced ? 12 : (now - t0) / 1000 + 4;
+      // the hero copy trails the page a little, as the bay's did
+      const y = window.scrollY;
+      yS = yS === undefined ? y : yS + (y - yS) * (reduced ? 1 : 1 - Math.exp(-dt / 0.09));
+      const copyEl = this.copyRef.current;
+      if (copyEl) {
+        const cap = window.innerHeight * 1.2;
+        const lag = reduced ? 0 : Math.min(y, cap) - 0.6 * Math.min(yS, cap);
+        const tf = "translateY(" + lag.toFixed(1) + "px) translate3d(" + (st.mouse[0] * -5).toFixed(1) + "px," + (st.mouse[1] * -3).toFixed(1) + "px,0)";
+        if (tf !== this.copyTf) { this.copyTf = tf; copyEl.style.transform = tf; }
+      }
+      const deep = this.deep || 0;
+      const mixing = st.prog !== st.target;
+      const budget = mixing ? 16 : deep > 0.6 ? 33 : 16;
+      if (now - lastDraw < budget - 4) return;
+      lastDraw = now;
+      const gl = st.gl, u = st.u;
+      if (gl && u) {
+        gl.uniform1f(u.uT, st.time); gl.uniform1f(u.uProg, st.prog); gl.uniform1f(u.uAmt, st.amt);
+        gl.uniform1f(u.uMist, 1); gl.uniform2f(u.uMouse, st.mouse[0], st.mouse[1]);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        if (first) { first = false; cv.style.opacity = "1"; imgs.day.style.opacity = "0"; imgs.night.style.opacity = "0"; }
+      }
+      // under a chapter the animals are too dim to read: they rest there
+      if (deep < 0.85 || mixing) updateWild();
+    };
+    this.alpineRaf = requestAnimationFrame(frame);
+    return true;
+  }
+
   // The name stands on the horizon. The three bands of the hero are placed from the same
   // numbers the shader uses — each cut's measured horizon, blended across the current
   // weather, through the same cover fit and the same intro push — so the name sits on the
@@ -2104,6 +2438,7 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
+    this.alpineOn = this.initAlpine();
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // `small` is not a fact about the device, it is a fact about the current window, and
@@ -2205,6 +2540,7 @@ class Component extends DCLogic {
     this.initTheme();
     this.onScroll();
 
+    if (this.alpineOn) return;   // the valley runs its own loop; the bay's scene never starts
     this.initHorizon();
     const canvas = this.canvasRef.current;
     if (!canvas) return;
@@ -2614,6 +2950,9 @@ class Component extends DCLogic {
     }
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.navRaf);
+    cancelAnimationFrame(this.alpineRaf);
+    if (this.alpineRO) this.alpineRO.disconnect();
+    if (this.onAlpineMove) window.removeEventListener("pointermove", this.onAlpineMove);
     window.removeEventListener("pointermove", this.onNavMove);
     if (this.onHorizonResize) window.removeEventListener("resize", this.onHorizonResize);
     if (this.onIsland) { window.removeEventListener("scroll", this.onIsland); window.removeEventListener("resize", this.onIslandResize); }
