@@ -199,21 +199,30 @@
       html[data-alpine] [data-hero-copy] { animation: alpFade linear both; animation-timeline: scroll(root); animation-range: 16vh 68vh; }
     }
   }
-  html[data-alpine] [data-mobile-nav-pill] { will-change: clip-path; }
-  /* The nav as a Dynamic Island. Past the hero, scrolling down folds the whole pill into
-     a small black capsule at its top centre that says where you are; scrolling up,
-     hovering, tapping it or tabbing in unfolds it again. The morph is one clip-path on
-     the pill (a composited animation, with a slight spring past the target), a black
-     ink that rises over the glass, and the capsule's own line fading in on top. Nothing
-     is laid out again while it moves. */
-  [data-mobile-nav-pill] { clip-path: inset(0px 0px 0px 0px round 999px); }
+  /* The nav as a Dynamic Island. Past the hero, scrolling down folds the pill into a
+     small black capsule that says where you are; scrolling up, hovering, tapping it or
+     tabbing in unfolds it again.
+     Every moving part is transform or opacity, so the whole morph runs on the compositor:
+     the black shape is two round caps and a bar that slide and scale from the pill's
+     outline to the capsule's (no stretched corners), the glass pill fades and settles away
+     underneath it, and the capsule's line fades in on top. Geometry is measured once per
+     state change, never during the motion. (It used to be a clip-path, which Chrome
+     repaints on the main thread every frame, blur and shadows included.) */
+  [data-mobile-nav-pill] { will-change: opacity, transform; transform-origin: 50% 0; }
   [data-portfolio-nav][data-island="mini"] [data-mobile-nav-pill] {
-    clip-path: inset(var(--it, 9px) var(--ir, 40%) var(--ib, 9px) var(--il, 40%) round 999px);
-    /* the ink is opaque, so blurring the moving scene behind it every frame bought nothing */
-    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    opacity: 0; transform: scale(.975, .9); visibility: hidden; pointer-events: none;
+    transition: opacity .2s ease, transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s, height .5s, background .5s !important;
   }
-  [data-island-ink] { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0;
-    background: radial-gradient(120% 140% at 50% 0%, #15181c 0%, #050608 60%); transition: opacity .34s ease .08s; }
+  [data-portfolio-nav]:not([data-island="mini"]) [data-mobile-nav-pill] {
+    transition: opacity .3s ease .16s, transform .52s cubic-bezier(.22,1,.36,1) .06s, visibility 0s, height .5s cubic-bezier(.22,.7,.2,1), background .5s ease !important;
+  }
+  [data-island-ink] { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .26s ease .3s; }
+  [data-island-ink] i { position: absolute; left: 0; top: 0; height: var(--h, 58px); background: #0b0c0f; transform-origin: 0 0; will-change: transform;
+    transform: var(--open); transition: transform .52s cubic-bezier(.3,1.12,.45,1); }
+  [data-island-ink] i[data-c="l"], [data-island-ink] i[data-c="r"] { width: var(--h, 58px); border-radius: 50%; }
+  [data-island-ink] i[data-c="m"] { width: 100px; box-shadow: 0 -1px 0 rgba(255,255,255,0.06) inset; }
+  [data-portfolio-nav][data-island="mini"] [data-island-ink] { opacity: 1; transition: opacity .14s ease; }
+  [data-portfolio-nav][data-island="mini"] [data-island-ink] i { transform: var(--mini); }
   [data-island-mini] { position: absolute !important; z-index: 4; top: var(--it, 9px); left: var(--il, 40%); width: var(--iw, 200px); height: var(--ih, 40px);
     display: flex; align-items: center; gap: 10px; box-sizing: border-box; margin: 0; padding: 0 14px 0 8px; border: 0; border-radius: 999px;
     background: none; color: #fff; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .14s ease; -webkit-tap-highlight-color: transparent; }
@@ -229,11 +238,11 @@
   [data-island-dot] { position: relative; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: #f6d79e; }
   [data-island-dot]::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(246,215,158,0.55); animation: islandPulse 2.4s ease-out infinite; }
   @keyframes islandPulse { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(3); opacity: 0; } }
-  [data-portfolio-nav][data-island="mini"] [data-island-ink] { opacity: 1; transition-delay: 0s; transition-duration: .22s; }
-  [data-portfolio-nav][data-island="mini"] [data-island-mini] { opacity: 1; pointer-events: auto; transition: opacity .3s ease .2s; }
+  [data-island-mini] { transform: scale(.9); will-change: opacity, transform; }
+  [data-portfolio-nav][data-island="mini"] [data-island-mini] { opacity: 1; transform: none; pointer-events: auto; transition: opacity .26s ease .22s, transform .44s cubic-bezier(.22,1,.36,1) .16s; }
   [data-portfolio-nav]:not([data-island="mini"]) [data-island-dot]::before { animation: none; }
   @media (prefers-reduced-motion: reduce) {
-    [data-mobile-nav-pill], [data-island-ink], [data-island-mini] { transition: none !important; }
+    [data-mobile-nav-pill], [data-island-ink], [data-island-ink] i, [data-island-mini] { transition: none !important; }
     [data-island-dot]::before, [data-island-label].swap { animation: none !important; }
   }
   /* Daylight: the centred copy sits over the sun and the sea, the brightest part of the
@@ -356,7 +365,7 @@
     </svg>
 
     <nav ref="{{ navRef }}" data-portfolio-nav style="position: fixed; top: clamp(16px, 3.4vh, 36px); left: 50%; transform: translateX(-50%); z-index: 20; max-width: calc(100% - 28px); opacity: 0; transition: opacity 1.9s cubic-bezier(.2,.7,.2,1), transform 1.9s cubic-bezier(.2,.7,.2,1)">
-      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .5s cubic-bezier(.22,.7,.2,1), background .5s ease, clip-path .46s cubic-bezier(.2,.8,.2,1)">
+      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .5s cubic-bezier(.22,.7,.2,1), background .5s ease">
         <div style="position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; opacity: .9; background: linear-gradient(196deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.05) 100%)"></div>
         <div ref="{{ sheenRef }}" style="position: absolute; top: -110%; left: -30%; width: 60%; height: 320%; background: radial-gradient(closest-side, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0) 100%); mix-blend-mode: screen; pointer-events: none; will-change: transform"></div>
         <div style="position: absolute; top: 0; left: 7%; right: 7%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 26%, rgba(255,255,255,0.38) 58%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0) 100%); pointer-events: none"></div>
@@ -2117,7 +2126,13 @@ class Component extends DCLogic {
   initIsland(nav, pill, items, activeIx) {
     const mini = pill.querySelector("[data-island-mini]");
     const label = pill.querySelector("[data-island-label]");
-    if (!mini || !label) return;
+    const ink = pill.querySelector("[data-island-ink]");
+    if (!mini || !label || !ink) return;
+    // the shape and the capsule live beside the pill, not inside it, so the pill can fade
+    // away underneath them
+    ink.innerHTML = '<i data-c="l"></i><i data-c="m"></i><i data-c="r"></i>';
+    nav.appendChild(ink); nav.appendChild(mini);
+    const [capL, bar, capR] = ink.children;
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     let state = "open", lastY = window.scrollY, hover = false, holdUntil = 0, idle = 0;
 
@@ -2132,10 +2147,19 @@ class Component extends DCLogic {
       const iw = Math.min(W - 16, 420, Math.max(phone ? 176 : 188, want));
       const it = phone ? 6 : Math.max(0, (H - ih) / 2);
       const il = Math.max(0, (W - iw) / 2);
-      const st = pill.style;
+      const px = pill.offsetLeft, py = pill.offsetTop, cx = px + il, cy = py + it, k = ih / H;
+      const st = nav.style;
       st.setProperty("--iw", iw.toFixed(1) + "px"); st.setProperty("--ih", ih + "px");
-      st.setProperty("--il", il.toFixed(1) + "px"); st.setProperty("--ir", il.toFixed(1) + "px");
-      st.setProperty("--it", it.toFixed(1) + "px"); st.setProperty("--ib", Math.max(0, H - it - ih).toFixed(1) + "px");
+      st.setProperty("--il", cx.toFixed(1) + "px"); st.setProperty("--it", cy.toFixed(1) + "px");
+      // pill outline -> capsule outline, as transforms of two caps and a bar
+      const f = (n) => n.toFixed(2);
+      ink.style.setProperty("--h", H + "px");
+      capL.style.setProperty("--open", "translate(" + f(px) + "px," + f(py) + "px)");
+      capL.style.setProperty("--mini", "translate(" + f(cx) + "px," + f(cy) + "px) scale(" + f(k) + ")");
+      capR.style.setProperty("--open", "translate(" + f(px + W - H) + "px," + f(py) + "px)");
+      capR.style.setProperty("--mini", "translate(" + f(cx + iw - ih) + "px," + f(cy) + "px) scale(" + f(k) + ")");
+      bar.style.setProperty("--open", "translate(" + f(px + H / 2) + "px," + f(py) + "px) scaleX(" + f(Math.max(0, W - H) / 100) + ")");
+      bar.style.setProperty("--mini", "translate(" + f(cx + ih / 2) + "px," + f(cy) + "px) scale(" + f(Math.max(0, iw - ih) / 100) + "," + f(k) + ")");
     };
     this.islandLabel = () => {
       const el = items[activeIx()];
@@ -2148,11 +2172,17 @@ class Component extends DCLogic {
     const set = (next) => {
       if (next === state) return;
       state = next;
-      if (next === "mini") { fit(); nav.setAttribute("data-island", "mini"); }
+      // measure the pill as it is now, and let the shape settle on that outline before
+      // the state flips, so the transition always starts from where the eye is
+      fit(); void ink.offsetWidth;
+      if (next === "mini") nav.setAttribute("data-island", "mini");
       else nav.removeAttribute("data-island");
       mini.setAttribute("aria-hidden", next === "mini" ? "false" : "true");
     };
     this.islandLabel();
+    fit();
+    window.addEventListener("resize", () => fit(), { passive: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fit());
 
     let queued = false;
     const decide = () => {
@@ -2457,7 +2487,8 @@ class Component extends DCLogic {
     if (this.navQ === q) return;
     this.navQ = q;
 
-    if (!window.matchMedia("(max-width: 660px)").matches) pill.style.height = (58 - 10 * q).toFixed(1) + "px";
+    // (The pill no longer shrinks in height here: animating height re-laid out the pill
+    // under its blur for half a second on the way out of the hero.)
 
     // The blur is set once and then left alone, on every screen size.
     //

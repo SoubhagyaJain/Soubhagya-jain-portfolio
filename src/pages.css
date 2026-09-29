@@ -140,11 +140,17 @@ button { font: inherit; color: inherit; }
 /* The nav as a Dynamic Island, as on the home page: past the top, scrolling down folds
    the pill into a black capsule that says where you are (on an article, the section and
    a ring of how far through it you are); scrolling up, hovering, tapping or tabbing in
-   unfolds it. One composited clip-path morph with a slight spring, a black ink over the
-   glass, and the capsule's line on top. */
-.pnav nav { clip-path: inset(0px 0px 0px 0px round 999px); transition: clip-path .62s cubic-bezier(.32,1.22,.42,1); }
-.pnav[data-island="mini"] nav { clip-path: inset(var(--it, 9px) var(--ir, 40%) var(--ib, 9px) var(--il, 40%) round 999px); }
-.pnav .isl-ink { position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; opacity: 0; background: radial-gradient(120% 140% at 50% 0%, #15181c 0%, #050608 60%); transition: opacity .34s ease .08s; }
+   unfolds it. Transform and opacity only, so it runs on the compositor: a black shape of
+   two caps and a bar slides and scales from the pill's outline to the capsule's, the
+   glass fades and settles away beneath it, and the capsule's line fades in on top.
+   Geometry is measured once per state change (journal.js), never during the motion. */
+.pnav nav { will-change: opacity, transform; transform-origin: 50% 0; transition: opacity .3s ease .16s, transform .52s cubic-bezier(.22,1,.36,1) .06s, visibility 0s; }
+.pnav[data-island="mini"] nav { opacity: 0; transform: scale(.975, .9); visibility: hidden; pointer-events: none; transition: opacity .2s ease, transform .5s cubic-bezier(.22,1,.36,1), visibility 0s linear .5s; }
+.pnav .isl-ink { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .26s ease .3s; }
+.pnav .isl-ink i { position: absolute; left: 0; top: 0; height: var(--h, 58px); background: #0b0c0f; transform-origin: 0 0; will-change: transform; transform: var(--open); transition: transform .52s cubic-bezier(.3,1.12,.45,1); }
+.pnav .isl-ink i[data-c="l"], .pnav .isl-ink i[data-c="r"] { width: var(--h, 58px); border-radius: 50%; }
+.pnav .isl-ink i[data-c="m"] { width: 100px; }
+.pnav[data-island="mini"] .isl-ink i { transform: var(--mini); }
 .pnav .isl-mini { position: absolute !important; z-index: 4; top: var(--it, 9px); left: var(--il, 40%); width: var(--iw, 200px); height: var(--ih, 40px); display: flex; align-items: center; gap: 10px; box-sizing: border-box; margin: 0; padding: 0 14px 0 8px; border: 0; border-radius: 999px; background: none; color: #fff; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .14s ease; -webkit-tap-highlight-color: transparent; }
 .pnav .isl-mark { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f6e7c7, #c89254 70%, #8a5a2c); color: #1a1208; font: 600 9.5px/1 var(--mono); letter-spacing: .04em; }
 .pnav .isl-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font: 500 10.5px/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.94); }
@@ -154,11 +160,12 @@ button { font: inherit; color: inherit; }
 @keyframes islandPulse { 0% { box-shadow: 0 0 0 0 rgba(246,215,158,0.55); } 70%, 100% { box-shadow: 0 0 0 7px rgba(246,215,158,0); } }
 /* on an article the dot becomes a ring that fills as the reader goes */
 .pnav .isl-dot.ring { width: 16px; height: 16px; animation: none; background: conic-gradient(#f6d79e calc(var(--p, 0) * 1turn), rgba(255,255,255,0.16) 0); -webkit-mask: radial-gradient(circle, transparent 5px, #000 5.5px); mask: radial-gradient(circle, transparent 5px, #000 5.5px); }
-.pnav[data-island="mini"] .isl-ink { opacity: 1; transition-delay: 0s; transition-duration: .22s; }
-.pnav[data-island="mini"] .isl-mini { opacity: 1; pointer-events: auto; transition: opacity .3s ease .2s; }
+.pnav[data-island="mini"] .isl-ink { opacity: 1; transition: opacity .14s ease; }
+.pnav .isl-mini { transform: scale(.9); will-change: opacity, transform; }
+.pnav[data-island="mini"] .isl-mini { opacity: 1; transform: none; pointer-events: auto; transition: opacity .26s ease .22s, transform .44s cubic-bezier(.22,1,.36,1) .16s; }
 .pnav:not([data-island="mini"]) .isl-dot { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-  .pnav nav, .pnav .isl-ink, .pnav .isl-mini { transition: none !important; }
+  .pnav nav, .pnav .isl-ink, .pnav .isl-ink i, .pnav .isl-mini { transition: none !important; }
   .pnav .isl-dot, .pnav .isl-label.swap { animation: none !important; }
 }
 /* the reading-mode switch is the weather switch: Light is Daylight, Dark is Night */
