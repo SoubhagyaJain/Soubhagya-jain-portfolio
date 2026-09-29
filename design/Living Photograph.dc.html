@@ -158,6 +158,9 @@
      plates and canvas stand down, the valley takes the stage, and the hero copy sits
      in the design's left column. Phones never set it and keep the bay. */
   html[data-alpine] [data-alpine-stage] { display: block !important; }
+  html[data-alpine-lite] [data-alpine-img] { object-position: 50% 50% !important; animation: alpDrift 48s ease-in-out infinite alternate; }
+  @keyframes alpDrift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(0, -1.4%, 0); } }
+  @media (prefers-reduced-motion: reduce) { html[data-alpine-lite] [data-alpine-img] { animation: none; } }
   html[data-alpine] [data-hero-cover], html[data-alpine] [data-scene-canvas], html[data-alpine] [data-bay-only] { display: none !important; }
   html[data-alpine] [data-hero-stack] { position: static; align-self: center; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(16px, 2.2vh, 24px); max-width: min(620px, 100%); margin-left: clamp(0px, 1.4vw, 22px); }
   html[data-alpine] [data-hero-sky], html[data-alpine] [data-hero-name], html[data-alpine] [data-hero-sea] { position: static; left: auto; right: auto; top: auto; align-items: flex-start; text-align: left; }
@@ -180,6 +183,23 @@
   html[data-alpine][data-scene="day"] [data-hero-sea] > p { color: rgba(21,33,44,0.84) !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
   html[data-alpine][data-scene="day"] [data-hero-cta] { color: #f6efe2 !important; background: linear-gradient(180deg, #243241, #141e29) !important; }
   html[data-alpine][data-scene="day"] [data-hero-secondary] { color: #8a4c12 !important; border-bottom-color: #8a4c12 !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
+  /* Desktop hero copy: the glide and fade run on the browser's scroll timeline, on the
+     compositor, locked to the scroll itself. Driving them from a rAF loop always trailed
+     the threaded scroll by a frame, which read as the text stuttering. Without scroll
+     timelines the copy simply scrolls with the page and fades; never a JS transform. */
+  @supports (animation-timeline: scroll()) {
+    html[data-alpine] [data-hero-copy] {
+      animation: alpGlide linear both, alpFade linear both;
+      animation-timeline: scroll(root), scroll(root);
+      animation-range: 0px 120vh, 16vh 68vh;
+    }
+    @keyframes alpGlide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 48vh, 0); } }
+    @keyframes alpFade { from { opacity: 1; } to { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      html[data-alpine] [data-hero-copy] { animation: alpFade linear both; animation-timeline: scroll(root); animation-range: 16vh 68vh; }
+    }
+  }
+  html[data-alpine] [data-mobile-nav-pill] { will-change: clip-path; }
   /* The nav as a Dynamic Island. Past the hero, scrolling down folds the whole pill into
      a small black capsule at its top centre that says where you are; scrolling up,
      hovering, tapping it or tabbing in unfolds it again. The morph is one clip-path on
@@ -336,7 +356,7 @@
     </svg>
 
     <nav ref="{{ navRef }}" data-portfolio-nav style="position: fixed; top: clamp(16px, 3.4vh, 36px); left: 50%; transform: translateX(-50%); z-index: 20; max-width: calc(100% - 28px); opacity: 0; transition: opacity 1.9s cubic-bezier(.2,.7,.2,1), transform 1.9s cubic-bezier(.2,.7,.2,1)">
-      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .6s cubic-bezier(.22,.7,.2,1), background .6s ease, backdrop-filter .6s ease, box-shadow .6s ease, clip-path .62s cubic-bezier(.32,1.22,.42,1)">
+      <div ref="{{ pillRef }}" data-mobile-nav-pill data-vt-nav style="position: relative; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 22px); height: 58px; padding: 0 clamp(10px, 1.1vw, 16px) 0 clamp(16px, 1.6vw, 22px); border-radius: 999px; overflow: hidden; isolation: isolate; background: linear-gradient(178deg, rgba(255,255,255,0.16) 0%, rgba(8,18,26,0.6) 46%, rgba(255,255,255,0.08) 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 1px 0 rgba(255,255,255,0.34) inset, 0 -1px 0 rgba(255,255,255,0.12) inset, 14px 0 30px -22px rgba(255,255,255,0.5) inset, -14px 0 30px -22px rgba(255,255,255,0.5) inset, 0 22px 44px -26px rgba(5,12,20,0.62), 0 3px 10px -6px rgba(5,12,20,0.34); transition: height .5s cubic-bezier(.22,.7,.2,1), background .5s ease, clip-path .46s cubic-bezier(.2,.8,.2,1)">
         <div style="position: absolute; inset: -1px; border-radius: 999px; pointer-events: none; opacity: .9; background: linear-gradient(196deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0.05) 100%)"></div>
         <div ref="{{ sheenRef }}" style="position: absolute; top: -110%; left: -30%; width: 60%; height: 320%; background: radial-gradient(closest-side, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0) 100%); mix-blend-mode: screen; pointer-events: none; will-change: transform"></div>
         <div style="position: absolute; top: 0; left: 7%; right: 7%; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 26%, rgba(255,255,255,0.38) 58%, rgba(255,255,255,0.72) 78%, rgba(255,255,255,0) 100%); pointer-events: none"></div>
@@ -1436,6 +1456,7 @@ void main(){
 // the ground of the whole page; phones keep the bay. Shader and choreography as designed.
 const ALPINE_SRC = {
   day: "assets/alpine-day.jpg", night: "assets/alpine-night.jpg",
+  dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
@@ -2171,6 +2192,21 @@ class Component extends DCLogic {
     const imgs = { day: stage.querySelector('[data-alpine-img="day"]'), night: stage.querySelector('[data-alpine-img="night"]') };
     const cv = stage.querySelector("[data-alpine-canvas]"), wild = stage.querySelector("[data-alpine-wild]");
     const scrim = { day: stage.querySelector('[data-alpine-scrim="day"]'), night: stage.querySelector('[data-alpine-scrim="night"]') };
+    // Phones and tablets: the same valley as portrait plates, held still under a slow CSS
+    // drift, crossfading with the theme. No shader, no animals, no loop: nothing to cost
+    // a frame while a phone scrolls.
+    if (root.hasAttribute("data-alpine-lite")) {
+      imgs.day.src = ALPINE_SRC.dayM; imgs.night.src = ALPINE_SRC.nightM;
+      if (cv) cv.style.display = "none";
+      this.alpineTheme = (name) => {
+        const day = name === "day";
+        scrim.day.style.opacity = day ? "1" : "0";
+        scrim.night.style.opacity = day ? "0" : "1";
+        imgs.day.style.opacity = day ? "1" : "0";
+        imgs.night.style.opacity = day ? "0" : "1";
+      };
+      return true;
+    }
     imgs.day.src = ALPINE_SRC.day; imgs.night.src = ALPINE_SRC.night;
     const reduced = this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const A0 = 1535 / 1025;
@@ -2292,7 +2328,7 @@ class Component extends DCLogic {
     // One loop: the valley, its animals, and the hero copy's glide. At most ~60fps while
     // the valley is what you are looking at, 30fps once it sits dimmed behind a chapter.
     const t0 = performance.now();
-    let last = t0, lastDraw = 0, first = true, yS;
+    let last = t0, lastDraw = 0, first = true;
     const frame = (now) => {
       this.alpineRaf = requestAnimationFrame(frame);
       if (document.hidden) { last = now; return; }
@@ -2302,19 +2338,19 @@ class Component extends DCLogic {
       st.mouse[0] += (st.mouseT[0] - st.mouse[0]) * km; st.mouse[1] += (st.mouseT[1] - st.mouse[1]) * km;
       st.amt = reduced ? 0 : 1;
       st.time = reduced ? 12 : (now - t0) / 1000 + 4;
-      // the hero copy trails the page a little, as the bay's did
-      const y = window.scrollY;
-      yS = yS === undefined ? y : yS + (y - yS) * (reduced ? 1 : 1 - Math.exp(-dt / 0.09));
+      // the scroll glide is CSS (see the helmet); only the cursor drift is written here,
+      // on `translate`, which composes with the scroll animation's transform
       const copyEl = this.copyRef.current;
-      if (copyEl) {
-        const cap = window.innerHeight * 1.2;
-        const lag = reduced ? 0 : Math.min(y, cap) - 0.6 * Math.min(yS, cap);
-        const tf = "translateY(" + lag.toFixed(1) + "px) translate3d(" + (st.mouse[0] * -5).toFixed(1) + "px," + (st.mouse[1] * -3).toFixed(1) + "px,0)";
-        if (tf !== this.copyTf) { this.copyTf = tf; copyEl.style.transform = tf; }
+      if (copyEl && !reduced) {
+        const tr = (st.mouse[0] * -5).toFixed(1) + "px " + (st.mouse[1] * -3).toFixed(1) + "px";
+        if (tr !== this.copyTf) { this.copyTf = tr; copyEl.style.translate = tr; }
       }
       const deep = this.deep || 0;
       const mixing = st.prog !== st.target;
-      const budget = mixing ? 16 : deep > 0.6 ? 33 : 16;
+      // while the page is moving the scene is fixed behind it: half the frames leave the
+      // GPU to the scroll, and a meadow at 30fps behind moving type reads the same
+      const scrolling = now - (this.lastScrollAt || 0) < 160;
+      const budget = mixing ? 16 : deep > 0.6 || scrolling ? 33 : 16;
       if (now - lastDraw < budget - 4) return;
       lastDraw = now;
       const gl = st.gl, u = st.u;
@@ -2414,7 +2450,10 @@ class Component extends DCLogic {
     // visually identical, but the DOM is touched twelve times instead of hundreds — and
     // leave the blur alone entirely on small screens, where it keeps the value the
     // markup set rather than being re-evaluated as the page scrolls under it.
-    const q = Math.round(k * 12) / 12;
+    // Two states, not twelve steps: each step restarted the pill's height transition,
+    // so the whole way out of the hero the nav was re-laid out and re-painted under its
+    // blur. Now it changes once, and the transition carries it.
+    const q = k > 0.5 ? 1 : 0;
     if (this.navQ === q) return;
     this.navQ = q;
 
@@ -2431,7 +2470,7 @@ class Component extends DCLogic {
     // which carries the same read for the price of an ordinary paint.
     if (!this.small && !this.navBlurSet) {
       this.navBlurSet = true;
-      pill.style.backdropFilter = "blur(21px) saturate(1.35) brightness(0.78)";
+      pill.style.backdropFilter = this.alpineOn ? "blur(12px) saturate(1.3) brightness(0.8)" : "blur(21px) saturate(1.35) brightness(0.78)";
       pill.style.webkitBackdropFilter = pill.style.backdropFilter;
     }
     pill.style.background = "linear-gradient(178deg, rgba(255,255,255," + (0.18 + 0.07 * q).toFixed(3) + ") 0%, rgba(8,18,26," + (0.52 + 0.12 * q).toFixed(3) + ") 46%, rgba(255,255,255," + (0.09 + 0.05 * q).toFixed(3) + ") 100%)";
@@ -2439,6 +2478,7 @@ class Component extends DCLogic {
 
   componentDidMount() {
     this.alpineOn = this.initAlpine();
+    this.cssGlide = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // `small` is not a fact about the device, it is a fact about the current window, and
@@ -2478,6 +2518,7 @@ class Component extends DCLogic {
     // scroll events only record position; all style writes happen once per frame in applyScroll
     this.onScroll = () => {
       this.scrollY = window.scrollY;
+      this.lastScrollAt = performance.now();
       if (this.scrollQueued) return;
       this.scrollQueued = true;
       requestAnimationFrame(() => { this.scrollQueued = false; this.applyScroll(); });
@@ -2509,9 +2550,11 @@ class Component extends DCLogic {
       const copy = this.copyRef.current;
       if (copy) {
         const out = cl((y / vh - 0.16) / 0.52);
-        copy.style.opacity = String(1 - out);
+        // desktop: the fade is on the scroll timeline (or the copy just scrolls away)
+        if (!this.alpineOn || !this.cssGlide) copy.style.opacity = String(1 - out);
         this.copyOut = out;   // the cursor depth is applied in the render loop, where it is smoothed
-        copy.style.pointerEvents = out > 0.6 ? "none" : "auto";
+        const pe = out > 0.6 ? "none" : "auto";
+        if (copy.style.pointerEvents !== pe) copy.style.pointerEvents = pe;
       }
       const veil = this.veilRef.current;
       if (veil) veil.style.opacity = (cl(y / (vh * 1.25)) * 0.25).toFixed(3);
