@@ -477,7 +477,7 @@ for (const [from, to] of content.copies) {
 const wanted = new Set();
 // pictures the journal pages use, which the home page's markup does not mention
 for (const f of ["journal-night.jpg", "portrait.jpg", "forest-night.jpg", "forest-day.jpg"]) wanted.add(f);
-for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif)/g)) {
+for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif|mp4|webm)/g)) {
   wanted.add(m[0].slice("assets/".length));
 }
 const missing = [];
