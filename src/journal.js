@@ -23,7 +23,7 @@
       // nightfall or daybreak (src/cine.js), rather than animating every colour on it
       if (window.cineTheme) window.cineTheme(m === "light" ? "light" : "dark", apply);
       else apply();
-      try { localStorage.setItem("lp-theme", m === "light" ? "day" : "dark"); } catch (e) {}
+      try { sessionStorage.setItem("lp-theme", m === "light" ? "day" : "dark"); } catch (e) {}
     });
   });
   paintMode();

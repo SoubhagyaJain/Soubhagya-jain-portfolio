@@ -278,7 +278,8 @@ const NAV = [["About", "/#about"], ["Work", "/#selected-systems"], ["Blog", "/bl
 // Reading mode follows the weather the visitor chose on the home page — Daylight reads
 // on paper, Night and Storm on graphite — and falls back to the system setting. It is
 // set before first paint, so the page never flashes the other palette.
-const HEAD_SCRIPT = `(function(){var m="dark";try{var t=localStorage.getItem("lp-theme");if(t==="day")m="light";else if(!t&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)m="light";}catch(e){}var d=document.documentElement;d.setAttribute("data-mode",m);d.className+=" js";setTimeout(function(){if(!window.__jr)d.className+=" still";},3000);})();`;
+// every visit opens in light; a switch to dark lasts only for this visit (sessionStorage)
+const HEAD_SCRIPT = `(function(){var m="light";try{localStorage.removeItem("lp-theme");localStorage.removeItem("lp-night");if(sessionStorage.getItem("lp-theme")==="dark")m="dark";}catch(e){}var d=document.documentElement;d.setAttribute("data-mode",m);d.className+=" js";setTimeout(function(){if(!window.__jr)d.className+=" still";},3000);})();`;
 
 /* The home page's living ground, held still: the alpine valley, landscape on a desktop and
    portrait on a phone, day or night with the reading mode. Behind everything, under a scrim for reading. */
@@ -319,7 +320,7 @@ const FOREST_BG = `<div class="scene-bg scene-forest" aria-hidden="true">
 function Shell({ title, description, path, active, main, ctx, type = "website", extraHead = "", scene = false }) {
   const full = title ? `${title} — ${AUTHOR}` : AUTHOR;
   return `<!DOCTYPE html>
-<html lang="en" data-mode="dark">
+<html lang="en" data-mode="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
