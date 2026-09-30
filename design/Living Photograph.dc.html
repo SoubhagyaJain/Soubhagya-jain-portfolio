@@ -158,6 +158,40 @@
      plates and canvas stand down, the valley takes the stage, and the hero copy sits
      in the design's left column. Phones never set it and keep the bay. */
   html[data-alpine] [data-alpine-stage] { display: block !important; }
+  /* The night film's screen and air: a bloom on the moon with an anamorphic streak, mist
+     drifting over the water, sparse embers falling, and the projected-film finish (grain,
+     vignette, a trace of edge fringing). Shown and hidden with the film; transform and
+     opacity only; paused while the hero sits dimmed behind a chapter. */
+  [data-hero-fx] { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity 1.2s ease, visibility 0s linear 1.2s; }
+  [data-hero-fx].on { opacity: 1; visibility: visible; transition: opacity 1.2s ease; }
+  [data-hero-fx] i { position: absolute; display: block; }
+  [data-fx-bloom], [data-fx-haze], [data-fx-embers] { position: absolute; inset: -4%; will-change: transform; }
+  [data-fx-bloom] { inset: 0; }
+  .fx-glow { left: var(--mx, 33%); top: var(--my, 22%); width: 52vmin; height: 52vmin; margin: -26vmin 0 0 -26vmin; border-radius: 50%; mix-blend-mode: screen;
+    background: radial-gradient(closest-side, rgba(255,222,200,0.34), rgba(255,150,118,0.15) 46%, rgba(255,120,90,0) 74%); animation: fx-breathe 7s ease-in-out infinite alternate; }
+  .fx-streak { left: 0; right: 0; top: var(--my, 22%); height: 3px; margin-top: -1.5px; mix-blend-mode: screen; filter: blur(0.8px);
+    background: linear-gradient(90deg, rgba(255,170,140,0) calc(var(--mx, 33%) - 42%), rgba(255,184,150,0.22) calc(var(--mx, 33%) - 12%), rgba(255,240,226,0.6) var(--mx, 33%), rgba(255,184,150,0.22) calc(var(--mx, 33%) + 12%), rgba(255,170,140,0) calc(var(--mx, 33%) + 42%));
+    animation: fx-breathe 9s ease-in-out infinite alternate-reverse; }
+  @keyframes fx-breathe { from { opacity: 0.72; } to { opacity: 1; } }
+  .fx-mist { left: 0; bottom: 0; width: 200%; background-repeat: repeat-x; background-position: 0 100%; will-change: transform; }
+  .fx-m1 { height: 50%; background-size: 50% 100%; opacity: 0.32; animation: fx-drift 70s linear infinite; }
+  .fx-m2 { height: 34%; background-size: 36% 100%; opacity: 0.22; animation: fx-drift 44s linear infinite reverse; }
+  @keyframes fx-drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+  .fx-ember { top: -4%; left: var(--x); width: var(--s); height: var(--s); opacity: 0; filter: blur(var(--b)); will-change: transform, opacity;
+    animation: fx-fall var(--d) linear var(--dl) infinite; }
+  .fx-ember.spark { border-radius: 50%; background: radial-gradient(circle, rgba(255,206,150,1), rgba(255,110,60,0.75) 45%, rgba(255,70,40,0) 72%); }
+  .fx-ember.leaf { border-radius: 2px 60% 2px 60%; background: linear-gradient(135deg, #ff5a3c, #b8121c); }
+  @keyframes fx-fall { 0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; } 8%, 84% { opacity: var(--o); }
+    100% { transform: translate3d(var(--dx), 112vh, 0) rotate(var(--r)); opacity: 0; } }
+  .fx-grain { inset: -50%; opacity: 0.055; animation: fx-grain 0.6s steps(4) infinite;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+  @keyframes fx-grain { 0% { transform: translate3d(0, 0, 0); } 25% { transform: translate3d(-3%, 2%, 0); } 50% { transform: translate3d(2%, -3%, 0); } 75% { transform: translate3d(-1%, 3%, 0); } 100% { transform: translate3d(3%, -1%, 0); } }
+  .fx-vignette { inset: 0; background: radial-gradient(ellipse 82% 76% at 50% 44%, rgba(0,0,0,0) 54%, rgba(0,0,0,0.44) 100%); }
+  .fx-fringe { inset: 0; mix-blend-mode: screen;
+    background: linear-gradient(90deg, rgba(255,40,70,0.06), rgba(255,40,70,0) 3%, rgba(40,200,255,0) 97%, rgba(40,200,255,0.06)),
+                linear-gradient(180deg, rgba(255,40,70,0.04), rgba(255,40,70,0) 4%, rgba(40,200,255,0) 96%, rgba(40,200,255,0.04)); }
+  [data-hero-fx].rest, [data-hero-fx].rest * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { [data-hero-fx] i { animation: none !important; } [data-fx-embers] { display: none; } }
   html[data-alpine-lite] [data-alpine-img] { object-position: 50% 50% !important; animation: alpDrift 48s ease-in-out infinite alternate; }
   @keyframes alpDrift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(0, -1.4%, 0); } }
   @media (prefers-reduced-motion: reduce) { html[data-alpine-lite] [data-alpine-img] { animation: none; } }
@@ -338,6 +372,12 @@
       <canvas data-alpine-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s ease"></canvas>
       <div data-alpine-wild style="position: absolute; inset: 0; pointer-events: none; overflow: hidden"></div>
       <video data-hero-video muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-moon.jpg" aria-hidden="true" tabindex="-1" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none"></video>
+      <div data-hero-fx aria-hidden="true">
+        <div data-fx-bloom><i class="fx-glow"></i><i class="fx-streak"></i></div>
+        <div data-fx-haze><i class="fx-mist fx-m1"></i><i class="fx-mist fx-m2"></i></div>
+        <div data-fx-embers></div>
+        <i class="fx-grain"></i><i class="fx-vignette"></i><i class="fx-fringe"></i>
+      </div>
       <div data-alpine-scrim="day" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 64% 62% at 16% 58%, rgba(250,244,232,0.7) 0%, rgba(250,244,232,0.42) 50%, rgba(250,244,232,0) 100%)"></div>
       <div data-alpine-scrim="night" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 62% 58% at 16% 60%, rgba(5,10,24,0.6) 0%, rgba(5,10,24,0.34) 50%, rgba(5,10,24,0) 100%)"></div>
       <div style="position: absolute; left: 0; right: 0; top: 0; height: 22vh; pointer-events: none; background: linear-gradient(180deg, rgba(5,10,20,0.28), rgba(5,10,20,0))"></div>
@@ -1468,6 +1508,7 @@ const ALPINE_SRC = {
   day: "assets/alpine-day.jpg", night: "assets/alpine-night.jpg",
   dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
   moon: "assets/hero-moon.mp4", moonWebm: "assets/hero-moon.webm",
+  moonHd: "assets/hero-moon-hd.mp4", moonHdWebm: "assets/hero-moon-hd.webm", mist: "assets/hero-mist.webp",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
@@ -2254,15 +2295,21 @@ class Component extends DCLogic {
       if (night) {
         if (!vid.getAttribute("src")) {
           // H.264 where the browser has it (hardware decode almost everywhere), VP9 otherwise
-          const h264 = vid.canPlayType('video/mp4; codecs="avc1.640020"');
-          vid.src = h264 ? ALPINE_SRC.moon : ALPINE_SRC.moonWebm; vid.preload = "auto";
+          const h264 = vid.canPlayType('video/mp4; codecs="avc1.640028"');
+          // the remastered 1080p cut on a desktop, the lighter 720p one on a phone
+          vid.src = lite ? (h264 ? ALPINE_SRC.moon : ALPINE_SRC.moonWebm) : (h264 ? ALPINE_SRC.moonHd : ALPINE_SRC.moonHdWebm);
+          vid.preload = "auto";
         }
         vid.style.opacity = "1";
+        this.videoOn = true;
+        if (fx) fx.classList.add("on");
         if (wild) wild.style.opacity = "0";
         if (!reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
         this.videoT = setTimeout(() => { this.videoCover = true; }, 1300);
       } else {
         this.videoCover = false;
+        this.videoOn = false;
+        if (fx) fx.classList.remove("on");
         vid.style.opacity = "0";
         if (wild) wild.style.opacity = "1";
         this.videoT = setTimeout(() => vid.pause(), 1300);
@@ -2270,6 +2317,32 @@ class Component extends DCLogic {
     };
     const reducedV = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (wild) wild.style.transition = "opacity 1.2s ease";
+    const lite = root.hasAttribute("data-alpine-lite");
+    const fx = this.heroFx = stage.querySelector("[data-hero-fx]");
+    if (fx) {
+      fx.querySelectorAll(".fx-mist").forEach((m) => { m.style.backgroundImage = "url(" + ALPINE_SRC.mist + ")"; });
+      const box = fx.querySelector("[data-fx-embers]");
+      let seed = 23; const r = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+      for (let i = 0; i < (lite ? 12 : 22); i++) {
+        const e = document.createElement("i"), leaf = r() < 0.4, near = r() < 0.25;
+        e.className = "fx-ember " + (leaf ? "leaf" : "spark");
+        const size = leaf ? 5 + r() * 6 : 2 + r() * 3;
+        e.style.cssText = "--x:" + (r() * 100).toFixed(1) + "%;--s:" + (near ? size * 1.8 : size).toFixed(1) + "px;--b:" + (near ? 2.4 : r() < 0.3 ? 0.8 : 0) +
+          "px;--d:" + (14 + r() * 16).toFixed(1) + "s;--dl:" + (-r() * 30).toFixed(1) + "s;--dx:" + Math.round(-120 + r() * 260) + "px;--r:" + Math.round(-260 + r() * 520) +
+          "deg;--o:" + (near ? 0.55 : 0.35 + r() * 0.5).toFixed(2);
+        box.appendChild(e);
+      }
+      // keep the bloom on the moon at any aspect ratio: the film is object-fit: cover
+      const placeMoon = () => {
+        const W = stage.clientWidth || window.innerWidth, H = stage.clientHeight || window.innerHeight;
+        const sc = Math.max(W / 1920, H / 1080), dw = 1920 * sc, dh = 1080 * sc;
+        fx.style.setProperty("--mx", ((W - dw) / 2 + 0.325 * dw).toFixed(1) + "px");
+        fx.style.setProperty("--my", ((H - dh) / 2 + 0.2 * dh).toFixed(1) + "px");
+      };
+      placeMoon();
+      this.onFxResize = placeMoon;
+      window.addEventListener("resize", placeMoon);
+    }
     if (vid) {
       this.onVideoVis = () => {
         if (document.hidden) vid.pause();
@@ -2433,6 +2506,20 @@ class Component extends DCLogic {
       if (copyEl && !reduced) {
         const tr = (st.mouse[0] * -5).toFixed(1) + "px " + (st.mouse[1] * -3).toFixed(1) + "px";
         if (tr !== this.copyTf) { this.copyTf = tr; copyEl.style.translate = tr; }
+      }
+      // depth under the cursor while the film shows: each layer moves by its own amount
+      if (this.videoOn && !reduced && this.heroFx) {
+        const mx = st.mouse[0], my = st.mouse[1];
+        const key = mx.toFixed(3) + "," + my.toFixed(3);
+        if (key !== this.fxKey) {
+          this.fxKey = key;
+          const t = (k) => "translate3d(" + (-mx * k).toFixed(1) + "px," + (-my * k * 0.7).toFixed(1) + "px,0)";
+          if (!this.fxEls) this.fxEls = { bloom: this.heroFx.querySelector("[data-fx-bloom]"), haze: this.heroFx.querySelector("[data-fx-haze]"), embers: this.heroFx.querySelector("[data-fx-embers]") };
+          vid.style.transform = t(8) + " scale(1.04)";
+          this.fxEls.bloom.style.transform = t(8);
+          this.fxEls.haze.style.transform = t(16);
+          this.fxEls.embers.style.transform = t(26);
+        }
       }
       const deep = this.deep || 0;
       const mixing = st.prog !== st.target;
@@ -2637,6 +2724,7 @@ class Component extends DCLogic {
       const dRaw = cl((y - vh * 0.45) / (vh * 1.15));
       const deep = dRaw * dRaw * (3 - 2 * dRaw);
       this.deep = deep;          // the draw loop reads this to decide its frame rate
+      if (this.heroFx) { const rest = deep > 0.9; if (this.heroFx.classList.contains("rest") !== rest) this.heroFx.classList.toggle("rest", rest); }
       this.scroll = cine;
       const copy = this.copyRef.current;
       if (copy) {
@@ -3086,6 +3174,7 @@ class Component extends DCLogic {
     cancelAnimationFrame(this.navRaf);
     cancelAnimationFrame(this.alpineRaf);
     if (this.onVideoVis) document.removeEventListener("visibilitychange", this.onVideoVis);
+    if (this.onFxResize) window.removeEventListener("resize", this.onFxResize);
     if (this.alpineRO) this.alpineRO.disconnect();
     if (this.onAlpineMove) window.removeEventListener("pointermove", this.onAlpineMove);
     window.removeEventListener("pointermove", this.onNavMove);
