@@ -191,6 +191,21 @@
     background: linear-gradient(90deg, rgba(255,40,70,0.06), rgba(255,40,70,0) 3%, rgba(40,200,255,0) 97%, rgba(40,200,255,0.06)),
                 linear-gradient(180deg, rgba(255,40,70,0.04), rgba(255,40,70,0) 4%, rgba(40,200,255,0) 96%, rgba(40,200,255,0.04)); }
   [data-hero-fx].rest, [data-hero-fx].rest * { animation-play-state: paused !important; }
+  /* the day photograph: held still but never frozen. A slow push-in (the scale property,
+     so it composes with the cursor-depth transform) and the low sun breathing through the
+     window glass, over a whisper of grain and a warm lens falloff */
+  [data-hero-day] { transform-origin: 72% 42%; animation: day-drift 34s ease-in-out infinite alternate; }
+  @keyframes day-drift { from { scale: 1; } to { scale: 1.07; } }
+  .fx-sun-day { inset: 0; mix-blend-mode: screen; background: radial-gradient(ellipse 46% 58% at 97% 12%, rgba(255,196,120,0.34), rgba(255,160,80,0.12) 42%, rgba(255,150,70,0) 72%);
+    animation: day-sun 9s ease-in-out infinite alternate; }
+  @keyframes day-sun { from { opacity: 0.55; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { [data-hero-day], .fx-sun-day { animation: none; } }
+  [data-hero-dayfx] { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity 1.2s ease, visibility 0s linear 1.2s; }
+  [data-hero-dayfx].on { opacity: 1; visibility: visible; transition: opacity 1.2s ease; }
+  [data-hero-dayfx] i { position: absolute; display: block; }
+  [data-hero-dayfx] .fx-grain { opacity: 0.035; }
+  .fx-vignette-day { inset: 0; background: radial-gradient(ellipse 84% 78% at 50% 46%, rgba(40,24,10,0) 58%, rgba(40,24,10,0.3) 100%); }
+  [data-hero-dayfx].rest, [data-hero-dayfx].rest * { animation-play-state: paused !important; }
   @media (prefers-reduced-motion: reduce) { [data-hero-fx] i { animation: none !important; } [data-fx-embers] { display: none; } }
   html[data-alpine-lite] [data-alpine-img] { object-position: 50% 50% !important; animation: alpDrift 48s ease-in-out infinite alternate; }
   @keyframes alpDrift { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.1) translate3d(0, -1.4%, 0); } }
@@ -217,6 +232,21 @@
   html[data-alpine][data-scene="day"] [data-hero-sea] > p { color: rgba(21,33,44,0.84) !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
   html[data-alpine][data-scene="day"] [data-hero-cta] { color: #f6efe2 !important; background: linear-gradient(180deg, #243241, #141e29) !important; }
   html[data-alpine][data-scene="day"] [data-hero-secondary] { color: #8a4c12 !important; border-bottom-color: #8a4c12 !important; text-shadow: 0 1px 22px rgba(255,248,236,.7) !important; }
+  /* over the golden-hour photograph the day ink turns to warm light: the frame is a
+     backlit room, so the type takes the window's glow, and the falloff behind it is the
+     room's own shadow instead of a cream wash */
+  html[data-alpine][data-scene="day"][data-day-photo] [data-alpine-scrim="day"] { background: linear-gradient(96deg, rgba(16,9,4,0.66) 0%, rgba(16,9,4,0.42) 32%, rgba(16,9,4,0.1) 56%, rgba(16,9,4,0) 68%) !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-sky] > div,
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-name],
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-stack] h1 { color: #fbf3e6 !important; text-shadow: 0 1px 3px rgba(12,6,2,.5), 0 2px 28px rgba(12,6,2,.55) !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-sky] > div > span { background: rgba(251,243,230,0.55) !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-stack] span[style*="e2b274"] { color: #f4b468 !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-sea] > p { color: rgba(251,243,230,0.9) !important; text-shadow: 0 1px 3px rgba(12,6,2,.55), 0 1px 18px rgba(12,6,2,.5) !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-cta] { color: #1c130b !important; background: linear-gradient(180deg, #fcf3e4, #ecd9bd) !important; }
+  html[data-alpine][data-scene="day"][data-day-photo] [data-hero-secondary] { color: #f6c486 !important; border-bottom-color: rgba(246,196,134,.8) !important; text-shadow: 0 1px 3px rgba(12,6,2,.55), 0 1px 18px rgba(12,6,2,.5) !important; }
+  @media (max-width: 820px) {
+    html[data-alpine][data-scene="day"][data-day-photo] [data-alpine-scrim="day"] { background: linear-gradient(180deg, rgba(16,9,4,0.3) 0%, rgba(16,9,4,0.58) 26%, rgba(16,9,4,0.56) 64%, rgba(16,9,4,0.22) 100%) !important; }
+  }
   /* Desktop hero copy: the glide and fade run on the browser's scroll timeline, on the
      compositor, locked to the scroll itself. Driving them from a rAF loop always trailed
      the threaded scroll by a frame, which read as the text stuttering. Without scroll
@@ -371,7 +401,9 @@
       <img data-alpine-img="night" data-src="assets/alpine-night.jpg" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; transform: scale(1.03); opacity: 0; transition: opacity 1.6s ease" />
       <canvas data-alpine-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s ease"></canvas>
       <div data-alpine-wild style="position: absolute; inset: 0; pointer-events: none; overflow: hidden"></div>
+      <img data-hero-day alt="" aria-hidden="true" decoding="async" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none" />
       <video data-hero-video muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-moon.jpg" aria-hidden="true" tabindex="-1" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none"></video>
+      <div data-hero-dayfx aria-hidden="true"><i class="fx-sun-day"></i><i class="fx-grain"></i><i class="fx-vignette-day"></i></div>
       <div data-hero-fx aria-hidden="true">
         <div data-fx-bloom><i class="fx-glow"></i><i class="fx-streak"></i></div>
         <div data-fx-haze><i class="fx-mist fx-m1"></i><i class="fx-mist fx-m2"></i></div>
@@ -1509,6 +1541,7 @@ const ALPINE_SRC = {
   dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
   moon: "assets/hero-moon.mp4", moonWebm: "assets/hero-moon.webm",
   moonHd: "assets/hero-moon-hd.mp4", moonHdWebm: "assets/hero-moon-hd.webm", mist: "assets/hero-mist.webp",
+  photo: "assets/hero-day-1600.webp", photoHd: "assets/hero-day-2560.webp", photoM: "assets/hero-day-m-1080.webp",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
@@ -2278,36 +2311,50 @@ class Component extends DCLogic {
     // the hero the valley's shader and animals stop drawing beneath it.
     const vid = stage.querySelector("[data-hero-video]");
     this.videoCover = false;
+    // By day the hero is a photograph (a golden-hour portrait at the window), by night the
+    // blood-moon film. Each loads the first time its theme is shown: the photograph as a
+    // WebP cut sized for the screen (a portrait crop on phones), the film as the
+    // remastered 1080p cut on a desktop or the lighter 720p one on a phone (H.264 where
+    // the browser has it, VP9 otherwise).
+    const dayImg = stage.querySelector("[data-hero-day]");
+    const load = (v, sd, sdW, hd, hdW) => {
+      if (!v || v.getAttribute("src")) return;
+      const h264 = v.canPlayType('video/mp4; codecs="avc1.640028"');
+      v.src = lite ? (h264 ? sd : sdW) : (h264 ? hd : hdW);
+      v.preload = "auto";
+    };
+    const loadPhoto = () => {
+      if (!dayImg || dayImg.getAttribute("src")) return;
+      if (lite) dayImg.srcset = ALPINE_SRC.photoM + " 1080w";
+      else dayImg.srcset = ALPINE_SRC.photo + " 1600w, " + ALPINE_SRC.photoHd + " 2560w";
+      dayImg.sizes = "100vw";
+      dayImg.src = lite ? ALPINE_SRC.photoM : ALPINE_SRC.photo;
+    };
     const setVideo = (night) => {
       if (!vid) return;
       clearTimeout(this.videoT);
-      if (night) {
-        if (!vid.getAttribute("src")) {
-          // H.264 where the browser has it (hardware decode almost everywhere), VP9 otherwise
-          const h264 = vid.canPlayType('video/mp4; codecs="avc1.640028"');
-          // the remastered 1080p cut on a desktop, the lighter 720p one on a phone
-          vid.src = lite ? (h264 ? ALPINE_SRC.moon : ALPINE_SRC.moonWebm) : (h264 ? ALPINE_SRC.moonHd : ALPINE_SRC.moonHdWebm);
-          vid.preload = "auto";
-        }
-        vid.style.opacity = "1";
-        this.videoOn = true;
-        if (fx) fx.classList.add("on");
-        if (wild) wild.style.opacity = "0";
-        if (!reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
-        this.videoT = setTimeout(() => { this.videoCover = true; }, 1300);
-      } else {
-        this.videoCover = false;
-        this.videoOn = false;
-        if (fx) fx.classList.remove("on");
-        vid.style.opacity = "0";
-        if (wild) wild.style.opacity = "1";
-        this.videoT = setTimeout(() => vid.pause(), 1300);
+      const on = night ? vid : dayImg, off = night ? dayImg : vid;
+      if (night) load(vid, ALPINE_SRC.moon, ALPINE_SRC.moonWebm, ALPINE_SRC.moonHd, ALPINE_SRC.moonHdWebm);
+      else loadPhoto();
+      root.toggleAttribute("data-day-photo", !night && !!dayImg);
+      this.videoCover = false;
+      this.activeVid = on;
+      this.videoOn = !!on;
+      if (fx) fx.classList.toggle("on", night);
+      if (dayFx) dayFx.classList.toggle("on", !night && !!dayImg);
+      if (on) {
+        on.style.opacity = "1";
+        if (on === vid && !reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
       }
+      if (off) off.style.opacity = "0";
+      if (wild) wild.style.opacity = on ? "0" : "1";
+      this.videoT = setTimeout(() => { if (off === vid) vid.pause(); if (on) this.videoCover = true; }, 1300);
     };
     const reducedV = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (wild) wild.style.transition = "opacity 1.2s ease";
     const lite = root.hasAttribute("data-alpine-lite");
     const fx = this.heroFx = stage.querySelector("[data-hero-fx]");
+    const dayFx = this.heroDayFx = stage.querySelector("[data-hero-dayfx]");
     if (fx) {
       fx.querySelectorAll(".fx-mist").forEach((m) => { m.style.backgroundImage = "url(" + ALPINE_SRC.mist + ")"; });
       const box = fx.querySelector("[data-fx-embers]");
@@ -2334,8 +2381,9 @@ class Component extends DCLogic {
     }
     if (vid) {
       this.onVideoVis = () => {
+        const cur = this.activeVid;
         if (document.hidden) vid.pause();
-        else if (vid.style.opacity === "1" && !reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
+        else if (cur === vid && vid.style.opacity === "1" && !reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
       };
       document.addEventListener("visibilitychange", this.onVideoVis);
     }
@@ -2504,7 +2552,7 @@ class Component extends DCLogic {
           this.fxKey = key;
           const t = (k) => "translate3d(" + (-mx * k).toFixed(1) + "px," + (-my * k * 0.7).toFixed(1) + "px,0)";
           if (!this.fxEls) this.fxEls = { bloom: this.heroFx.querySelector("[data-fx-bloom]"), haze: this.heroFx.querySelector("[data-fx-haze]"), embers: this.heroFx.querySelector("[data-fx-embers]") };
-          vid.style.transform = t(8) + " scale(1.04)";
+          (this.activeVid || vid).style.transform = t(8) + " scale(1.04)";
           this.fxEls.bloom.style.transform = t(8);
           this.fxEls.haze.style.transform = t(16);
           this.fxEls.embers.style.transform = t(26);
@@ -2713,6 +2761,9 @@ class Component extends DCLogic {
       const dRaw = cl((y - vh * 0.45) / (vh * 1.15));
       const deep = dRaw * dRaw * (3 - 2 * dRaw);
       this.deep = deep;          // the draw loop reads this to decide its frame rate
+      if (this.heroDayFx) {
+        const r2 = deep > 0.9; if (this.heroDayFx.classList.contains("rest") !== r2) this.heroDayFx.classList.toggle("rest", r2);
+      }
       if (this.heroFx) { const rest = deep > 0.9; if (this.heroFx.classList.contains("rest") !== rest) this.heroFx.classList.toggle("rest", rest); }
       this.scroll = cine;
       const copy = this.copyRef.current;
@@ -2731,8 +2782,11 @@ class Component extends DCLogic {
       // the hero leaves, but only as far as the type needs, and that depends on the
       // plate: daylight is bright enough that text over it needs more help than a night
       // sky does. Local shading behind each block of text does the rest.
-      const DIM_CAP = { day: 0.66, dark: 0.5 };
-      if (dim) dim.style.opacity = (deep * (DIM_CAP[this.state.theme] || 0.5)).toFixed(3);
+      // The golden-hour portrait is the light theme's ground for the whole page, so it
+      // only sinks a little: the frame is already low-key and the type is light over it.
+      const DIM_CAP = { day: 0.66, dark: 0.5, photo: 0.32 };
+      const capKey = this.state.theme === "day" && document.documentElement.hasAttribute("data-day-photo") ? "photo" : this.state.theme;
+      if (dim) dim.style.opacity = (deep * (DIM_CAP[capKey] || 0.5)).toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
     };
 
