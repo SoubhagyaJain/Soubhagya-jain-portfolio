@@ -20,8 +20,8 @@
       var m = b.getAttribute("data-set-mode");
       if (root.getAttribute("data-mode") === m) return;
       var apply = function () { root.setAttribute("data-mode", m); paintMode(); };
-      // one GPU cross-fade of the page, rather than animating every colour on it
-      if (document.startViewTransition && !reduced) document.startViewTransition(apply);
+      // nightfall or daybreak (src/cine.js), rather than animating every colour on it
+      if (window.cineTheme) window.cineTheme(m === "light" ? "light" : "dark", apply);
       else apply();
       try { localStorage.setItem("lp-theme", m === "light" ? "day" : "dark"); } catch (e) {}
     });
