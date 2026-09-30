@@ -9,95 +9,153 @@
 <x-dc>
 <helmet>
 <style>html, body { background: #080b0e; }
+  /* Direction, pinned. Two zones that never share a pixel: a text rail on the left that
+     moves through three states (the statement, the seven-stage index, the close), and a
+     framed diagram on the right that builds the system as the page scrolls. Nothing
+     floats over the diagram and the diagram never runs under the text. */
+  [data-dir-grid] { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 56px);
+    padding: clamp(92px, 13vh, 128px) clamp(22px, 4vw, 54px) clamp(26px, 5vh, 52px); box-sizing: border-box; }
+  [data-dir-rail] { position: relative; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+  [data-dir-eyebrow] { font: 400 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); }
+  [data-dir-eyebrow] b { font-weight: 400; color: rgba(232,186,124,0.95); margin-right: 10px; }
+  [data-dir-states] { position: relative; flex: 1 1 auto; min-height: 0; }
+  /* one state at a time: the outgoing one leaves before the incoming one arrives */
+  [data-dir-state] { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 2.2vh, 22px);
+    opacity: 0; transform: translate3d(0, 14px, 0); pointer-events: none; transition: opacity .4s ease, transform .6s cubic-bezier(.22,1,.36,1); }
+  [data-dir-state].on { opacity: 1; transform: none; pointer-events: auto; transition: opacity .5s ease .38s, transform .8s cubic-bezier(.22,1,.36,1) .3s; }
+  [data-dir-state] h3 { margin: 0; font: 400 clamp(28px, 2.9vw, 46px)/1.06 'Instrument Serif', Georgia, serif; letter-spacing: -0.02em; color: #fbfdf8; text-wrap: balance; }
+  [data-dir-state] p { margin: 0; max-width: 42ch; font: 400 clamp(14px, 1.05vw, 16px)/1.62 'Instrument Sans', 'Helvetica Neue', sans-serif; color: rgba(240,246,240,0.8); text-wrap: pretty; }
+  [data-dir-state] p + p { color: rgba(240,246,240,0.66); }
+  [data-dir-close-k] { font: 400 9.5px/1 'IBM Plex Mono', monospace; letter-spacing: .28em; text-transform: uppercase; color: rgba(232,240,232,0.5); }
+  [data-dir-close-t] { font: 400 clamp(30px, 3.2vw, 48px)/1.08 'Instrument Serif', Georgia, serif; color: #f8fbf6; letter-spacing: -0.015em; }
+  [data-dir-cta] { align-self: flex-start; display: inline-flex; align-items: center; gap: 12px; margin-top: 8px; padding: 14px 0 11px; font: 400 11px/1 'IBM Plex Mono', monospace;
+    letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.95); border-bottom: 1px solid rgba(246,250,244,0.35); transition: gap .45s cubic-bezier(.22,1,.36,1), border-color .45s ease; }
+  [data-dir-cta]:hover, [data-dir-cta]:focus-visible { gap: 20px; border-bottom-color: rgba(246,250,244,0.9); }
+
+  /* the seven stages as an index: the active one opens, a hairline beside it fills */
+  [data-dir-index] { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  [data-dir-index] li { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr); padding: 11px 0 11px 16px; border-top: 1px solid rgba(214,230,236,0.1);
+    color: rgba(240,246,240,0.34); transition: color .45s ease; }
+  [data-dir-index] li:last-child { border-bottom: 1px solid rgba(214,230,236,0.1); }
+  [data-dir-index] li.done { color: rgba(240,246,240,0.6); }
+  [data-dir-index] li.on { color: #fbfdf8; }
+  [data-dir-index] .tr { position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 2px; overflow: hidden; background: rgba(214,230,236,0.12); }
+  [data-dir-index] .fl { position: absolute; inset: 0; background: rgba(232,186,124,0.95); transform-origin: 50% 0; transform: scaleY(0); }
+  [data-dir-index] .n { font: 400 10px/2 'IBM Plex Mono', monospace; letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+  [data-dir-index] li.on .n { color: rgba(232,186,124,0.95); }
+  [data-dir-index] .t { font: 400 clamp(17px, 1.45vw, 21px)/1.25 'Instrument Serif', Georgia, serif; }
+  [data-dir-index] .bw { grid-column: 2; display: grid; grid-template-rows: 0fr; transition: grid-template-rows .55s cubic-bezier(.22,1,.36,1); }
+  [data-dir-index] li.on .bw { grid-template-rows: 1fr; }
+  [data-dir-index] .b { overflow: hidden; min-height: 0; font: 400 14px/1.55 'Instrument Sans', 'Helvetica Neue', sans-serif; color: rgba(240,246,240,0.76); text-wrap: pretty; }
+  [data-dir-index] .b span { display: block; padding-top: 8px; }
+
+  /* the frame: a viewport onto the system, with its own header and instrument strip */
+  [data-dir-frame] { position: relative; display: flex; flex-direction: column; min-height: 0; border-radius: 14px; border: 1px solid rgba(214,230,236,0.14);
+    background: rgba(7,11,15,0.66); overflow: hidden; }
+  [data-dir-fbar] { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; height: 44px; padding: 0 16px;
+    font: 400 10px/1 'IBM Plex Mono', monospace; letter-spacing: .2em; text-transform: uppercase; font-variant-numeric: tabular-nums; color: rgba(232,240,232,0.55); white-space: nowrap; }
+  [data-dir-plot] { position: relative; flex: 1 1 auto; min-height: 0; border-top: 1px solid rgba(214,230,236,0.1); border-bottom: 1px solid rgba(214,230,236,0.1); }
+  [data-dir-plot] canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  [data-dir-status] { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(214,230,236,0.16); color: rgba(240,246,240,0.82); }
+  [data-dir-status] i { width: 6px; height: 6px; border-radius: 50%; background: rgba(214,230,236,0.45); transition: background .4s ease; }
+  [data-dir-status][data-s="live"] i { background: #e8ba7c; }
+  [data-dir-status][data-s="down"] i { background: #ec8a66; }
+  [data-dir-key] { display: flex; align-items: center; gap: 16px; min-width: 0; overflow: hidden; }
+  [data-dir-key] span { display: inline-flex; align-items: center; gap: 7px; }
+  [data-dir-key] em { display: inline-block; font-style: normal; }
+  [data-dir-readout] { display: flex; gap: 16px; opacity: 0; transition: opacity .6s ease; }
+  [data-dir-readout].on { opacity: 1; }
+  /* the key explains the build; once the system is serving, the readout takes its place */
+  [data-dir-readout]:not(.on) { position: absolute; right: 16px; pointer-events: none; }
+  [data-dir-frame][data-ro] [data-dir-key] { display: none; }
+  [data-dir-readout] b { font-weight: 500; color: #f4efe4; }
+  @media (max-width: 1180px) { [data-dir-key] span:nth-child(n+3) { display: none; } }
+  @media (max-width: 980px) { [data-dir-key] { display: none; } }
+
   /* On a phone the chapter no longer pins. It reads top to bottom: the statement, then
-     the system itself held just under the nav while the seven stages scroll up beneath
-     it, each one building its part of the graph as it reaches the reading line, then the
-     close. Every stage is on the page as text, and the page never stops moving with the
-     finger. */
+     the diagram held just under the nav while the seven stages scroll up beneath it,
+     each one building its part of the system as it reaches the reading line, then the
+     close. Every stage is on the page as text, and the page never stops moving. */
   [data-dir-steps] { display: none; }
   @media (max-width: 700px) {
-    [data-dir-stage] { position: relative !important; height: auto !important; min-height: 0 !important; overflow: visible !important; display: flex; flex-direction: column; }
-    [data-dir-copy] { display: contents !important; }
-    [data-dir-top] { order: 1; padding: 0 22px 18px; }
-    [data-dir-text] { order: 2; max-width: none !important; padding: 0 22px 26px; }
-    [data-dir-canvas] { order: 3; position: sticky !important; inset: 128px auto auto auto !important; width: 100% !important; height: min(92vw, 42svh) !important; z-index: 2; background: #080c10; box-shadow: 0 -128px 0 0 #080c10, 0 18px 18px -6px #080c10; }
-    [data-dir-steps] { order: 4; display: block; position: relative; list-style: none; margin: 0; padding: 26px 22px 40px 22px; }
-    [data-dir-steps]::before { content: ""; position: absolute; left: 30px; top: 34px; bottom: 60px; width: 1px; background: rgba(214,230,236,0.16); }
+    [data-dir-stage] { position: relative !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+    [data-dir-grid] { position: relative; display: flex; flex-direction: column; gap: 0; padding: 0 22px; }
+    [data-dir-rail], [data-dir-states] { display: contents; }
+    [data-dir-eyebrow] { order: 1; padding: 0 0 18px; }
+    [data-dir-state] { position: relative; inset: auto; opacity: 1; transform: none; pointer-events: auto; justify-content: flex-start; transition: none; }
+    [data-dir-state="statement"] { order: 2; padding-bottom: 26px; }
+    [data-dir-state="index"] { display: none; }
+    [data-dir-frame] { order: 3; position: sticky; top: 118px; z-index: 2; background: #0a0f14; box-shadow: 0 -118px 0 0 #080c10, 0 18px 18px -6px #080c10; }
+    [data-dir-plot] { flex: none; height: min(104vw, 52svh); }
+    [data-dir-fbar] { height: 38px; padding: 0 12px; font-size: 9px; letter-spacing: .16em; }
+    [data-dir-readout] { gap: 10px; }
+    [data-dir-readout] [data-m="queue"] { display: none; }
+    [data-dir-steps] { order: 4; display: block; position: relative; list-style: none; margin: 0; padding: 26px 0 40px; }
+    [data-dir-steps]::before { content: ""; position: absolute; left: 8px; top: 34px; bottom: 60px; width: 1px; background: rgba(214,230,236,0.16); }
     [data-dir-steps] li { position: relative; padding: 0 0 34px 34px; opacity: .42; transition: opacity .6s ease; }
     [data-dir-steps] li.on { opacity: 1; }
-    [data-dir-steps] li::before { content: ""; position: absolute; left: 3px; top: 4px; width: 9px; height: 9px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(214,230,236,0.5); background: #0b1117; transition: background .5s ease, border-color .5s ease, box-shadow .5s ease; }
-    [data-dir-steps] li.on::before { background: rgba(232,186,124,0.95); border-color: rgba(232,186,124,0.95); box-shadow: 0 0 0 4px rgba(232,186,124,0.14); }
-    [data-dir-steps] .n { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; text-transform: uppercase; color: rgba(232,186,124,0.9); }
-    [data-dir-steps] .t { display: block; margin: 6px 0; font-family: 'Instrument Serif', Georgia, serif; font-size: 23px; line-height: 1.12; color: #fbfdf8; }
-    [data-dir-steps] .b { display: block; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 14.5px; line-height: 1.58; color: rgba(240,246,240,0.8); text-wrap: pretty; }
-    [data-dir-close] { order: 6; position: relative; z-index: 3; padding: 34px 22px 70px; max-width: none !important; background: linear-gradient(180deg, rgba(8,12,16,0), #080c10 34px); }
-    [data-dir-scrim], [data-dir="legend"], [data-dir-barrow] { display: none !important; }
+    [data-dir-steps] li::before { content: ""; position: absolute; left: 3px; top: 4px; width: 11px; height: 11px; border-radius: 3px; box-sizing: border-box; border: 1px solid rgba(214,230,236,0.5); background: #0b1117; transition: background .5s ease, border-color .5s ease; }
+    [data-dir-steps] li.on::before { background: rgba(232,186,124,0.95); border-color: rgba(232,186,124,0.95); }
+    [data-dir-steps] .n { display: block; font: 400 9.5px/1 'IBM Plex Mono', monospace; letter-spacing: .28em; text-transform: uppercase; color: rgba(232,186,124,0.9); }
+    [data-dir-steps] .t { display: block; margin: 8px 0 6px; font: 400 23px/1.12 'Instrument Serif', Georgia, serif; color: #fbfdf8; }
+    [data-dir-steps] .b { display: block; font: 400 14.5px/1.58 'Instrument Sans', 'Helvetica Neue', sans-serif; color: rgba(240,246,240,0.8); text-wrap: pretty; }
+    [data-dir-state="close"] { order: 6; position: relative; z-index: 3; padding: 34px 0 70px; background: linear-gradient(180deg, rgba(8,12,16,0), #080c10 34px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-dir-state], [data-dir-state].on, [data-dir-index] .bw, [data-dir-index] li { transition: none !important; }
   }
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 </helmet>
-<div ref="{{ rootRef }}" style="position: relative; color: #f2ece0; background: linear-gradient(90deg, rgba(6,10,14,0) 0%, rgba(6,10,14,0.42) 12%, rgba(6,10,14,0.42) 88%, rgba(6,10,14,0) 100%)">
-
+<div ref="{{ rootRef }}" style="position: relative; color: #f2ece0">
   <div ref="{{ scrollRef }}" style="position: relative; height: 520vh">
-    <div data-dir-stage style="position: sticky; top: 0; height: 100vh; min-height: 520px; overflow: hidden">
+    <div data-dir-stage style="position: sticky; top: 0; height: 100vh; min-height: 560px; overflow: hidden">
+      <div data-dir-grid>
 
-      <canvas ref="{{ canvasRef }}" data-dir-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block"></canvas>
-
-      <div ref="{{ scrimRef }}" data-dir-scrim style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.1s ease; background: linear-gradient(96deg, rgba(6,10,14,0.9) 0%, rgba(6,10,14,0.74) 32%, rgba(6,10,14,0.24) 56%, rgba(6,10,14,0) 72%)"></div>
-      <div ref="{{ layerRef }}" style="position: absolute; inset: 0; pointer-events: none">
-        <div data-word="retrieval" style="position: absolute; left: 56%; top: 12%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Retrieval</div>
-        <div data-word="agents" style="position: absolute; left: 47%; top: 30%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Agents</div>
-        <div data-word="evaluation" style="position: absolute; left: 62%; top: 48%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Evaluation</div>
-        <div data-word="inference" style="position: absolute; left: 52%; top: 66%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Inference</div>
-        <div data-word="observability" style="position: absolute; left: 66%; top: 78%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Observability</div>
-        <div data-word="infrastructure" style="position: absolute; left: 58%; top: 89%; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: rgba(240,246,240,0.8); opacity: 0; transition: opacity .9s ease">Infrastructure</div>
-      </div>
-
-      <div ref="{{ legendRef }}" data-dir="legend" style="position: absolute; right: clamp(22px, 4vw, 54px); bottom: clamp(74px, 12vh, 118px); width: min(300px, 40vw); display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; border-radius: 14px; background: rgba(7,13,19,0.78); border: 1px solid rgba(214,230,236,0.2); box-shadow: 0 24px 60px -28px rgba(0,0,0,0.9); backdrop-filter: blur(9px); pointer-events: none; opacity: 0; transition: opacity .8s ease">
-        <div style="display: flex; flex-direction: column; gap: 7px">
-          <div ref="{{ stageNoRef }}" data-dir="stageNo" style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,186,124,0.95)">Stage 01</div>
-          <div ref="{{ stageTitleRef }}" data-dir="stageTitle" style="font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; line-height: 1.12; color: #fbfdf8">A single request</div>
-          <div ref="{{ stageBodyRef }}" data-dir="stageBody" style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 13.5px; line-height: 1.55; color: rgba(240,246,240,0.88); text-wrap: pretty">Everything starts as one question arriving with no system around it yet.</div>
-        </div>
-        <div style="height: 1px; background: rgba(214,230,236,0.16)"></div>
-        <div style="display: flex; flex-direction: column; gap: 8px">
-          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.5)">Key</div>
-          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 0; border-top: 2px solid rgba(226,240,246,0.9)"></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Request path</span></div>
-          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; height: 0; border-top: 2px dashed rgba(158,196,216,0.95)"></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Feedback loop</span></div>
-          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; display: flex; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: rgba(240,232,214,0.98)"></span></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Live traffic</span></div>
-          <div style="display: flex; align-items: center; gap: 10px"><span style="width: 24px; display: flex; justify-content: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: rgba(232,186,124,0.98)"></span></span><span style="font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: 12px; color: rgba(240,246,240,0.9)">Under load / failing</span></div>
-        </div>
-      </div>
-
-      <div data-dir-barrow style="position: absolute; left: clamp(22px, 4vw, 54px); right: clamp(22px, 4vw, 54px); bottom: clamp(18px, 3vh, 30px); display: flex; align-items: center; gap: 16px; pointer-events: none">
-        <div ref="{{ stepRef }}" data-dir="step" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .24em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.75); white-space: nowrap"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">01</span><span style="opacity: .42; padding-right: .48em">/</span>07</div>
-        <div style="flex: 1; position: relative; height: 3px; background: rgba(214,230,236,0.18); border-radius: 3px; overflow: hidden">
-          <div ref="{{ barRef }}" data-dir="bar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, rgba(214,230,236,0.55), rgba(232,186,124,0.98)); border-radius: 3px; transition: width .18s linear"></div>
-        </div>
-        <div ref="{{ hintRef }}" data-dir="hint" style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(232,240,232,0.5); white-space: nowrap">Scroll to build the system &#8595;</div>
-      </div>
-
-      <div data-dir-copy style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 5vh, 60px) clamp(22px, 4vw, 54px); box-sizing: border-box; pointer-events: none">
-
-        <div data-dir-top style="display: flex; align-items: baseline; justify-content: space-between; gap: 18px; flex-wrap: wrap">
-          <div ref="{{ eyebrowRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(240,246,240,0.6); opacity: 0; transition: opacity 1.2s ease"><span style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.5em; line-height: 0; letter-spacing: 0; padding-right: .3em; vertical-align: -0.06em; color: rgba(240,220,190,0.92)">04.3</span><span style="opacity: .42; padding-right: .48em">/</span>Direction</div>
-          <div ref="{{ phaseRef }}" style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: .26em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.42); transition: opacity .5s ease">Unresolved</div>
-        </div>
-
-        <div data-dir-text style="display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 26px); max-width: min(560px, 46vw)">
-          <h3 ref="{{ headRef }}" style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: clamp(28px, 3.7vw, 56px); text-wrap: balance; line-height: 1.04; letter-spacing: -0.02em; color: #fbfdf8; text-wrap: pretty; opacity: 0; transform: translateY(24px); transition: opacity 1.5s cubic-bezier(.2,.7,.2,1), transform 1.5s cubic-bezier(.2,.7,.2,1)">From making AI work<br />to making AI hold up.</h3>
-          <p ref="{{ p1Ref }}" style="margin: 0; max-width: 40ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.82); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I&#8217;m building toward the engineering layer where models meet reality &#8212; retrieval, agents, evaluation, inference, observability, and the infrastructure that keeps them reliable under real load.</p>
-          <p ref="{{ p2Ref }}" style="margin: 0; max-width: 38ch; font-family: 'Instrument Sans', 'Helvetica Neue', sans-serif; font-size: clamp(14px, 1.1vw, 16.5px); line-height: 1.64; color: rgba(240,246,240,0.7); text-wrap: pretty; opacity: 0; transform: translateY(16px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1)">I want to work on systems where quality, latency, cost and failure recovery are designed together &#8212; not patched in later.</p>
-        </div>
-
-        <div data-dir-close style="display: flex; align-items: flex-end; justify-content: space-between; gap: clamp(20px, 4vw, 60px); flex-wrap: wrap; max-width: min(900px, 92vw)">
-          <div ref="{{ closeRef }}" style="display: flex; flex-direction: column; gap: 10px; opacity: 0; transform: translateY(18px); transition: opacity 1.3s ease, transform 1.3s cubic-bezier(.2,.7,.2,1)">
-            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .28em; font-variant-numeric: tabular-nums; text-transform: uppercase; color: rgba(232,240,232,0.5)">The direction is simple</div>
-            <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: clamp(22px, 2.6vw, 38px); line-height: 1.16; color: #f8fbf6">Fewer demos.<br />Deeper systems.</div>
+        <div data-dir-rail>
+          <div data-dir-eyebrow><b>04.3</b>Direction</div>
+          <div data-dir-states>
+            <div ref="{{ statementRef }}" data-dir-state="statement">
+              <h3>From making AI work<br />to making AI hold up.</h3>
+              <p>I&#8217;m building toward the engineering layer where models meet reality &#8212; retrieval, agents, evaluation, inference, observability, and the infrastructure that keeps them reliable under real load.</p>
+              <p>I want to work on systems where quality, latency, cost and failure recovery are designed together &#8212; not patched in later.</p>
+            </div>
+            <div data-dir-state="index">
+              <ol ref="{{ indexRef }}" data-dir-index aria-label="The seven stages"></ol>
+            </div>
+            <div ref="{{ closeRef }}" data-dir-state="close">
+              <div data-dir-close-k>The direction is simple</div>
+              <div data-dir-close-t>Fewer demos.<br />Deeper systems.</div>
+              <a ref="{{ ctaRef }}" data-dir-cta href="#contact">Start a conversation <span aria-hidden="true">&#8594;</span></a>
+            </div>
           </div>
-          <a ref="{{ ctaRef }}" href="#contact" style="display: inline-flex; align-items: center; gap: 12px; padding: 14px 0 11px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(246,250,244,0.95); border-bottom: 1px solid rgba(246,250,244,0.28); pointer-events: auto; opacity: 0; transform: translateY(14px); transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.2,.7,.2,1), gap .45s cubic-bezier(.2,.7,.2,1), border-bottom-color .45s ease" style-hover="gap: 22px; border-bottom-color: rgba(246,250,244,0.9)">Start a conversation <span style="font-size: 13px">&#8594;</span></a>
         </div>
+
+        <div data-dir-frame>
+          <div data-dir-fbar>
+            <span ref="{{ sysRef }}">System &#183; 01 / 07</span>
+            <span ref="{{ statusRef }}" data-dir-status data-s="idle"><i></i><span data-dir-status-t>Unresolved</span></span>
+          </div>
+          <div ref="{{ plotRef }}" data-dir-plot>
+            <canvas ref="{{ canvasRef }}" role="img" aria-label="A system diagram that builds stage by stage: retrieval, an agent, evaluation, serving, replicas and monitoring."></canvas>
+          </div>
+          <div data-dir-fbar>
+            <div data-dir-key aria-hidden="true">
+              <span><em style="width: 18px; border-top: 1.5px solid rgba(226,238,244,0.8)"></em>Request path</span>
+              <span><em style="width: 18px; border-top: 1.5px dashed rgba(164,198,218,0.9)"></em>Feedback</span>
+              <span><em style="width: 9px; height: 9px; border: 1px solid rgba(226,238,244,0.7); border-radius: 2px"></em>Built</span>
+              <span><em style="width: 9px; height: 9px; border: 1px solid rgba(232,186,124,0.95); border-radius: 2px"></em>This stage</span>
+            </div>
+            <div ref="{{ readoutRef }}" data-dir-readout>
+              <span data-m="ttft">TTFT <b>180ms</b></span>
+              <span data-m="p95">P95 <b ref="{{ p95Ref }}">42ms</b></span>
+              <span data-m="tps">Tok/s <b ref="{{ tpsRef }}">1.4K</b></span>
+              <span data-m="queue">Queue <b ref="{{ queueRef }}">1</b></span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -105,44 +163,55 @@
 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{}">
-// One persistent canvas scene. Scroll is the only input: an unfinished blueprint
-// gains a layer of engineering at a time until it is a system that survives failure.
+// The system, laid on a grid by layer: u runs with the flow (request -> retrieval ->
+// agent -> evaluation -> serving -> replicas), v across it. On a frame taller than it is
+// wide the whole grid turns ninety degrees; labels always read horizontally.
 const NODES = [
-  { id: "query",  x: 0.09, y: 0.30, at: 0.06, l: "query" },
-  { id: "ret",    x: 0.25, y: 0.21, at: 0.16, l: "retrieve" },
-  { id: "rank",   x: 0.37, y: 0.31, at: 0.21, l: "rerank" },
-  { id: "ground", x: 0.49, y: 0.22, at: 0.26, l: "ground" },
-  { id: "orch",   x: 0.29, y: 0.52, at: 0.34, l: "orchestrator" },
-  { id: "tools",  x: 0.15, y: 0.67, at: 0.39, l: "tools" },
-  { id: "mem",    x: 0.43, y: 0.69, at: 0.40, l: "memory" },
-  { id: "verify", x: 0.55, y: 0.56, at: 0.43, l: "verify" },
-  { id: "harn",   x: 0.68, y: 0.74, at: 0.52, l: "harness" },
-  { id: "batch",  x: 0.65, y: 0.37, at: 0.62, l: "batch" },
-  { id: "model",  x: 0.77, y: 0.47, at: 0.65, l: "model" },
-  { id: "r1",     x: 0.90, y: 0.29, at: 0.74, l: "replica" },
-  { id: "r2",     x: 0.92, y: 0.46, at: 0.76, l: "replica" },
-  { id: "r3",     x: 0.90, y: 0.63, at: 0.78, l: "replica" },
-  { id: "mon",    x: 0.60, y: 0.87, at: 0.84, l: "monitor" }
+  { id: "query",  u: 0, v: 1.5, at: 0.06, l: "query",        s: "query" },
+  { id: "ret",    u: 1, v: 0.5, at: 0.16, l: "retrieve",     s: "retrieve" },
+  { id: "rank",   u: 1, v: 1.5, at: 0.21, l: "rerank",       s: "rerank" },
+  { id: "ground", u: 1, v: 2.5, at: 0.26, l: "ground",       s: "ground" },
+  { id: "orch",   u: 2, v: 1.5, at: 0.34, l: "orchestrator", s: "orch" },
+  { id: "tools",  u: 2, v: 0.4, at: 0.39, l: "tools",        s: "tools" },
+  { id: "mem",    u: 2, v: 2.6, at: 0.40, l: "memory",       s: "memory" },
+  { id: "verify", u: 3, v: 1.0, at: 0.43, l: "verify",       s: "verify" },
+  { id: "harn",   u: 3, v: 2.4, at: 0.52, l: "harness",      s: "harness" },
+  { id: "batch",  u: 4, v: 0.6, at: 0.62, l: "batch",        s: "batch" },
+  { id: "model",  u: 4, v: 1.6, at: 0.65, l: "model",        s: "model" },
+  { id: "r1",     u: 5, v: 0.6, at: 0.74, l: "replica",      s: "replica" },
+  { id: "r2",     u: 5, v: 1.6, at: 0.76, l: "replica",      s: "replica" },
+  { id: "r3",     u: 5, v: 2.6, at: 0.78, l: "replica",      s: "replica" },
+  { id: "mon",    u: 4, v: 3.45, at: 0.84, l: "monitor",     s: "monitor" }
 ];
+const U0 = -0.5, U1 = 5.75, V0 = -0.6, V1 = 3.75;
 
+// Routes are explicit, so no line ever crosses a node. k: "h" leaves along the flow and
+// turns once at lane e; "v" runs straight across it; "bus" rides the lane above the top
+// row; "side" rides the lane past the last column. back: a feedback path (dashed), with
+// its own offset o (px, across) and lane shift eo (px, along) so it never shares a line.
 const LINKS = [
-  ["query", "ret", 0.14], ["ret", "rank", 0.20], ["rank", "ground", 0.25],
-  ["ground", "orch", 0.33], ["orch", "tools", 0.38], ["orch", "mem", 0.40],
-  ["orch", "verify", 0.42], ["verify", "orch", 0.46],
-  ["harn", "verify", 0.53], ["harn", "model", 0.56],
-  ["query", "batch", 0.61], ["batch", "model", 0.64],
-  ["model", "r1", 0.73], ["model", "r2", 0.75], ["model", "r3", 0.77],
-  ["r2", "mon", 0.83], ["mon", "orch", 0.88]
+  { a: "query", b: "ret",    at: 0.14, k: "h", e: 0.5 },
+  { a: "ret",   b: "rank",   at: 0.20, k: "v" },
+  { a: "rank",  b: "ground", at: 0.25, k: "v" },
+  { a: "ground",b: "orch",   at: 0.33, k: "h", e: 1.5 },
+  { a: "orch",  b: "tools",  at: 0.38, k: "v" },
+  { a: "orch",  b: "mem",    at: 0.40, k: "v" },
+  { a: "orch",  b: "verify", at: 0.42, k: "h", e: 2.5 },
+  { a: "verify",b: "orch",   at: 0.46, k: "h", e: 2.5, o: -8, eo: 8, back: 1 },
+  { a: "harn",  b: "verify", at: 0.53, k: "v" },
+  { a: "harn",  b: "model",  at: 0.56, k: "h", e: 3.5 },
+  { a: "query", b: "batch",  at: 0.61, k: "bus", e: -0.35 },
+  { a: "batch", b: "model",  at: 0.64, k: "v" },
+  { a: "model", b: "r1",     at: 0.73, k: "h", e: 4.5 },
+  { a: "model", b: "r2",     at: 0.75, k: "h", e: 4.5 },
+  { a: "model", b: "r3",     at: 0.77, k: "h", e: 4.5 },
+  { a: "r2",    b: "mon",    at: 0.83, k: "side", e: 5.55 },
+  { a: "mon",   b: "orch",   at: 0.88, k: "h", e: 2.5, o: 8, eo: -8, back: 1 }
 ];
 
 const PHASES = [
   [0.00, "Unresolved"], [0.16, "Retrieval forming"], [0.34, "Orchestration"],
   [0.52, "Observing itself"], [0.62, "Traffic"], [0.74, "Operations"], [0.90, "Operational"]
-];
-
-const WORDS = [
-  ["retrieval", 0.16, 0.40], ["agents", 0.34, 0.56], ["evaluation", 0.52, 0.68],
-  ["inference", 0.62, 0.80], ["observability", 0.83, 0.94], ["infrastructure", 0.74, 0.97]
 ];
 
 // Plain-language reading of each stage, so the diagram explains itself to anyone.
@@ -155,24 +224,21 @@ const STAGES = [
   [0.74, "Stage 06", "Surviving failure", "Traffic spreads across replicas. When one drops out, the rest absorb it and the system keeps answering."],
   [0.88, "Stage 07", "A system that holds up", "Monitoring feeds back into the orchestrator, so what breaks in production changes how the system behaves next."]
 ];
+const stageOf = (at) => { let s = 0; STAGES.forEach((st, i) => { if (at >= st[0]) s = i; }); return s; };
 
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    ["rootRef","scrollRef","canvasRef","layerRef","scrimRef","eyebrowRef","phaseRef","headRef","p1Ref","p2Ref","closeRef","ctaRef",
-     "legendRef","barRef","stepRef","hintRef","stageNoRef","stageTitleRef","stageBodyRef"]
-      .forEach(k => { this[k] = React.createRef(); });
+    ["rootRef","scrollRef","canvasRef","plotRef","statementRef","indexRef","closeRef","ctaRef",
+     "sysRef","statusRef","readoutRef","p95Ref","tpsRef","queueRef"].forEach(k => { this[k] = React.createRef(); });
     this.p = 0;
-    this.hoverCta = 0;
   }
 
   renderVals() {
-    return { rootRef: this.rootRef, scrollRef: this.scrollRef, canvasRef: this.canvasRef, layerRef: this.layerRef,
-             eyebrowRef: this.eyebrowRef, phaseRef: this.phaseRef, headRef: this.headRef,
-             p1Ref: this.p1Ref, p2Ref: this.p2Ref, closeRef: this.closeRef, ctaRef: this.ctaRef,
-             scrimRef: this.scrimRef, legendRef: this.legendRef, barRef: this.barRef, stepRef: this.stepRef,
-             hintRef: this.hintRef, stageNoRef: this.stageNoRef, stageTitleRef: this.stageTitleRef,
-             stageBodyRef: this.stageBodyRef };
+    return { rootRef: this.rootRef, scrollRef: this.scrollRef, canvasRef: this.canvasRef, plotRef: this.plotRef,
+             statementRef: this.statementRef, indexRef: this.indexRef, closeRef: this.closeRef, ctaRef: this.ctaRef,
+             sysRef: this.sysRef, statusRef: this.statusRef, readoutRef: this.readoutRef,
+             p95Ref: this.p95Ref, tpsRef: this.tpsRef, queueRef: this.queueRef };
   }
 
   componentDidMount() {
@@ -180,73 +246,57 @@ class Component extends DCLogic {
     if (!cv || !sec) return;
     this.ctx = cv.getContext("2d");
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    this.small = window.matchMedia("(max-width: 860px)").matches;
-    // re-read on rotation, so a landscape phone does not keep the portrait treatment
     this.syncBreak = () => {
       this.small = window.matchMedia("(max-width: 860px)").matches;
       this.phone = window.matchMedia("(max-width: 700px)").matches;
-      if (sec) sec.style.height = this.phone ? "auto" : this.small ? "360vh" : "520vh";
+      sec.style.height = this.phone ? "auto" : this.small ? "360vh" : "520vh";
+      this.geo = null;
     };
     window.addEventListener("resize", this.syncBreak);
     this.syncBreak();
 
     this.byId = {};
-    NODES.forEach(n => { this.byId[n.id] = n; });
-    this.links = LINKS.map(([a, b, at], i) => ({ a: this.byId[a], b: this.byId[b], at, i, phase: (i * 0.19) % 1 }));
+    NODES.forEach(n => { this.byId[n.id] = n; n.stage = stageOf(n.at); });
+    this.links = LINKS.map((l, i) => Object.assign({}, l, { A: this.byId[l.a], B: this.byId[l.b], i, phase: (i * 0.37) % 1 }));
 
-    // the direction field: faint traces that start scattered and gradually agree
-    const dense = this.small ? 240 : 620;
-    this.field = [];
-    for (let i = 0; i < dense; i++) {
-      this.field.push({
-        x: Math.random(), y: Math.random(),
-        a0: Math.random() * Math.PI * 2,
-        len: 0.007 + Math.random() * 0.016,
-        w: 0.35 + Math.random() * 0.65
-      });
-    }
-
-    // the stage panel now carries the explanation, so the floating labels stand down entirely
-    this.words = {};
-    this.layerRef.current.style.display = "none";
+    // the rail's index of the seven stages
+    const ol = this.indexRef.current;
+    this.indexItems = STAGES.map((st) => {
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="tr"><span class="fl"></span></span><span class="n"></span><span class="t"></span><span class="bw"><span class="b"><span></span></span></span>';
+      li.querySelector(".n").textContent = st[1].replace("Stage ", "");
+      li.querySelector(".t").textContent = st[2];
+      li.querySelector(".b span").textContent = st[3];
+      ol.appendChild(li);
+      return { li, fl: li.querySelector(".fl"), f: -1, c: "" };
+    });
 
     // the phone's reading of the stages (see the style block): every stage as text
-    const stageBox = sec.querySelector("[data-dir-stage]");
-    const ol = document.createElement("ol");
-    ol.setAttribute("data-dir-steps", "");
-    ol.setAttribute("aria-label", "The seven stages");
+    const grid = sec.querySelector("[data-dir-grid]");
+    const steps = document.createElement("ol");
+    steps.setAttribute("data-dir-steps", "");
+    steps.setAttribute("aria-label", "The seven stages");
     STAGES.forEach((st) => {
       const li = document.createElement("li");
       li.innerHTML = '<span class="n"></span><span class="t"></span><span class="b"></span>';
       li.children[0].textContent = st[1];
       li.children[1].textContent = st[2];
       li.children[2].textContent = st[3];
-      ol.appendChild(li);
+      steps.appendChild(li);
     });
-    stageBox.appendChild(ol);
-    this.stepsEl = ol;
-    this.stepItems = [...ol.children];
+    grid.appendChild(steps);
+    this.stepsEl = steps;
+    this.stepItems = [...steps.children];
     this.stepOffs = [];
     this.cacheSteps = () => { this.stepOffs = this.stepItems.map(li => li.offsetTop); };
-    window.addEventListener("resize", () => { this.cacheSteps(); });
-
-    if (this.small) {
-      const lg = this.legendRef.current;
-      if (lg) {
-        lg.style.width = "auto";
-        lg.style.left = "clamp(22px, 4vw, 54px)";
-        lg.style.bottom = "clamp(58px, 9vh, 90px)";
-      }
-      const h = this.hintRef.current;
-      if (h) h.style.display = "none";
-    }
+    this.onResizeSteps = () => this.cacheSteps();
+    window.addEventListener("resize", this.onResizeSteps);
 
     const cta = this.ctaRef.current;
     if (cta) {
-      cta.addEventListener("pointerenter", () => { this.ctaHot = true; });
-      cta.addEventListener("pointerleave", () => { this.ctaHot = false; });
-      cta.addEventListener("focus", () => { this.ctaHot = true; });
-      cta.addEventListener("blur", () => { this.ctaHot = false; });
+      const on = (v) => () => { this.ctaHot = v; };
+      cta.addEventListener("pointerenter", on(true)); cta.addEventListener("pointerleave", on(false));
+      cta.addEventListener("focus", on(true)); cta.addEventListener("blur", on(false));
     }
 
     this.t0 = performance.now();
@@ -256,7 +306,6 @@ class Component extends DCLogic {
       // target only: this.p eases toward it in the loop so the chapter never snaps
       this.pTarget = this.phone ? this.phoneP() : Math.min(1, Math.max(0, -r.top / span));
       if (this.reduced) { this.p = this.pTarget; this.draw(); }
-      // copy follows scroll, even if the animation loop is paused - while it can be seen
       if (r.bottom > -window.innerHeight * 0.3 && r.top < window.innerHeight * 1.3) this.copy();
     };
     window.addEventListener("scroll", this.onScroll, { passive: true });
@@ -265,26 +314,24 @@ class Component extends DCLogic {
     this.live = true;
     if ("IntersectionObserver" in window) {
       this.io = new IntersectionObserver((en) => {
-        // only the ambient loop pauses; scroll still draws every frame it needs
         const e = en[en.length - 1];
         if (e && e.target === sec) this.live = e.isIntersecting;
       }, { rootMargin: "25% 0px" });
       this.io.observe(sec);
     }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { this.geo = null; this.draw(); });
 
     this.draw();
     this.copy();
     if (!this.reduced) {
-      cancelAnimationFrame(this.raf);
       this.pTarget = this.p;
       const tick = () => {
         this.raf = requestAnimationFrame(tick);
-        // frame-rate-independent ease toward the scroll target: buttery, never overshoots
         const t = this.pTarget === undefined ? this.p : this.pTarget;
         const d = t - this.p;
         this.p += Math.abs(d) < 0.0004 ? d : d * 0.14;
-        this.copy();
         if (!this.live) return;
+        this.copy();
         this.draw();
       };
       tick();
@@ -312,272 +359,277 @@ class Component extends DCLogic {
     return Math.max(0.045, a + (b - a) * f);
   }
 
+  // Geometry for the current frame size: orientation, spacing, chip size, label set, and
+  // every route as a sampled polyline with rounded elbows (so a line can be drawn to any
+  // length, and a packet placed at any distance along it). Rebuilt only on resize.
+  layout(W, H) {
+    const pad = 18;
+    const fit = (flowLen, crossLen) => {
+      const cw = (flowLen - 2 * pad) / (U1 - U0), rh = (crossLen - 2 * pad) / (V1 - V0);
+      return { cw, rh };
+    };
+    const mono = (fs) => fs * 0.6;    // IBM Plex Mono advance
+    const longest = (key) => Math.max(...NODES.map(n => n[key].length));
+    const tryOrient = (horiz) => {
+      const f = horiz ? fit(W, H) : fit(H, W);
+      // keep the grid from sprawling: cap one spacing against the other (it is centred)
+      const cw = Math.min(f.cw, f.rh * 1.9), rh = Math.min(f.rh, cw * 1.15);
+      // a chip's width on screen is bounded by the flow spacing when horizontal, by the
+      // cross spacing when turned; its height by the other one
+      const room = (horiz ? cw : rh) * 0.76, tall = (horiz ? rh : cw) * 0.62;
+      const fsFull = (room - 12) / (longest("l") * mono(1));
+      const fsShort = (room - 12) / (longest("s") * mono(1));
+      return { horiz, cw, rh, room, tall, fsFull, fsShort };
+    };
+    const h = tryOrient(true), v = tryOrient(false);
+    const wide = W >= H * 1.05;
+    let o;
+    // full labels in whichever orientation sets them larger (a left-to-right flow on a tie)
+    const hf = Math.min(11, h.fsFull, h.tall / 2.5), vf = Math.min(11, v.fsFull, v.tall / 2.5);
+    if (hf >= 9 && hf >= vf - 0.5) o = Object.assign(h, { full: true, fs: hf });
+    else if (vf >= 9) o = Object.assign(v, { full: true, fs: vf });
+    else if (wide && h.fsShort >= 9) o = Object.assign(h, { full: false, fs: Math.min(11, h.fsShort) });
+    else o = Object.assign(v, { full: false, fs: Math.min(11, v.fsShort) });
+    o.fs = Math.max(8, Math.min(o.fs, o.tall / 2.5));
+    const flowLen = o.horiz ? W : H, crossLen = o.horiz ? H : W;
+    const uOff = (flowLen - (U1 - U0) * o.cw) / 2, vOff = (crossLen - (V1 - V0) * o.rh) / 2;
+    const U = (u) => uOff + (u - U0) * o.cw, V = (vv) => vOff + (vv - V0) * o.rh;
+    const toXY = (pu, pv) => o.horiz ? [pu, pv] : [pv, pu];
+    const chipH = Math.min(Math.round(o.fs * 2.5), Math.floor(o.tall));
+    const ctx = this.ctx;
+    ctx.font = "500 " + o.fs + "px 'IBM Plex Mono', monospace";
+    const chipW = Math.min(o.room, Math.max(...NODES.map(n => ctx.measureText((o.full ? n.l : n.s).toUpperCase()).width)) + 12);
+    // half extents along u (flow) and v (cross), in px
+    const hu = (o.horiz ? chipW : chipH) / 2, hv = (o.horiz ? chipH : chipW) / 2;
+    const P = {};
+    NODES.forEach(n => { P[n.id] = { u: U(n.u), v: V(n.v) }; });
+    const anchor = (id, side, off) => {
+      const c = P[id]; off = off || 0;
+      if (side === "out") return [c.u + hu, c.v + off];
+      if (side === "in") return [c.u - hu, c.v + off];
+      if (side === "up") return [c.u + off, c.v - hv];
+      return [c.u + off, c.v + hv];
+    };
+    const routes = this.links.map((l) => {
+      const a = P[l.a], b = P[l.b], o2 = l.o || 0, eo = l.eo || 0;
+      let pts;
+      if (l.k === "v") {
+        const down = b.v > a.v;
+        pts = [anchor(l.a, down ? "down" : "up"), anchor(l.b, down ? "up" : "down")];
+      } else if (l.k === "bus") {
+        const A = anchor(l.a, "up"), B = anchor(l.b, "up"), L = V(l.e);
+        pts = [A, [A[0], L], [B[0], L], B];
+      } else if (l.k === "side") {
+        const A = anchor(l.a, "out"), B = anchor(l.b, "out"), E = U(l.e);
+        pts = [A, [E, A[1]], [E, B[1]], B];
+      } else {
+        const fwd = b.u > a.u;
+        const A = anchor(l.a, fwd ? "out" : "in", o2), B = anchor(l.b, fwd ? "in" : "out", o2), E = U(l.e) + eo;
+        pts = A[1] === B[1] ? [A, B] : [A, [E, A[1]], [E, B[1]], B];
+      }
+      return this.polyline(pts.map(q => toXY(q[0], q[1])), Math.min(10, o.rh * 0.12));
+    });
+    const chips = NODES.map(n => { const [x, y] = toXY(P[n.id].u, P[n.id].v); return { n, x, y }; });
+    return Object.assign(o, { W, H, chipW, chipH, routes, chips, U, V, toXY });
+  }
+
+  // sample a right-angled path with rounded corners into points + cumulative length
+  polyline(pts, r) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+      const d1 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), d2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+      const rr = Math.min(r, d1 / 2, d2 / 2);
+      if (rr < 0.5) { out.push(p1); continue; }
+      const a = [p1[0] + (p0[0] - p1[0]) / d1 * rr, p1[1] + (p0[1] - p1[1]) / d1 * rr];
+      const b = [p1[0] + (p2[0] - p1[0]) / d2 * rr, p1[1] + (p2[1] - p1[1]) / d2 * rr];
+      for (let k = 0; k <= 6; k++) {   // quadratic through the corner: close to a quarter arc
+        const t = k / 6, it = 1 - t;
+        out.push([it * it * a[0] + 2 * it * t * p1[0] + t * t * b[0], it * it * a[1] + 2 * it * t * p1[1] + t * t * b[1]]);
+      }
+    }
+    out.push(pts[pts.length - 1]);
+    const cum = [0];
+    for (let i = 1; i < out.length; i++) cum.push(cum[i - 1] + Math.hypot(out[i][0] - out[i - 1][0], out[i][1] - out[i - 1][1]));
+    return { pts: out, cum, len: cum[cum.length - 1] };
+  }
+  at(path, s) {
+    const c = path.cum, P = path.pts;
+    if (s <= 0) return P[0];
+    if (s >= path.len) return P[P.length - 1];
+    let i = 1; while (c[i] < s) i++;
+    const f = (s - c[i - 1]) / Math.max(1e-6, c[i] - c[i - 1]);
+    return [P[i - 1][0] + (P[i][0] - P[i - 1][0]) * f, P[i - 1][1] + (P[i][1] - P[i - 1][1]) * f];
+  }
+  stroke(path, upto) {
+    const ctx = this.ctx, P = path.pts, c = path.cum;
+    ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+    for (let i = 1; i < P.length; i++) {
+      if (c[i] <= upto) { ctx.lineTo(P[i][0], P[i][1]); continue; }
+      const q = this.at(path, upto); ctx.lineTo(q[0], q[1]); break;
+    }
+    ctx.stroke();
+  }
+
   draw() {
-    const cv = this.canvasRef.current, ctx = this.ctx;
-    if (!cv || !ctx) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, this.small ? 1.25 : 1.6);
-    const W = cv.clientWidth, H = cv.clientHeight;
-    const pw = Math.max(1, Math.round(W * dpr)), ph = Math.max(1, Math.round(H * dpr));
-    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+    const cv = this.canvasRef.current, ctx = this.ctx, plot = this.plotRef.current;
+    if (!cv || !ctx || !plot) return;
+    const W = plot.clientWidth, H = plot.clientHeight;
+    if (!W || !H) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pw = Math.round(W * dpr), ph = Math.round(H * dpr);
+    if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; this.geo = null; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!this.geo || this.geo.W !== W || this.geo.H !== H) { this.geo = this.layout(W, H); this.grid = null; }
+    const g = this.geo;
+
+    // the dot grid: drawn once per size, then copied
+    if (!this.grid) {
+      const off = document.createElement("canvas"); off.width = pw; off.height = ph;
+      const o = off.getContext("2d"); o.setTransform(dpr, 0, 0, dpr, 0, 0);
+      o.fillStyle = "rgba(214,230,236,0.075)";
+      const step = 22;
+      for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) o.fillRect(Math.round(x), Math.round(y), 1, 1);
+      this.grid = off;
+    }
     ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(this.grid, 0, 0, W, H);
 
     const t = (performance.now() - this.t0) / 1000;
     const p = this.p;
-    const cl = (v, a, b) => Math.min(b === undefined ? 1 : b, Math.max(a === undefined ? 0 : a, v));
+    const cl = (v) => Math.min(1, Math.max(0, v));
     const ease = (k) => k * k * (3 - 2 * k);
-    // the camera barely moves: the system assembles around the viewer
-    const zoom = (0.9 + 0.12 * ease(cl(p / 0.9))) * (this.phone ? 0.88 : 1 - 0.14 * (1 - ease(cl((p - 0.55) / 0.22))));
-    // while the statement holds the left column, the architecture sits to its right
-    const clear = this.phone ? 0 : 1 - ease(cl((p - 0.55) / 0.22));
-    const shiftX = 0.16 * clear - 0.02 * p, shiftY = 0.012 * Math.sin(p * 3.14) - 0.03 * clear;
-    const X = (nx) => (0.5 + (nx - 0.5 + shiftX) * zoom) * W;
-    const Y = (ny) => (0.5 + (ny - 0.5 + shiftY) * zoom) * H;
+    let si = 0; STAGES.forEach((st, i) => { if (p >= st[0]) si = i; });
+    const cycle = (t % 16) / 16;
+    const down = p > 0.80 && p < 0.995 && cycle > 0.30 && cycle < 0.62;
+    this.down = down;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
 
-    // ── direction field: alignment IS the story, so it is drawn first and faintest
-    const align = ease(cl((p - 0.05) / 0.85));
-    const target = -0.32;
-    ctx.lineCap = "round";
-    for (let i = 0; i < this.field.length; i++) {
-      const f = this.field[i];
-      const wobble = Math.sin(t * 0.22 + i) * 0.22 * (1 - align);
-      const ang = f.a0 * (1 - align) + (target + wobble) * (align || 0.0001) + (1 - align) * wobble;
-      const x = X(f.x), y = Y(f.y);
-      const L = f.len * Math.min(W, H) * (0.8 + 0.6 * align);
-      ctx.strokeStyle = "rgba(198,214,224," + (0.035 + 0.075 * align * f.w).toFixed(3) + ")";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x - Math.cos(ang) * L, y - Math.sin(ang) * L);
-      ctx.lineTo(x + Math.cos(ang) * L, y + Math.sin(ang) * L);
-      ctx.stroke();
-    }
-
-    // ── architecture: each connection draws only once its layer is reached
-    this.links.forEach((l) => {
-      const rev = ease(cl((p - l.at) / 0.09));
-      if (rev <= 0.001) return;
-      const ax = X(l.a.x), ay = Y(l.a.y), bx = X(l.b.x), by = Y(l.b.y);
-      const mx = (ax + bx) / 2, my = (ay + by) / 2;
-      const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
-      const bow = (l.i % 2 ? 1 : -1) * len * 0.13;
-      const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
-      l.cx = cx; l.cy = cy; l.rev = rev;
-      // a returning path (verify→orch, mon→orch) reads cooler and thinner
-      const back = l.b.id === "orch" && l.a.id !== "ground";
-      ctx.strokeStyle = back ? "rgba(164,198,218," + (0.62 * rev).toFixed(3) + ")"
-                            : "rgba(222,236,242," + (0.7 * rev).toFixed(3) + ")";
-      ctx.lineWidth = back ? 1.3 : 1.7;
-      ctx.setLineDash(back ? [4, 6] : []);
-      ctx.beginPath();
-      ctx.moveTo(ax, ay);
-      // partial draw while the layer is still forming
-      if (rev < 1) {
-        const ex = (1 - rev) * (1 - rev) * ax + 2 * (1 - rev) * rev * cx + rev * rev * bx;
-        const ey = (1 - rev) * (1 - rev) * ay + 2 * (1 - rev) * rev * cy + rev * rev * by;
-        ctx.quadraticCurveTo(ax + (cx - ax) * rev, ay + (cy - ay) * rev, ex, ey);
-      } else {
-        ctx.quadraticCurveTo(cx, cy, bx, by);
-      }
-      ctx.stroke();
+    // ── edges: the whole blueprint faintly, then each path drawn as its layer arrives
+    this.links.forEach((l, i) => {
+      const path = g.routes[i];
+      const rev = ease(cl((p - l.at) / 0.08));
+      l.rev = rev;
+      ctx.setLineDash([2, 5]); ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(214,230,236,0.11)";
+      this.stroke(path, path.len);
+      if (rev <= 0.001) { ctx.setLineDash([]); return; }
+      const toR3 = l.b === "r3" && down;
+      ctx.setLineDash(l.back ? [5, 5] : []);
+      ctx.lineWidth = l.back ? 1.2 : 1.4;
+      ctx.strokeStyle = l.back ? "rgba(164,198,218," + (0.7 * rev).toFixed(3) + ")"
+                               : "rgba(226,238,244," + ((toR3 ? 0.18 : 0.62) * rev).toFixed(3) + ")";
+      this.stroke(path, path.len * rev);
       ctx.setLineDash([]);
     });
 
-    // ── the replica that goes away, and comes back
-    const failWindow = p > 0.80 && p < 0.995;
-    const cycle = (t % 16) / 16;
-    const down = failWindow && cycle > 0.30 && cycle < 0.62;
+    // ── packets: small squares at a constant speed along every finished path
+    if (!this.reduced) {
+      const hot = this.ctaHot ? 1 : 0;
+      this.hotK = (this.hotK || 0) + (hot - (this.hotK || 0)) * 0.08;
+      this.links.forEach((l, i) => {
+        if (l.rev < 1) return;
+        const path = g.routes[i];
+        let speed = 70 * (1 + 0.6 * this.hotK);
+        if (down && (l.b === "r1" || l.b === "r2")) speed *= 1.45;
+        let s = ((t * speed + l.phase * path.len) % path.len + path.len) % path.len;
+        let u = s / path.len, alpha = 0.3 + 0.7 * Math.sin(Math.PI * u);
+        let col = l.back ? "176,206,224" : "246,240,228";
+        if (l.a === "rank" && u > 0.55) alpha *= cl(1 - (u - 0.55) * 4);           // a weak match is dropped
+        if (l.b === "batch") { const hold = (t % 4) / 4; if (hold < 0.45 && u > 0.82) s = path.len * 0.82; }  // the batch waits
+        if (l.a === "harn" && Math.sin(t * 0.5 + l.i) > 0.7) col = "232,186,124"; // a test trace diverges
+        if (down && l.b === "r3") alpha *= 0.08;                                    // traffic avoids the dead replica
+        const q = this.at(path, s);
+        const sz = l.a === "batch" ? 5 : 4;
+        ctx.fillStyle = "rgba(" + col + "," + alpha.toFixed(3) + ")";
+        ctx.fillRect(Math.round(q[0] - sz / 2), Math.round(q[1] - sz / 2), sz, sz);
+      });
+    }
 
-    // ── nodes: matte plates that emerge from the dark, warming slightly under load
-    NODES.forEach((n, i) => {
-      const rev = ease(cl((p - n.at) / 0.08));
-      if (rev <= 0.002) return;
-      const x = X(n.x), y = Y(n.y);
+    // ── chips: ghosts until their stage, then built; the current stage carries the amber
+    ctx.font = "500 " + g.fs + "px 'IBM Plex Mono', monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const chipsOut = [];
+    g.chips.forEach(({ n, x, y }) => {
+      const rev = ease(cl((p - n.at) / 0.07));
       const gone = down && n.id === "r3";
-      const a = rev * (gone ? 0.34 : 1);
-      if (gone) {
-        // the failing replica is marked, not just dimmed — the recovery must be legible
-        ctx.strokeStyle = "rgba(234,150,104,0.85)";
-        ctx.lineWidth = 1.4;
-        ctx.beginPath(); ctx.moveTo(x - 7, y - 7); ctx.lineTo(x + 7, y + 7);
-        ctx.moveTo(x + 7, y - 7); ctx.lineTo(x - 7, y + 7); ctx.stroke();
-        ctx.font = "500 10px 'IBM Plex Mono', monospace";
-        ctx.textAlign = "right";
-        ctx.fillStyle = "rgba(236,164,116,0.95)";
-        ctx.fillText("REPLICA DOWN \u2192 REROUTED", x - 14, y + 4);
+      const active = rev > 0.02 && n.stage === si && p < 0.9;
+      const load = n.id === "model" ? Math.max(cl((p - 0.62) / 0.2) * 0.6, this.hotK || 0) : 0;
+      let label = (g.full ? n.l : n.s).toUpperCase();
+      if (gone) label = g.full ? "REPLICA · DOWN" : "DOWN";
+      const w = g.chipW, h = g.chipH, sc = 0.96 + 0.04 * rev;
+      const cw = w * sc, chh = h * sc, x0 = x - cw / 2, y0 = y - chh / 2;
+      chipsOut.push({ id: n.id, x: x - w / 2, y: y - h / 2, w, h });
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x0, y0, cw, chh, 6); else ctx.rect(x0, y0, cw, chh);
+      if (rev <= 0.02) {
+        ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeStyle = "rgba(214,230,236,0.2)"; ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(226,238,244,0.24)"; ctx.fillText(label, x, y + 0.5);
+        return;
       }
-      const load = n.id === "model" ? cl((p - 0.62) / 0.2) : 0;
-      const r = (n.id === "model" || n.id === "orch") ? 8.5 : 6.4;
-
-      ctx.beginPath();
-      ctx.arc(x, y + 7, r * 2.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(2,6,10," + (0.35 * a).toFixed(3) + ")";
+      ctx.fillStyle = "rgba(12,18,24," + (0.94 * rev + 0.06).toFixed(3) + ")";
       ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      const g = ctx.createLinearGradient(x, y - r, x, y + r);
-      g.addColorStop(0, "rgba(46,54,62," + a.toFixed(3) + ")");
-      g.addColorStop(1, "rgba(16,21,26," + a.toFixed(3) + ")");
-      ctx.fillStyle = g;
-      ctx.fill();
-      ctx.lineWidth = 1.4;
-      ctx.strokeStyle = load > 0.02
-        ? "rgba(234,188,124," + ((0.6 + 0.4 * load) * a).toFixed(3) + ")"
-        : "rgba(224,236,240," + (0.68 * a).toFixed(3) + ")";
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = gone ? "rgba(236,138,102,0.95)"
+        : (active || load > 0.3) ? "rgba(232,186,124," + (0.95 * rev).toFixed(3) + ")"
+        : "rgba(226,238,244," + (0.46 * rev).toFixed(3) + ")";
       ctx.stroke();
-
-      // label plate keeps every name readable over the field and the curves
-      const key = n.id === "model" || n.id === "orch";
-      const fs = key ? 13 : 11.5;
-      ctx.font = "500 " + fs + "px 'IBM Plex Mono', monospace";
-      ctx.textAlign = "center";
-      const lbl = n.l.toUpperCase();
-      const tw = ctx.measureText(lbl).width;
-      const ly = y - r - 15;
-      ctx.fillStyle = "rgba(6,11,16," + (0.72 * a).toFixed(3) + ")";
-      ctx.beginPath();
-      const rx = x - tw / 2 - 6, ry = ly - fs + 1, rw = tw + 12, rh = fs + 6;
-      if (ctx.roundRect) { ctx.roundRect(rx, ry, rw, rh, 4); } else { ctx.rect(rx, ry, rw, rh); }
-      ctx.fill();
-      ctx.fillStyle = key ? "rgba(250,252,248," + (0.98 * a).toFixed(3) + ")"
-                          : "rgba(238,246,240," + (0.9 * a).toFixed(3) + ")";
-      ctx.fillText(lbl, x, ly);
+      ctx.fillStyle = gone ? "rgba(240,168,136,0.98)"
+        : active ? "rgba(252,246,236," + rev.toFixed(3) + ")"
+        : "rgba(232,240,236," + (0.86 * rev).toFixed(3) + ")";
+      ctx.fillText(label, x, y + 0.5);
     });
-
-    // ── signals: the details that make it feel operational
-    const sig = (l, u, col, size) => {
-      const iu = 1 - u;
-      const x = iu * iu * X(l.a.x) + 2 * iu * u * l.cx + u * u * X(l.b.x);
-      const y = iu * iu * Y(l.a.y) + 2 * iu * u * l.cy + u * u * Y(l.b.y);
-      ctx.beginPath();
-      ctx.arc(x, y, size || 2, 0, Math.PI * 2);
-      ctx.fillStyle = col;
-      ctx.fill();
-      return [x, y];
-    };
-    this.links.forEach((l) => {
-      if (!l.rev || l.rev < 1) return;
-      const back = l.b.id === "orch" && l.a.id !== "ground";
-      let speed = 0.17;
-      let u = ((t * speed + l.phase) % 1 + 1) % 1;
-      if (back) u = 1 - u;
-      let alpha = 0.35 + Math.sin(Math.PI * u) * 0.65;
-      let col = back ? "rgba(176,206,224," : "rgba(246,242,232,";
-
-      // a reranked chunk gets rejected before it reaches grounding
-      if (l.a.id === "rank" && u > 0.55) alpha *= cl(1 - (u - 0.55) * 4);
-      // the batch waits for one more request before it moves
-      if (l.b.id === "batch") { const hold = (t % 4) / 4; if (hold < 0.45 && u > 0.62) u = 0.62; }
-      // a test trace diverges from its pair
-      if (l.a.id === "harn") { const div = Math.sin(t * 0.5 + l.i) > 0.7; if (div) col = "rgba(226,178,116,"; }
-      // traffic avoids the replica that is down
-      if (down && l.b.id === "r3") alpha *= 0.1;
-      if (down && (l.b.id === "r1" || l.b.id === "r2")) { speed = 0.24; alpha = Math.min(1, alpha * 1.3); }
-
-      sig(l, u, col + alpha.toFixed(3) + ")", l.a.id === "batch" ? 3.8 : 3.1);
-    });
-
-    // ── instrumentation, embedded rather than dashboarded
-    if (p > 0.62) {
-      const a = cl((p - 0.62) / 0.1) * 0.92;
-      ctx.font = "400 10.5px 'IBM Plex Mono', monospace";
-      ctx.fillStyle = "rgba(234,242,234," + a.toFixed(3) + ")";
-      ctx.textAlign = "left";
-      ctx.fillText("TTFT 180MS", X(0.65) + 16, Y(0.31));
-      ctx.fillText("QUEUE " + (1 + Math.floor((t % 4) / 1.3)), X(0.65) + 16, Y(0.35));
-      ctx.fillText("P95 42MS", X(0.77) + 16, Y(0.53));
-      ctx.fillText("TOKENS/S 1.4K", X(0.77) + 16, Y(0.57));
-    }
-
-    // ── the final output trace runs to the CTA, and answers when it is hovered
-    if (p > 0.86) {
-      const a = cl((p - 0.86) / 0.1);
-      const cta = this.ctaRef.current;
-      if (cta) {
-        const cr = cta.getBoundingClientRect(), pr = cv.getBoundingClientRect();
-        const tx = cr.left - pr.left + 8, ty = cr.top - pr.top + cr.height / 2;
-        const sx = X(this.byId.r2.x), sy = Y(this.byId.r2.y);
-        const hot = this.ctaHot ? 1 : 0;
-        this.ctaGlow = (this.ctaGlow || 0) + (hot - (this.ctaGlow || 0)) * 0.08;
-        ctx.strokeStyle = "rgba(226,178,116," + ((0.16 + 0.34 * this.ctaGlow) * a).toFixed(3) + ")";
-        ctx.lineWidth = 1 + this.ctaGlow * 0.5;
-        ctx.setLineDash([4, 6]);
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.quadraticCurveTo((sx + tx) / 2, Math.max(sy, ty) + 60, tx, ty);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        const u = ((t * (0.16 + 0.3 * this.ctaGlow)) % 1 + 1) % 1;
-        const iu = 1 - u;
-        const mx = (sx + tx) / 2, my = Math.max(sy, ty) + 60;
-        const px = iu * iu * sx + 2 * iu * u * mx + u * u * tx;
-        const py = iu * iu * sy + 2 * iu * u * my + u * u * ty;
-        ctx.beginPath();
-        ctx.arc(px, py, 2.4 + this.ctaGlow, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(240,224,190," + ((0.5 + 0.5 * this.ctaGlow) * a).toFixed(3) + ")";
-        ctx.fill();
-      }
-    }
-
-    this.copy();
+    cv.__chips = chipsOut;   // for layout checks
   }
 
-  // driven by scroll so the chapter reads correctly with no animation loop at all
+  // the rail, the frame's header and its instrument strip, all driven by scroll
   copy() {
     const p = this.p;
-    const cl = (v) => Math.min(1, Math.max(0, v));
-    // written unconditionally: React re-renders reapply the template's inline opacity:0,
-    // so a cached flag would strand elements invisible
-    const show = (ref, on, dy) => {
-      const el = ref.current;
-      if (!el) return;
-      const o = on ? "1" : "0";
-      const tr = on ? "none" : "translateY(" + (dy || 16) + "px)";
-      if (el.style.opacity !== o) el.style.opacity = o;
-      if (el.style.transform !== tr) el.style.transform = tr;
-    };
+    const set = (el, on) => { if (el && el.classList.contains("on") !== on) el.classList.toggle("on", on); };
+    const root = this.rootRef.current;
+    if (!root) return;
     const ph = this.phone;
-    show(this.eyebrowRef, ph || p > 0.01, 0);
-    show(this.headRef, ph || (p > 0.05 && p < (this.small ? 0.50 : 0.62)), 24);
-    show(this.p1Ref, ph || (p > 0.12 && p < (this.small ? 0.46 : 0.55)), 16);
-    show(this.p2Ref, ph || (p > 0.30 && p < (this.small ? 0.46 : 0.55)), 16);
-    show(this.closeRef, ph || p > 0.88, 18);
-    const sc = this.scrimRef.current;
-    if (sc) {
-      const o = String((p > 0.03 && p < 0.60) ? 1 : (p > 0.86 ? 0.55 : 0));
-      if (sc.style.opacity !== o) sc.style.opacity = o;
-    }
-    show(this.ctaRef, ph || p > 0.90, 14);
+    set(this.statementRef.current, ph || p < 0.1);
+    set(root.querySelector('[data-dir-state="index"]'), !ph && p >= 0.12 && p <= 0.88);
+    set(this.closeRef.current, ph || p > 0.9);
 
-    // ── plain-language stage panel: the part that makes the diagram readable.
-    // Nodes are resolved from the live DOM (every match, not a cached ref) and written
-    // unconditionally, so neither a stale ref nor a re-render can strand the panel.
-    let si = 0;
-    STAGES.forEach((st, i) => { if (p >= st[0]) si = i; });
-    const stage = STAGES[si];
-    const root = this.rootRef.current || document;
-    const all = (k) => root.querySelectorAll('[data-dir="' + k + '"]');
-    const setText = (k, txt) => all(k).forEach(el => { if (el.textContent !== txt) el.textContent = txt; });
-    setText("stageNo", stage[1]);
-    setText("stageTitle", stage[2]);
-    setText("stageBody", stage[3]);
-    setText("step", String(si + 1).padStart(2, "0") + " / 07");
-    const lgOn = (this.small ? (p > 0.56 && p < 0.84) : (p > 0.03 && p < 0.95)) ? "1" : "0";
-    all("legend").forEach(el => { el.style.opacity = lgOn; });
-    const w = Math.round(p * 1000) / 10 + "%";
-    all("bar").forEach(el => { el.style.width = w; });
-    all("hint").forEach(el => { el.style.opacity = (!this.small && p < 0.06) ? "1" : "0"; });
+    let si = 0; STAGES.forEach((st, i) => { if (p >= st[0]) si = i; });
+    this.indexItems.forEach((it, i) => {
+      const a = STAGES[i][0], b = i + 1 < STAGES.length ? STAGES[i + 1][0] : 1;
+      const f = i < si ? 1 : i > si ? 0 : Math.round(Math.min(1, Math.max(0, (p - a) / (b - a))) * 100) / 100;
+      if (f !== it.f) { it.f = f; it.fl.style.transform = "scaleY(" + f + ")"; }
+      const c = i < si ? "done" : i === si ? "on" : "";
+      if (c !== it.c) { it.c = c; it.li.className = c; }
+    });
 
-    const down = p > 0.80 && p < 0.995 && ((performance.now() - this.t0) / 1000 % 16) / 16 > 0.30 && ((performance.now() - this.t0) / 1000 % 16) / 16 < 0.62;
+    const sys = this.sysRef.current, txt = "System · " + String(si + 1).padStart(2, "0") + " / 07";
+    if (sys && sys.textContent !== txt) sys.textContent = txt;
     let label = PHASES[0][1];
     PHASES.forEach(([at, name]) => { if (p >= at) label = name; });
-    const pr = this.phaseRef.current;
-    if (pr && pr.__l !== label) { pr.__l = label; pr.textContent = down ? "Recovering" : label; }
+    const down = !!this.down;
+    const st = this.statusRef.current;
+    if (st) {
+      const s = down ? "down" : p >= 0.62 ? "live" : "idle";
+      if (st.getAttribute("data-s") !== s) st.setAttribute("data-s", s);
+      const tEl = st.querySelector("[data-dir-status-t]"), lbl = down ? "Recovering" : label;
+      if (tEl && tEl.textContent !== lbl) tEl.textContent = lbl;
+    }
+    const ro = p > 0.62;
+    set(this.readoutRef.current, ro);
+    const fr = root.querySelector("[data-dir-frame]");
+    if (fr && fr.hasAttribute("data-ro") !== ro) fr.toggleAttribute("data-ro", ro);
+    const w = (ref, v) => { const el = ref.current; if (el && el.textContent !== v) el.textContent = v; };
+    const tt = (performance.now() - (this.t0 || 0)) / 1000;
+    w(this.p95Ref, down ? "58ms" : "42ms");
+    w(this.tpsRef, down ? "1.1K" : "1.4K");
+    w(this.queueRef, String(1 + Math.floor((tt % 4) / 1.3)));
   }
 
   componentWillUnmount() {
     cancelAnimationFrame(this.raf);
     window.removeEventListener("scroll", this.onScroll);
+    window.removeEventListener("resize", this.syncBreak);
+    window.removeEventListener("resize", this.onResizeSteps);
     if (this.io) this.io.disconnect();
   }
 }
