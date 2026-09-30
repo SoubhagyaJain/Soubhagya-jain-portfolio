@@ -334,6 +334,7 @@ html,body{max-width:100%;overflow-x:clip}
   }
 }`,
   ...helmetStyles,
+  readFileSync(join(ROOT, "src", "cine.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "writing.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "activity.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
@@ -359,7 +360,9 @@ return Component;
   })
   .join("\n\n");
 
-const app = `${runtime}
+const app = `${readFileSync(join(ROOT, "src", "cine.js"), "utf8")}
+
+${runtime}
 
 /* ── artboard logic, compiled from design/*.dc.html ──────────────────────── */
 
@@ -447,8 +450,8 @@ writeFileSync(join(OUT, "app.js"), app);
 
 // the journal, its article pages and the Notes library share one stylesheet, one
 // small script, and the home page's fonts
-const pagesCss = readFileSync(join(ROOT, "src", "pages.css"), "utf8");
-const journalJs = readFileSync(join(ROOT, "src", "journal.js"), "utf8");
+const pagesCss = readFileSync(join(ROOT, "src", "pages.css"), "utf8") + "\n\n" + readFileSync(join(ROOT, "src", "cine.css"), "utf8");
+const journalJs = readFileSync(join(ROOT, "src", "cine.js"), "utf8") + "\n" + readFileSync(join(ROOT, "src", "journal.js"), "utf8");
 try { new Script(journalJs, { filename: "journal.js" }); }
 catch (e) { throw new Error(`src/journal.js does not parse — ${e.message}`); }
 writeFileSync(join(OUT, "pages.css"), pagesCss);

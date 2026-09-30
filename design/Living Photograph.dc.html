@@ -1798,8 +1798,8 @@ class Component extends DCLogic {
       lens.style.transform = "translateX(" + (ORDER.indexOf(name) * step()).toFixed(1) + "px)";
     };
 
-    const paint = (name) => {
-      if (this.alpineTheme) this.alpineTheme(name);
+    const paint = (name, instant) => {
+      if (this.alpineTheme) this.alpineTheme(name, instant);
       const c = CHROME[name] || CHROME.dark;
       // chapter 03 draws its own canvases and styles its paper per plate
       document.documentElement.dataset.scene = name === "day" ? "day" : "dark";
@@ -1826,13 +1826,19 @@ class Component extends DCLogic {
 
     this.setTheme = (name) => {
       if (!ONEHOT[name] || name === this.state.theme) return;
-      this.wFrom = this.wCur.slice();
-      this.wTo = ONEHOT[name].slice();
-      this.mixK = 0;
-      this.mixAt = performance.now();
-      this.setState({ theme: name });
-      paint(name);
-      if (this.applyScroll) this.applyScroll();   // the scrim depth is per plate
+      const apply = (instant) => {
+        this.wFrom = this.wCur.slice();
+        this.wTo = ONEHOT[name].slice();
+        this.mixK = instant ? 1 : 0;
+        if (instant) this.wCur = this.wTo.slice();
+        this.mixAt = performance.now();
+        this.setState({ theme: name });
+        paint(name, instant);
+        if (this.applyScroll) this.applyScroll();   // the scrim depth is per plate
+      };
+      // nightfall or daybreak (src/cine.js); a plain switch where it cannot run
+      if (window.cineTheme) window.cineTheme(name === "day" ? "light" : "dark", apply);
+      else apply(false);
       try { localStorage.setItem("lp-theme", name); } catch (e) {}
     };
 
@@ -2380,10 +2386,11 @@ class Component extends DCLogic {
     initGL();
 
     // day <-> night: the shader sweeps the valley over; chrome and scrims follow
-    this.alpineTheme = (name) => {
+    this.alpineTheme = (name, instant) => {
       const day = name === "day";
       st.target = day ? 0 : 1;
-      if (!this.alpineThemed) { st.prog = st.target; this.alpineThemed = true; }
+      // under the cinematic switch the new frame is already the finished scene
+      if (!this.alpineThemed || instant) { st.prog = st.target; this.alpineThemed = true; }
       scrim.day.style.opacity = day ? "1" : "0";
       scrim.night.style.opacity = day ? "0" : "1";
       if (!st.gl) { imgs.day.style.opacity = day ? "1" : "0"; imgs.night.style.opacity = day ? "0" : "1"; }
