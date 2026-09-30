@@ -407,7 +407,7 @@ ${favicon}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
 <link rel="stylesheet" href="styles.css?v=${stamp(css)}">
-<script>document.documentElement.classList.add("js-act");try{var de=document.documentElement;de.setAttribute("data-alpine","");if(!(matchMedia("(min-width: 900px)").matches&&!matchMedia("(orientation: portrait) and (max-width: 820px)").matches))de.setAttribute("data-alpine-lite","")}catch(e){}try{if(document.referrer&&new URL(document.referrer).origin===location.origin)document.documentElement.classList.add("from-site")}catch(e){}</script>
+<script>document.documentElement.classList.add("js-act");try{localStorage.removeItem("lp-theme");localStorage.removeItem("lp-night");document.documentElement.dataset.scene=sessionStorage.getItem("lp-theme")==="dark"?"dark":"day"}catch(e){document.documentElement.dataset.scene="day"}try{var de=document.documentElement;de.setAttribute("data-alpine","");if(!(matchMedia("(min-width: 900px)").matches&&!matchMedia("(orientation: portrait) and (max-width: 820px)").matches))de.setAttribute("data-alpine-lite","")}catch(e){}try{if(document.referrer&&new URL(document.referrer).origin===location.origin)document.documentElement.classList.add("from-site")}catch(e){}</script>
 </head>
 <body>
 <div id="dc-root" data-dc-component="${escapeAttr(ENTRY)}">${body}</div>

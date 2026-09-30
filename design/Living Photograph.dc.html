@@ -1839,14 +1839,15 @@ class Component extends DCLogic {
       // nightfall or daybreak (src/cine.js); a plain switch where it cannot run
       if (window.cineTheme) window.cineTheme(name === "day" ? "light" : "dark", apply);
       else apply(false);
-      try { localStorage.setItem("lp-theme", name); } catch (e) {}
+      try { sessionStorage.setItem("lp-theme", name); } catch (e) {}
     };
 
-    let start = "dark";
+    // Every visit opens in daylight. A switch to night lasts for the rest of this visit
+    // (this tab's session, shared with the journal pages), never into the next one.
+    let start = "day";
     try {
-      const saved = localStorage.getItem("lp-theme");
+      const saved = sessionStorage.getItem("lp-theme");
       if (saved && ONEHOT[saved]) start = saved;
-      else if (localStorage.getItem("lp-night") === "0") start = "day";   // migrate the old key
     } catch (e) {}
     this.setState({ theme: start });
     this.wCur = ONEHOT[start].slice();
