@@ -1,0 +1,89 @@
+/* ── three cinematic entrances (see cine-seq.js) ────────────────────────────
+   1. the Hero is assembled inside a laptop, then entered;
+   2. the Builder: the desk film pushes into the monitor, which becomes Projects;
+   3. the CTA: the laptop is opened toward the reader and becomes Contact.
+   Everything on a screen is a clone of the live section it resolves into, so the
+   last frame of each shot is the section itself. Transforms, opacity and filters
+   only; nothing here moves layout on the page. */
+
+/* before the script has built the first shot, the stage is simply dark, so the
+   finished hero never flashes ahead of its own construction */
+html.bi-pending body::after { content: ""; position: fixed; inset: 0; z-index: 2147483600; background: #07080a; }
+
+/* ── 1 · the Hero build ─────────────────────────────────────────────────── */
+.bi { position: fixed; inset: 0; z-index: 2147483500; overflow: hidden; background: #07080a; color: #efe7da; cursor: none; contain: strict; }
+.bi * { box-sizing: border-box; }
+.bi-bg { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 72% 38%, rgba(214,142,70,0.16), rgba(214,142,70,0) 70%),
+    radial-gradient(90% 70% at 50% 110%, rgba(40,52,50,0.35), rgba(0,0,0,0) 70%),
+    #07080a; }
+.bi-grid { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background-image: radial-gradient(rgba(239,231,218,0.16) 1px, transparent 1.2px); background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 100%); mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 100%); }
+.bi-lap { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform, opacity; pointer-events: none; }
+.bi-lap img { display: block; width: 100%; height: auto; user-select: none; }
+.bi-glow { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; transform-origin: 0 0; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(226,150,78,0.30), rgba(226,150,78,0.08) 55%, rgba(226,150,78,0) 100%); }
+/* the screen: the plate is clipped to it, the interface is not (it flies in) */
+/* the screen: a full-viewport layer clipped (clip-path, set per frame) to the glass,
+   so moving it never costs layout */
+.bi-clip { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: #040405; clip-path: inset(50%); will-change: clip-path, opacity; }
+.bi-bloom { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  background: radial-gradient(60% 55% at 50% 50%, rgba(255,214,160,0.55), rgba(255,170,100,0.18) 55%, rgba(255,160,90,0) 80%); }
+.bi-plate, .bi-frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; overflow: visible; will-change: transform; }
+.bi-plate > * , .bi-frame > * { pointer-events: none; }
+.bi-glass { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 30%), #050506; }
+.bi-sheen { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; will-change: transform, opacity; pointer-events: none;
+  background: linear-gradient(112deg, rgba(255,244,226,0) 0%, rgba(255,244,226,0.07) 22%, rgba(255,244,226,0) 38%, rgba(255,244,226,0) 70%, rgba(255,244,226,0.04) 86%, rgba(255,244,226,0) 100%); }
+.bi-piece { will-change: transform, opacity, filter; }
+/* the tool layer: a hairline selection, its size, and the guides it snaps to */
+.bi-tool { position: absolute; inset: 0; pointer-events: none; }
+.bi-sel { position: absolute; left: 0; top: 0; border: 1px solid rgba(226,178,116,0.9); opacity: 0; transform-origin: 0 0; }
+.bi-sel i { position: absolute; width: 7px; height: 7px; background: #07080a; border: 1px solid rgba(226,178,116,0.95); }
+.bi-sel i:nth-child(1) { left: -4px; top: -4px; } .bi-sel i:nth-child(2) { right: -4px; top: -4px; }
+.bi-sel i:nth-child(3) { left: -4px; bottom: -4px; } .bi-sel i:nth-child(4) { right: -4px; bottom: -4px; }
+.bi-sel b { position: absolute; left: -1px; bottom: calc(100% + 7px); white-space: nowrap; padding: 3px 6px; border-radius: 3px; font: 500 10px/1 'IBM Plex Mono', monospace; letter-spacing: .08em; color: #07080a; background: rgba(226,178,116,0.95); }
+.bi-guide { position: absolute; background: rgba(226,178,116,0.85); opacity: 0; }
+.bi-guide.v { width: 1px; } .bi-guide.h { height: 1px; }
+.bi-cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; will-change: transform, opacity; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); }
+.bi-cursor svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .12s ease; }
+.bi-cursor .grab { opacity: 0; }
+.bi-cursor.is-grab .arrow { opacity: 0; } .bi-cursor.is-grab .grab { opacity: 1; }
+/* chrome: where we are in the build, and the way out */
+.bi-chrome { position: absolute; left: clamp(22px, 3vw, 44px); right: clamp(22px, 3vw, 44px); bottom: clamp(20px, 3.4vh, 36px); display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; font: 500 10px/1.4 'IBM Plex Mono', monospace; letter-spacing: .24em; text-transform: uppercase; color: rgba(239,231,218,0.5); }
+.bi-steps { display: flex; flex-direction: column; gap: 10px; }
+.bi-steps ol { display: flex; gap: 18px; margin: 0; padding: 0; list-style: none; }
+.bi-steps li { transition: color .5s ease; } .bi-steps li.on { color: rgba(239,231,218,0.95); } .bi-steps li span { color: rgba(226,178,116,0.9); margin-right: .5em; }
+.bi-rule { position: relative; height: 1px; width: min(360px, 40vw); background: rgba(239,231,218,0.14); }
+.bi-rule i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transform-origin: 0 0; transform: scaleX(0); background: rgba(226,178,116,0.9); }
+.bi-skip { pointer-events: auto; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: rgba(239,231,218,0.78); background: rgba(239,231,218,0.04); border: 1px solid rgba(239,231,218,0.18); border-radius: 999px; padding: 10px 16px; transition: border-color .3s ease, color .3s ease; }
+.bi-skip:hover, .bi-skip:focus-visible { color: #fff; border-color: rgba(226,178,116,0.8); outline: none; }
+.bi-hint { position: absolute; left: 50%; bottom: clamp(70px, 12vh, 120px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 14px; font: 500 10px/1 'IBM Plex Mono', monospace; letter-spacing: .32em; text-transform: uppercase; color: rgba(239,231,218,0.62); pointer-events: none; }
+.bi-hint i { display: block; width: 1px; height: 38px; background: linear-gradient(rgba(226,178,116,0), rgba(226,178,116,0.9)); transform-origin: 50% 0; animation: bi-cue 2.2s cubic-bezier(.6,0,.2,1) infinite; }
+@keyframes bi-cue { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+.bi.out { transition: opacity .45s ease; opacity: 0; }
+
+/* ── 2 and 3 · the films ────────────────────────────────────────────────── */
+.cs-track { position: relative; pointer-events: none; }
+.cs-film { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; opacity: 0; visibility: hidden; background: #060606; contain: strict; }
+.cs-film.on { visibility: visible; }
+.cs-film canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cs-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cs-group { position: absolute; inset: 0; }
+.cs-back, .cs-sheen, .cs-frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; backface-visibility: hidden; }
+.cs-back { background: #0b0a09; opacity: 0; }
+.cs-sheen { mix-blend-mode: screen; opacity: 0;
+  background: linear-gradient(115deg, rgba(255,244,226,0) 0%, rgba(255,244,226,0.10) 24%, rgba(255,244,226,0) 42%), radial-gradient(120% 90% at 50% 50%, rgba(255,226,180,0) 60%, rgba(255,226,180,0.10) 100%); }
+.cs-frame { opacity: 0; overflow: hidden; }
+.cs-frame > * { pointer-events: none; }
+.cs-grain { position: absolute; inset: -50%; opacity: .06; pointer-events: none; animation: fx-grain .6s steps(4) infinite;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
+.cs-vig { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 75% at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.42) 100%); }
+/* the Builder's fragments: real lines from the work, drifting at depth */
+.cs-frag { position: absolute; left: 0; top: 0; white-space: nowrap; font: 500 12px/1.2 'IBM Plex Mono', monospace; letter-spacing: .12em; color: rgba(244,214,168,0.9); text-shadow: 0 0 18px rgba(226,150,78,0.35); will-change: transform, opacity, filter; opacity: 0; }
+.cs-frag.lg { font: italic 400 26px/1.1 'Instrument Serif', Georgia, serif; letter-spacing: 0; color: rgba(248,236,216,0.9); }
+.cs-frag svg { display: block; overflow: visible; }
+/* a section a film resolves into stays out of sight until the cut */
+.cs-held { visibility: hidden !important; }
