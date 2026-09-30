@@ -284,8 +284,8 @@ const HEAD_SCRIPT = `(function(){var m="light";try{localStorage.removeItem("lp-t
 /* The home page's living ground, held still: the alpine valley, landscape on a desktop and
    portrait on a phone, day or night with the reading mode. Behind everything, under a scrim for reading. */
 const SCENE_BG = `<div class="scene-bg" aria-hidden="true">
-  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/alpine-night.jpg"><img src="/assets/alpine-night-m.jpg" alt="" decoding="async" fetchpriority="low"></picture>
-  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><img src="/assets/alpine-day-m.jpg" alt="" loading="lazy" decoding="async"></picture>
+  <picture class="sb-night"><source media="(min-width: 900px)" type="image/webp" srcset="/assets/alpine-night-1600.webp 1600w, /assets/alpine-night-2560.webp 2560w" sizes="100vw"><source media="(min-width: 900px)" srcset="/assets/alpine-night.jpg"><source type="image/webp" srcset="/assets/alpine-night-m-1080.webp 1080w, /assets/alpine-night-m-1440.webp 1440w" sizes="100vw"><img src="/assets/alpine-night-m.jpg" alt="" loading="lazy" decoding="async"></picture>
+  <picture class="sb-day"><source media="(min-width: 900px)" type="image/webp" srcset="/assets/alpine-day-1600.webp 1600w, /assets/alpine-day-2560.webp 2560w" sizes="100vw"><source media="(min-width: 900px)" srcset="/assets/alpine-day.jpg"><source type="image/webp" srcset="/assets/alpine-day-m-1080.webp 1080w, /assets/alpine-day-m-1440.webp 1440w" sizes="100vw"><img src="/assets/alpine-day-m.jpg" alt="" decoding="async" fetchpriority="high"></picture>
 </div>`;
 
 /* The Journal's ground on a desktop: a forest, moonlit or at sunrise with the reading
@@ -311,8 +311,8 @@ const FOREST_MOTES = (() => {
   return out.join("");
 })();
 const FOREST_BG = `<div class="scene-bg scene-forest" aria-hidden="true">
-  <picture class="sb-night"><source media="(min-width: 900px)" srcset="/assets/forest-night.jpg"><img src="${PIXEL}" alt="" decoding="async" fetchpriority="low"></picture>
-  <picture class="sb-day"><source media="(min-width: 900px)" srcset="/assets/forest-day.jpg"><img src="${PIXEL}" alt="" loading="lazy" decoding="async"></picture>
+  <picture class="sb-night"><source media="(min-width: 900px)" type="image/webp" srcset="/assets/forest-night-1600.webp 1600w, /assets/forest-night-2560.webp 2560w" sizes="100vw"><source media="(min-width: 900px)" srcset="/assets/forest-night.jpg"><img src="${PIXEL}" alt="" loading="lazy" decoding="async"></picture>
+  <picture class="sb-day"><source media="(min-width: 900px)" type="image/webp" srcset="/assets/forest-day-1600.webp 1600w, /assets/forest-day-2560.webp 2560w" sizes="100vw"><source media="(min-width: 900px)" srcset="/assets/forest-day.jpg"><img src="${PIXEL}" alt="" decoding="async" fetchpriority="high"></picture>
   <div class="sf-rays"><span></span><span></span></div>
   <div class="sf-motes">${FOREST_MOTES}</div>
 </div>`;
