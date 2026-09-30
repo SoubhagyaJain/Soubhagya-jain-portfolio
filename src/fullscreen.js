@@ -198,7 +198,8 @@
     var fresh = now - wLast > 180 || dir !== wDir;
     // after a short lull, a weaker event is still the tail of the same gesture (a
     // trackpad's momentum can stutter); a new flick arrives at least as strong
-    if (fresh && dir === wDir && now - wLast < 700 && abs < wAbs * 0.85) fresh = false;
+    // (a real new flick is recognised by its deltas rising again, just below)
+    if (fresh && dir === wDir && now - wLast < 700 && abs <= wAbs * 1.02) fresh = false;
     if (!fresh && wDecay && abs > wAbs * 1.5 && progress() > 0.6) fresh = true;
     wDecay = abs < wAbs; wAbs = abs; wLast = now; wDir = dir;
     // where the reader is headed: the glide's end if one is under way
