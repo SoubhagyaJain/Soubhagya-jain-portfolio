@@ -139,17 +139,95 @@
      small to mean anything settles back. Where the space between two stops is more
      than a screen (a panel that runs long), the reader scrolls freely and is only
      drawn to a stop once it is close. Touch keeps the platform's own scrolling. */
-  var pagerStops = [], settled = 0, gliding = false, target = 0, idle = 0, guard = 0, held = false;
+  var pagerStops = [], settled = 0, gliding = false, target = 0, idle = 0, held = false;
   var reducedMq = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)");
   function pagerOn() {
     // while the hero is being built, the wheel drives the build, not the page
     if (root.classList.contains("bi-on")) return false;
     return window.innerWidth > 820 && !!(window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches);
   }
+  /* One gesture, one page, one unbroken move. A wheel or trackpad gesture that
+     starts at a stop is taken whole: the glide begins on its first event and the
+     rest of it (a trackpad's momentum included) is absorbed, so there is never a
+     native half-move followed by a correction. The glide is our own eased tween,
+     slower and softer than the browser's smooth scroll, and it can be retargeted
+     in flight. Keys page the same way. */
+  var anim = 0, aFrom = 0, aTo = 0, aT0 = 0, aDur = 0, aEase = null, lastSet = -1;
+  var inOut = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+  var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
+  function progress() { return gliding ? Math.min(1, (performance.now() - aT0) / aDur) : 1; }
   function glide(y) {
-    gliding = true; target = y; settled = y;
-    clearTimeout(guard); guard = setTimeout(function () { gliding = false; }, 1400);
-    window.scrollTo({ top: y, behavior: reducedMq && reducedMq.matches ? "auto" : "smooth" });
+    target = y; settled = y;
+    var from = window.scrollY;
+    if ((reducedMq && reducedMq.matches) || Math.abs(y - from) < 1) {
+      if (anim) { cancelAnimationFrame(anim); anim = 0; }
+      gliding = false; lastSet = -1; window.scrollTo(0, y); return;
+    }
+    // already moving: carry on from here without stopping first
+    aEase = gliding ? easeOut : inOut;
+    aFrom = from; aTo = y; aT0 = performance.now();
+    aDur = Math.max(620, Math.min(1150, 520 + 0.42 * Math.abs(y - from)));
+    gliding = true;
+    if (!anim) anim = requestAnimationFrame(step);
+  }
+  function step(now) {
+    var t = Math.min(1, (now - aT0) / aDur);
+    lastSet = aFrom + (aTo - aFrom) * aEase(t);
+    window.scrollTo(0, lastSet);
+    if (t < 1) anim = requestAnimationFrame(step);
+    else { anim = 0; gliding = false; lastSet = -1; }
+  }
+  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; }
+  // the next stop from y in a direction, if it is a page away and not a long scroll
+  function nextStop(y, dir) {
+    var ys = pagerStops, vh = window.innerHeight, t = null;
+    if (dir > 0) { for (var i = 0; i < ys.length; i++) if (ys[i] > y + 2) { t = ys[i]; break; } }
+    else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < y - 2) { t = ys[j]; break; } }
+    if (t === null || Math.abs(t - y) > vh * 1.05) return null;
+    return t;
+  }
+  // gestures: a wheel stream is one gesture until it pauses, or until a trackpad
+  // flicks again (the deltas rise after decaying) once the current glide is well on
+  var wLast = 0, wAbs = 0, wDecay = false, wDir = 0;
+  function onWheel(e) {
+    if (!pagerOn() || e.ctrlKey || held) return;
+    var vh = window.innerHeight;
+    var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1);
+    if (Math.abs(dy) < 0.5 || Math.abs(e.deltaX) > Math.abs(dy)) return;
+    var now = performance.now(), abs = Math.abs(dy), dir = dy > 0 ? 1 : -1;
+    var fresh = now - wLast > 180 || dir !== wDir;
+    // after a short lull, a weaker event is still the tail of the same gesture (a
+    // trackpad's momentum can stutter); a new flick arrives at least as strong
+    if (fresh && dir === wDir && now - wLast < 700 && abs < wAbs * 0.85) fresh = false;
+    if (!fresh && wDecay && abs > wAbs * 1.5 && progress() > 0.6) fresh = true;
+    wDecay = abs < wAbs; wAbs = abs; wLast = now; wDir = dir;
+    // where the reader is headed: the glide's end if one is under way
+    var same = gliding && dir === Math.sign(aTo - aFrom);
+    var t = nextStop(same ? aTo : window.scrollY, dir);
+    if (t === null) {
+      // a long panel or the footer: scroll natively, unless a glide is still running
+      if (gliding) e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    clearTimeout(idle);
+    if (!fresh) return;
+    if (same && progress() < 0.6) return;
+    glide(t);
+  }
+  function onKey(e) {
+    if (!pagerOn() || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    var el = document.activeElement, tag = el && el.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || (el && el.isContentEditable)) return;
+    var k = e.key, dir = 0;
+    if (k === "ArrowDown" || k === "PageDown" || (k === " " && !e.shiftKey)) dir = 1;
+    else if (k === "ArrowUp" || k === "PageUp" || (k === " " && e.shiftKey)) dir = -1;
+    else if (k === "Home") { e.preventDefault(); glide(0); return; }
+    else return;
+    var t = nextStop(gliding ? aTo : window.scrollY, dir);
+    if (t === null) return;             // a long panel: the key scrolls it natively
+    e.preventDefault();
+    glide(t);
   }
   function settle() {
     var y = window.scrollY, vh = window.innerHeight, from = settled;
@@ -172,8 +250,9 @@
   function onScroll() {
     if (!pagerOn()) return;
     if (gliding) {
-      if (Math.abs(window.scrollY - target) <= 2) { gliding = false; clearTimeout(guard); }
-      return;
+      // our own tween moves the page; anything else (a scrollbar drag) takes over
+      if (lastSet >= 0 && Math.abs(window.scrollY - lastSet) > 4) stopGlide();
+      else return;
     }
     clearTimeout(idle);
     idle = setTimeout(settle, 160);
@@ -196,8 +275,10 @@
     window.addEventListener("load", refit);
     settled = window.scrollY;
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKey);
     // a held button is a scrollbar drag or a text selection: leave the page where it is
-    window.addEventListener("pointerdown", function (e) { if (e.pointerType === "mouse") held = true; }, true);
+    window.addEventListener("pointerdown", function (e) { if (e.pointerType === "mouse") { held = true; stopGlide(); } }, true);
     window.addEventListener("pointerup", function () { if (held) { held = false; clearTimeout(idle); idle = setTimeout(settle, 160); } }, true);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
     // late content: the GitHub data refresh, lazy images

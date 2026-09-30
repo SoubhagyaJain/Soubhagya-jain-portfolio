@@ -118,7 +118,7 @@
       '<div class="bi-bg"></div><div class="bi-grid"></div><i class="bi-glow"></i>' +
       '<div class="bi-clip"><div class="bi-plate"></div><div class="bi-glass"></div></div>' +
       '<div class="bi-lap"><img alt="" draggable="false"></div>' +
-      '<div class="bi-sheen"></div>' +
+      '<div class="bi-sheen"></div><i class="bi-bloom"></i>' +
       '<div class="bi-frame"></div>' +
       '<div class="bi-tool"><div class="bi-sel"><i></i><i></i><i></i><i></i><b></b></div><i class="bi-guide v"></i><i class="bi-guide h"></i></div>' +
       '<div class="bi-cursor">' + SVG_ARROW + SVG_GRAB + '</div>' +
@@ -128,7 +128,7 @@
       '</ol><div class="bi-rule"><i></i></div></div><button type="button" class="bi-skip">Skip intro ↓</button></div>';
     var $ = function (s) { return el.querySelector(s); };
     var bg = $(".bi-grid"), glow = $(".bi-glow"), clip = $(".bi-clip"), plate = $(".bi-plate"), glass = $(".bi-glass");
-    var lap = $(".bi-lap"), lapImg = $(".bi-lap img"), sheen = $(".bi-sheen"), frame = $(".bi-frame");
+    var lap = $(".bi-lap"), lapImg = $(".bi-lap img"), sheen = $(".bi-sheen"), bloom = $(".bi-bloom"), frame = $(".bi-frame"), sizeKey = "";
     var sel = $(".bi-sel"), selLabel = $(".bi-sel b"), gv = $(".bi-guide.v"), gh = $(".bi-guide.h");
     var cursor = $(".bi-cursor"), hint = $(".bi-hint"), steps = el.querySelectorAll(".bi-steps li"), rule = $(".bi-rule i"), skip = $(".bi-skip");
     var chrome = $(".bi-chrome");
@@ -201,7 +201,7 @@
       fBase = F.f;
       lap.style.width = Lb.w + "px";
       // measure where each piece lands, in frame pixels, with nothing displaced
-      frame.style.width = F.W + "px"; frame.style.height = vh + "px"; frame.style.transform = "none";
+      frame.style.width = F.W + "px"; frame.style.height = vh + "px"; frame.style.transform = "none"; sizeKey = "";
       groups.forEach(function (g) { g.forEach(function (n) { n.style.transform = n._base || "none"; }); });
       var fr = frame.getBoundingClientRect();
       G = groups.map(function (g, i) {
@@ -263,18 +263,25 @@
 
       lap.style.opacity = L.o.toFixed(3);
       lap.style.transform = "translate(" + L.x + "px," + L.y + "px) scale(" + (L.w / Lb.w) + ")";
+      // the screen is a clip on a full-viewport layer and everything in it moves by
+      // transform, so no frame of the build ever asks the page for layout
       clip.style.opacity = L.o.toFixed(3);
-      clip.style.left = S.x + "px"; clip.style.top = S.y + "px"; clip.style.width = S.w + "px"; clip.style.height = S.h + "px";
-      plate.style.width = F.W + "px"; plate.style.height = vh + "px";
-      plate.style.transform = "translate(" + (F.x - S.x) + "px," + (F.y - S.y) + "px) scale(" + F.f + ")";
+      var cwv = cw();
+      clip.style.clipPath = "inset(" + S.y.toFixed(1) + "px " + (cwv - S.x - S.w).toFixed(1) + "px " + (vh - S.y - S.h).toFixed(1) + "px " + S.x.toFixed(1) + "px round " + (4 * S.w / 1182).toFixed(1) + "px)";
+      if (sizeKey !== F.W + "|" + vh) {
+        sizeKey = F.W + "|" + vh;
+        plate.style.width = frame.style.width = F.W + "px"; plate.style.height = frame.style.height = vh + "px";
+      }
+      plate.style.transform = frame.style.transform = "translate(" + F.x.toFixed(2) + "px," + F.y.toFixed(2) + "px) scale(" + F.f.toFixed(5) + ")";
+      // the screen comes on: black glass, a warm bloom, then the portrait develops
       var on = seg(p, 0.24, 0.36);
       glass.style.opacity = (1 - seg(p, 0.25, 0.31)).toFixed(3);
-      plate.style.filter = on >= 1 ? "none" : "brightness(" + (0.15 + 0.85 * on).toFixed(3) + ") blur(" + ((1 - on) * 16 / Math.max(F.f, 0.2)).toFixed(1) + "px) saturate(" + (0.6 + 0.4 * on).toFixed(2) + ")";
-      sheen.style.left = S.x + "px"; sheen.style.top = S.y + "px"; sheen.style.width = S.w + "px"; sheen.style.height = S.h + "px";
+      plate.style.filter = on >= 1 ? "none" : "brightness(" + (0.12 + 0.88 * smooth(on)).toFixed(3) + ") saturate(" + (0.55 + 0.45 * on).toFixed(2) + ")";
+      var bl = Math.sin(Math.PI * seg(p, 0.25, 0.4)) * 0.85;
+      bloom.style.opacity = bl.toFixed(3);
+      bloom.style.visibility = bl > 0.001 ? "visible" : "hidden";
+      sheen.style.transform = bloom.style.transform = "translate(" + S.x.toFixed(2) + "px," + S.y.toFixed(2) + "px) scale(" + (S.w / 1000).toFixed(5) + "," + (S.h / 1000).toFixed(5) + ")";
       sheen.style.opacity = (L.o * (1 - seg(p, 0.86, 0.97))).toFixed(3);
-
-      frame.style.width = F.W + "px"; frame.style.height = vh + "px";
-      frame.style.transform = "translate(" + F.x + "px," + F.y + "px) scale(" + F.f + ")";
 
       // the pieces
       var appear = seg(p, 0.26, 0.30);
@@ -364,7 +371,7 @@
     }
 
     /* the drive: the wheel and the keys move the build, not the page */
-    var p = 0, target = 0, last = performance.now(), done = false, raf = 0;
+    var p = 0, vel = 0, target = 0, last = performance.now(), done = false, raf = 0;
     var VH = function () { return window.innerHeight; };
     function nudge(d) { target = clamp(target + d, 0, 1); }
     function onWheel(e) {
@@ -393,8 +400,11 @@
 
     function frameLoop(now) {
       var dt = Math.min(64, now - last); last = now;
-      p += (target - p) * (1 - Math.exp(-dt / 190));
-      if (Math.abs(target - p) < 0.0004) p = target;
+      // a critically damped spring: the build eases into motion and eases out of it
+      var W2 = 9, h = dt / 1000;
+      vel += ((target - p) * W2 * W2 - 2 * W2 * vel) * h;
+      p = clamp(p + vel * h, 0, 1);
+      if (Math.abs(target - p) < 0.0004 && Math.abs(vel) < 0.002) { p = target; vel = 0; }
       render(p, now);
       // (__biHold lets a test look at the very last frame before the cut)
       if (p >= 1 && target >= 1 && !window.__biHold) { finish(false); return; }
@@ -426,10 +436,11 @@
     // the Builder's head sits in front of the left of the monitor, so the section
     // is set against the right of the screen and the push carries the head away
     { id: "cs-builder", dir: "assets/seq/builder/", before: "#selected-systems", target: "#selected-systems > div > header", screens: 5.5,
-      filmEnd: 0.78, frag: true, anchor: 1, wakeAt: 104 },
-    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 5, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 84 }
+      filmEnd: 0.78, frag: true, anchor: 1, wakeAt: 156 },
+    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 5, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 126 }
   ];
-  var N = 160, FW = 1280, FH = 720;
+  // every frame the camera shot, at its own 24 fps: no frame is skipped or blended
+  var N = 240, FW = 1280, FH = 720;
   var FRAGS = [
     { t: "retrieve → rerank → ground", x: 0.08, y: 0.22, z: 0.9 },
     { t: "p95 42 ms · queue 1", x: 0.70, y: 0.16, z: 0.5 },
@@ -532,7 +543,8 @@
     var dirty = true, lastKey = "", lastFg = "", lastFgKey = "";
     function draw(p) {
       var vw = window.innerWidth, vh = window.innerHeight;
-      var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      // the film is 1280 wide: a canvas much wider than that only costs fill
+      var dpr = Math.min(window.devicePixelRatio || 1, 1.5, 1600 / vw);
       if (cv.width !== Math.round(vw * dpr)) { fgc.width = cv.width = Math.round(vw * dpr); fgc.height = cv.height = Math.round(vh * dpr); dirty = true; }
       var k = Math.max(vw / FW, vh / FH), ox = (vw - FW * k) / 2, oy = (vh - FH * k) / 2;
       var fp = seg(p, 0.03, cfg.filmEnd), fi = fp * (N - 1);
@@ -548,15 +560,16 @@
         var cx = (minx + maxx) / 2, cy = (miny + maxy) / 2;
         bx = lerp(cx, vw / 2, pushT) - a * cx; by = lerp(cy, vh / 2, pushT) - a * cy;
       }
-      var key = fi.toFixed(2) + "|" + a.toFixed(4) + "|" + vw + "x" + vh;
+      var key = Math.round(fi) + "|" + a.toFixed(4) + "|" + vw + "x" + vh;
       if (dirty || key !== lastKey) {
         lastKey = key; dirty = false;
-        var i0 = Math.floor(fi), t = fi - i0, A = nearest(i0), B = nearest(Math.min(N - 1, i0 + 1));
+        // every frame the camera shot is here, so the nearest one is drawn, once; a
+        // blend of two would only double the cost and ghost the motion
+        var A = nearest(Math.round(fi));
         ctx.setTransform(dpr * a, 0, 0, dpr * a, dpr * bx, dpr * by);
         if (A >= 0) {
           poster.style.visibility = "hidden";
-          ctx.globalAlpha = 1; ctx.drawImage(frames[A], ox, oy, FW * k, FH * k);
-          if (B >= 0 && B !== A && t > 0.02) { ctx.globalAlpha = t; ctx.drawImage(frames[B], ox, oy, FW * k, FH * k); ctx.globalAlpha = 1; }
+          ctx.drawImage(frames[A], ox, oy, FW * k, FH * k);
         }
       }
 
@@ -607,13 +620,20 @@
       });
     }
 
-    var raf = 0, active = false, lastP = -1;
-    function tick() {
+    // The film does not jump with the scroll: it eases after it (critically damped,
+    // about a tenth of a second), so a wheel's notches and a glide's steps become one
+    // continuous camera move. Out of the track it snaps, so the cut is still exact.
+    var raf = 0, active = false, lastP = -1, pv = -1, lastT = 0;
+    function tick(now) {
       raf = 0;
+      now = now || performance.now();
+      var dt = lastT ? Math.min(64, now - lastT) : 16; lastT = now;
       var vh = window.innerHeight, y = window.scrollY;
       var top = track.getBoundingClientRect().top + y, H = track.offsetHeight;
       var enter = seg(y, top - vh, top);
       var p = (y - top) / H;
+      if (pv < 0 || p <= 0 || p >= 1) pv = clamp(p, 0, 1);
+      else { pv += (p - pv) * (1 - Math.exp(-dt / 110)); if (Math.abs(p - pv) < 1e-4) pv = p; }
       var on = y > top - vh && p < 1;
       if (on) {
         if (!held) { target.classList.add("cs-held"); held = true; }
@@ -621,11 +641,13 @@
         load();
         if (!active) { ov.classList.add("on"); active = true; }
         ov.style.opacity = enter.toFixed(3);
-        if (Math.abs(p - lastP) > 1e-5 || dirty) { draw(clamp(p, 0, 1)); lastP = p; }
-        if (loaded < N || dirty) raf = requestAnimationFrame(tick);
+        if (Math.abs(pv - lastP) > 1e-5 || dirty) { draw(pv); lastP = pv; }
+        if (loaded < N || dirty || Math.abs(p - pv) > 1e-5) raf = requestAnimationFrame(tick);
+        else lastT = 0;
       } else {
         if (active) { ov.classList.remove("on"); ov.style.opacity = "0"; active = false; lastP = -1; }
         if (held) { target.classList.remove("cs-held"); held = false; }
+        lastT = 0;
       }
     }
     function queue() { if (!raf) raf = requestAnimationFrame(tick); }

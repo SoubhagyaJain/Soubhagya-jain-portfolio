@@ -26,12 +26,16 @@ html.bi-pending body::after { content: ""; position: fixed; inset: 0; z-index: 2
 .bi-glow { position: absolute; left: 0; top: 0; width: 1px; height: 1px; pointer-events: none; transform-origin: 0 0; border-radius: 50%;
   background: radial-gradient(closest-side, rgba(226,150,78,0.30), rgba(226,150,78,0.08) 55%, rgba(226,150,78,0) 100%); }
 /* the screen: the plate is clipped to it, the interface is not (it flies in) */
-.bi-clip { position: absolute; left: 0; top: 0; overflow: hidden; pointer-events: none; background: #040405; }
-.bi-plate, .bi-frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; overflow: visible; }
+/* the screen: a full-viewport layer clipped (clip-path, set per frame) to the glass,
+   so moving it never costs layout */
+.bi-clip { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: #040405; clip-path: inset(50%); will-change: clip-path, opacity; }
+.bi-bloom { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+  background: radial-gradient(60% 55% at 50% 50%, rgba(255,214,160,0.55), rgba(255,170,100,0.18) 55%, rgba(255,160,90,0) 80%); }
+.bi-plate, .bi-frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; overflow: visible; will-change: transform; }
 .bi-plate > * , .bi-frame > * { pointer-events: none; }
 .bi-glass { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(118deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 30%), #050506; }
-.bi-sheen { position: absolute; left: 0; top: 0; pointer-events: none; mix-blend-mode: screen;
+.bi-sheen { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; transform-origin: 0 0; will-change: transform, opacity; pointer-events: none;
   background: linear-gradient(112deg, rgba(255,244,226,0) 0%, rgba(255,244,226,0.07) 22%, rgba(255,244,226,0) 38%, rgba(255,244,226,0) 70%, rgba(255,244,226,0.04) 86%, rgba(255,244,226,0) 100%); }
 .bi-piece { will-change: transform, opacity, filter; }
 /* the tool layer: a hairline selection, its size, and the guides it snaps to */
