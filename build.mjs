@@ -337,6 +337,7 @@ html,body{max-width:100%;overflow-x:clip}
   readFileSync(join(ROOT, "src", "cine.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "writing.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "activity.css"), "utf8").trim(),
+  readFileSync(join(ROOT, "src", "fullscreen.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
 ].join("\n\n");
@@ -372,6 +373,9 @@ dc.mount();
 
 /* ── chapter 03: src/activity.js ─────────────────────────────────────────── */
 ${readFileSync(join(ROOT, "src", "activity.js"), "utf8")}
+
+/* ── one screen per section: src/fullscreen.js ──────────────────────────── */
+${readFileSync(join(ROOT, "src", "fullscreen.js"), "utf8")}
 `;
 
 /* ── emit ─────────────────────────────────────────────────────────────────── */

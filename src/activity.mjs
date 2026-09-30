@@ -78,6 +78,7 @@ function github(config, data) {
     : "Contribution landscape: the calendar could not be loaded from GitHub.";
   return `
   <article id="github" class="gx" data-gx>
+    <div class="fs-panel fs-gx1">
     <header class="gx-head">
       <div class="gx-eyebrow" data-step="0"><span class="n">03</span><span class="s">/</span>Engineering activity</div>
       <h2 data-step="1"><span class="ln"><span>Engineering,</span></span> <span class="ln"><span>in public.</span></span></h2>
@@ -112,9 +113,12 @@ function github(config, data) {
       ${languages(dv)}
       <div class="gx-events"><div class="gx-label">Recent public activity</div><div data-gx-events>${eventsList(data.events || [])}</div></div>
     </div>
+    </div>
 
+    <div class="fs-panel fs-gx2">
     <div class="gx-repos-head"><span class="gx-label">Selected repositories</span><a href="${esc(u.url)}?tab=repositories" rel="noopener" class="gx-all sm">All ${num(dv.repositories)} repositories <span aria-hidden="true">→</span></a></div>
     ${repos(config, data)}
+    </div>
   </article>`;
 }
 
@@ -192,14 +196,16 @@ function credentials(list) {
   const issuers = new Set(list.map((c) => c.issuer)).size;
   const span = `${ym(list[list.length - 1].date).short} – ${ym(list[0].date).short}`;
   return `
-  <div class="gx-bridge" aria-hidden="true"><canvas></canvas><span class="b0">What I build</span><span class="b1">What I study</span></div>
   <article id="credentials" class="cx" data-cx-root>
+    <div class="fs-panel fs-cx0">
+    <div class="gx-bridge" aria-hidden="true"><canvas></canvas><span class="b0">What I build</span><span class="b1">What I study</span></div>
     <header class="cx-head">
       <div class="gx-eyebrow" data-step="0"><span class="n">03.2</span><span class="s">/</span>Credentials</div>
       <h2 data-step="1"><span class="ln"><span>Credentials &amp;</span></span> <span class="ln"><span>continued learning.</span></span></h2>
       <p class="gx-lead" data-step="2">Formal checkpoints along a much larger engineering education.</p>
       <p class="cx-count" data-step="3">${list.length} credentials · ${issuers} issuers · ${span}</p>
     </header>
+    </div>
     ${wheel(list)}
     <div class="cxw-fallback">
       ${groups.map((g) => `<section class="cx-month" id="cx-${g.date}">
