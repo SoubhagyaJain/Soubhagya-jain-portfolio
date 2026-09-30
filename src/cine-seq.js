@@ -436,11 +436,12 @@
     // the Builder's head sits in front of the left of the monitor, so the section
     // is set against the right of the screen and the push carries the head away
     { id: "cs-builder", dir: "assets/seq/builder/", before: "#selected-systems", target: "#selected-systems > div > header", screens: 5.5,
-      filmEnd: 0.78, frag: true, anchor: 1, wakeAt: 156 },
-    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 5, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 126 }
+      filmEnd: 0.78, frag: true, anchor: 1, wakeAt: 156, w: 1280, h: 720 },
+    // the CTA is re-mastered at 1080p: its last seconds are pushed in close
+    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 5, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 126, w: 1920, h: 1080 }
   ];
   // every frame the camera shot, at its own 24 fps: no frame is skipped or blended
-  var N = 240, FW = 1280, FH = 720;
+  var N = 240;
   var FRAGS = [
     { t: "retrieve → rerank → ground", x: 0.08, y: 0.22, z: 0.9 },
     { t: "p95 42 ms · queue 1", x: 0.70, y: 0.16, z: 0.5 },
@@ -543,8 +544,9 @@
     var dirty = true, lastKey = "", lastFg = "", lastFgKey = "";
     function draw(p) {
       var vw = window.innerWidth, vh = window.innerHeight;
-      // the film is 1280 wide: a canvas much wider than that only costs fill
-      var dpr = Math.min(window.devicePixelRatio || 1, 1.5, 1600 / vw);
+      // a canvas much wider than the film itself only costs fill
+      var FW = cfg.w, FH = cfg.h;
+      var dpr = Math.min(window.devicePixelRatio || 1, 1.5, 1.25 * FW / vw);
       if (cv.width !== Math.round(vw * dpr)) { fgc.width = cv.width = Math.round(vw * dpr); fgc.height = cv.height = Math.round(vh * dpr); dirty = true; }
       var k = Math.max(vw / FW, vh / FH), ox = (vw - FW * k) / 2, oy = (vh - FH * k) / 2;
       var fp = seg(p, 0.03, cfg.filmEnd), fi = fp * (N - 1);
