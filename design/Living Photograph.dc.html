@@ -199,9 +199,6 @@
   .fx-sun-day { inset: 0; mix-blend-mode: screen; background: radial-gradient(ellipse 46% 58% at 97% 12%, rgba(255,196,120,0.34), rgba(255,160,80,0.12) 42%, rgba(255,150,70,0) 72%);
     animation: day-sun 9s ease-in-out infinite alternate; }
   @keyframes day-sun { from { opacity: 0.55; } to { opacity: 1; } }
-  /* once the hero has gone, the portrait steps back into the room's shadow so it never
-     competes with the About portrait: an opacity on one layer, driven by the scroll */
-  .fx-recede { inset: 0; background: radial-gradient(ellipse 58% 84% at 72% 42%, rgba(14,8,4,0.92), rgba(14,8,4,0.7)); opacity: calc(var(--recede, 0) * 0.78); }
   @media (prefers-reduced-motion: reduce) { [data-hero-day], .fx-sun-day { animation: none; } }
   [data-hero-dayfx] { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity 1.2s ease, visibility 0s linear 1.2s; }
   [data-hero-dayfx].on { opacity: 1; visibility: visible; transition: opacity 1.2s ease; }
@@ -406,7 +403,7 @@
       <div data-alpine-wild style="position: absolute; inset: 0; pointer-events: none; overflow: hidden"></div>
       <img data-hero-day alt="" aria-hidden="true" decoding="async" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none" />
       <video data-hero-video muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-moon.jpg" aria-hidden="true" tabindex="-1" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none"></video>
-      <div data-hero-dayfx aria-hidden="true"><i class="fx-sun-day"></i><i class="fx-recede"></i><i class="fx-grain"></i><i class="fx-vignette-day"></i></div>
+      <div data-hero-dayfx aria-hidden="true"><i class="fx-sun-day"></i><i class="fx-grain"></i><i class="fx-vignette-day"></i></div>
       <div data-hero-fx aria-hidden="true">
         <div data-fx-bloom><i class="fx-glow"></i><i class="fx-streak"></i></div>
         <div data-fx-haze><i class="fx-mist fx-m1"></i><i class="fx-mist fx-m2"></i></div>
@@ -2766,7 +2763,6 @@ class Component extends DCLogic {
       this.deep = deep;          // the draw loop reads this to decide its frame rate
       if (this.heroDayFx) {
         const r2 = deep > 0.9; if (this.heroDayFx.classList.contains("rest") !== r2) this.heroDayFx.classList.toggle("rest", r2);
-        this.heroDayFx.style.setProperty("--recede", deep.toFixed(3));
       }
       if (this.heroFx) { const rest = deep > 0.9; if (this.heroFx.classList.contains("rest") !== rest) this.heroFx.classList.toggle("rest", rest); }
       this.scroll = cine;
@@ -2786,8 +2782,11 @@ class Component extends DCLogic {
       // the hero leaves, but only as far as the type needs, and that depends on the
       // plate: daylight is bright enough that text over it needs more help than a night
       // sky does. Local shading behind each block of text does the rest.
-      const DIM_CAP = { day: 0.66, dark: 0.5 };
-      if (dim) dim.style.opacity = (deep * (DIM_CAP[this.state.theme] || 0.5)).toFixed(3);
+      // The golden-hour portrait is the light theme's ground for the whole page, so it
+      // only sinks a little: the frame is already low-key and the type is light over it.
+      const DIM_CAP = { day: 0.66, dark: 0.5, photo: 0.32 };
+      const capKey = this.state.theme === "day" && document.documentElement.hasAttribute("data-day-photo") ? "photo" : this.state.theme;
+      if (dim) dim.style.opacity = (deep * (DIM_CAP[capKey] || 0.5)).toFixed(3);
       this.navScroll(cl(y / (vh * 0.55)));
     };
 
