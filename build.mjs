@@ -338,6 +338,7 @@ html,body{max-width:100%;overflow-x:clip}
   readFileSync(join(ROOT, "src", "writing.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "activity.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "fullscreen.css"), "utf8").trim(),
+  readFileSync(join(ROOT, "src", "cine-seq.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
 ].join("\n\n");
@@ -373,6 +374,9 @@ dc.mount();
 
 /* ── chapter 03: src/activity.js ─────────────────────────────────────────── */
 ${readFileSync(join(ROOT, "src", "activity.js"), "utf8")}
+
+/* ── three cinematic entrances: src/cine-seq.js (before the pager, which pages its tracks) ── */
+${readFileSync(join(ROOT, "src", "cine-seq.js"), "utf8")}
 
 /* ── one screen per section: src/fullscreen.js ──────────────────────────── */
 ${readFileSync(join(ROOT, "src", "fullscreen.js"), "utf8")}
@@ -411,7 +415,7 @@ ${favicon}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${[...fontHrefs].map((h) => `<link rel="stylesheet" href="${h}">`).join("\n")}
 <link rel="stylesheet" href="styles.css?v=${stamp(css)}">
-<script>document.documentElement.classList.add("js-act");try{localStorage.removeItem("lp-theme");localStorage.removeItem("lp-night");document.documentElement.dataset.scene=sessionStorage.getItem("lp-theme")==="dark"?"dark":"day"}catch(e){document.documentElement.dataset.scene="day"}try{var de=document.documentElement;de.setAttribute("data-alpine","");if(!(matchMedia("(min-width: 900px)").matches&&!matchMedia("(orientation: portrait) and (max-width: 820px)").matches))de.setAttribute("data-alpine-lite","")}catch(e){}try{if(document.referrer&&new URL(document.referrer).origin===location.origin)document.documentElement.classList.add("from-site")}catch(e){}</script>
+<script>document.documentElement.classList.add("js-act");try{localStorage.removeItem("lp-theme");localStorage.removeItem("lp-night");document.documentElement.dataset.scene=sessionStorage.getItem("lp-theme")==="dark"?"dark":"day"}catch(e){document.documentElement.dataset.scene="day"}try{var de=document.documentElement;de.setAttribute("data-alpine","");if(!(matchMedia("(min-width: 900px)").matches&&!matchMedia("(orientation: portrait) and (max-width: 820px)").matches))de.setAttribute("data-alpine-lite","")}catch(e){}try{if(document.referrer&&new URL(document.referrer).origin===location.origin)document.documentElement.classList.add("from-site")}catch(e){}try{var ce=document.documentElement;if(!sessionStorage.getItem("sj-built")&&ce.dataset.scene==="day"&&!location.hash&&!ce.classList.contains("from-site")&&innerWidth>=1024&&matchMedia("(hover: hover) and (pointer: fine)").matches&&!matchMedia("(prefers-reduced-motion: reduce)").matches)ce.classList.add("bi-pending")}catch(e){}</script>
 </head>
 <body>
 <div id="dc-root" data-dc-component="${escapeAttr(ENTRY)}">${body}</div>
@@ -489,6 +493,12 @@ for (const n of ["forest-night", "forest-day", "alpine-night", "alpine-day"]) fo
 for (const n of ["alpine-night-m", "alpine-day-m"]) for (const w of [1080, 1440]) wanted.add(`${n}-${w}.webp`);
 for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif|mp4|webm)/g)) {
   wanted.add(m[0].slice("assets/".length));
+}
+// the films' frames and mattes (src/cine-seq.js builds their names by number)
+const SEQ = join(SRC, "assets", "seq");
+if (existsSync(SEQ)) for (const d of readdirSync(SEQ)) {
+  mkdirSync(join(OUT, "assets", "seq", d), { recursive: true });
+  for (const f of readdirSync(join(SEQ, d))) copyFileSync(join(SEQ, d, f), join(OUT, "assets", "seq", d, f));
 }
 const missing = [];
 for (const file of wanted) {

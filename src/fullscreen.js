@@ -21,7 +21,8 @@
     "#philosophy", "#beyond", "#education", "#technology",
     "#writing", "#contact"
   ];
-  var TRACKS = ["#aperture-pipeline", "#activity .cxw-track", "#direction"];
+  // the pinned stages, and the films' tracks (src/cine-seq.js), a stop per screen
+  var TRACKS = ["#aperture-pipeline", "#activity .cxw-track", "#direction", "#cs-builder", "#cs-cta"];
   var panels = [];
 
   function collect() {
@@ -141,6 +142,8 @@
   var pagerStops = [], settled = 0, gliding = false, target = 0, idle = 0, guard = 0, held = false;
   var reducedMq = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)");
   function pagerOn() {
+    // while the hero is being built, the wheel drives the build, not the page
+    if (root.classList.contains("bi-on")) return false;
     return window.innerWidth > 820 && !!(window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches);
   }
   function glide(y) {
