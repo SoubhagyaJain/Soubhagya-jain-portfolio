@@ -480,6 +480,9 @@ for (const [from, to] of content.copies) {
 const wanted = new Set();
 // pictures the journal pages use, which the home page's markup does not mention
 for (const f of ["journal-night.jpg", "portrait.jpg", "forest-night.jpg", "forest-day.jpg"]) wanted.add(f);
+// the journal backdrops' re-mastered, responsive cuts (src/journal.mjs picks one per screen)
+for (const n of ["forest-night", "forest-day", "alpine-night", "alpine-day"]) for (const w of [1600, 2560]) wanted.add(`${n}-${w}.webp`);
+for (const n of ["alpine-night-m", "alpine-day-m"]) for (const w of [1080, 1440]) wanted.add(`${n}-${w}.webp`);
 for (const m of (body + app).matchAll(/assets\/[\w.-]+\.(?:jpg|jpeg|png|webp|svg|avif|mp4|webm)/g)) {
   wanted.add(m[0].slice("assets/".length));
 }
