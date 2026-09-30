@@ -19,9 +19,14 @@
     b.addEventListener("click", function () {
       var m = b.getAttribute("data-set-mode");
       if (root.getAttribute("data-mode") === m) return;
+      var prev = root.getAttribute("data-mode");
       var apply = function () { root.setAttribute("data-mode", m); paintMode(); };
-      // nightfall or daybreak (src/cine.js), rather than animating every colour on it
-      if (window.cineTheme) window.cineTheme(m === "light" ? "light" : "dark", apply);
+      var revert = function () {
+        root.setAttribute("data-mode", prev); paintMode();
+        try { sessionStorage.setItem("lp-theme", prev === "light" ? "day" : "dark"); } catch (e) {}
+      };
+      // nightfall (by hand) or daybreak (src/cine.js), rather than animating every colour on it
+      if (window.cineTheme) window.cineTheme(m === "light" ? "light" : "dark", apply, revert);
       else apply();
       try { sessionStorage.setItem("lp-theme", m === "light" ? "day" : "dark"); } catch (e) {}
     });

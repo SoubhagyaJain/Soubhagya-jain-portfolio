@@ -75,3 +75,43 @@ html.theme-cut [data-alpine-stage], html.theme-cut [data-alpine-stage] *, html.t
 html.theme-cut .scene-bg, html.theme-cut .scene-bg *, html.theme-cut .scene-bg::after, html.theme-cut body { transition: none !important; }
 
 @media (prefers-reduced-motion: reduce) { .cine { display: none; } }
+
+/* ── Nightfall, by hand (see dragNight in cine.js) ───────────────────────────
+   The light page is held still; the live dark page shows only above --night, the
+   horizon the reader drags. A no-op animation keeps the transition open meanwhile. */
+html.vt-drag::view-transition-old(root),
+html.vt-drag::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.vt-drag::view-transition-new(root) {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--night, 0px) - 28px), transparent calc(var(--night, 0px) + 28px));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--night, 0px) - 28px), transparent calc(var(--night, 0px) + 28px));
+}
+html.vt-drag::view-transition-group(root) { animation: cine-hold 600s linear; }
+@keyframes cine-hold { from { opacity: 1; } to { opacity: 1; } }
+
+/* the sky that comes with it: stars only above the horizon */
+.cine[data-to="drag"] .cd-sky { inset: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--night, 0px) - 60px), transparent var(--night, 0px));
+  mask-image: linear-gradient(to bottom, #000 calc(var(--night, 0px) - 60px), transparent var(--night, 0px)); }
+.cd-star { width: var(--s); height: var(--s); border-radius: 50%; background: #f4f1ff; box-shadow: 0 0 calc(var(--s) * 3) rgba(220,226,255,.75);
+  animation: cd-twinkle var(--tw) ease-in-out var(--dl) infinite alternate; }
+@keyframes cd-twinkle { from { opacity: .25; } to { opacity: .95; } }
+/* the day darkens a little just ahead of the night */
+.cd-dusk { left: 0; right: 0; top: 0; height: 26vh; transform: translate3d(0, var(--night, 0px), 0); will-change: transform;
+  background: linear-gradient(to bottom, rgba(14,18,40,.38), rgba(14,18,40,0)); }
+/* the horizon: a hairline of last light with a blue-hour glow, and the handle on it */
+.cd-line { left: 0; right: 0; top: 0; height: 0; transform: translate3d(0, var(--night, 0px), 0); will-change: transform; }
+.cd-line::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 2px;
+  background: linear-gradient(90deg, rgba(236,232,255,0), rgba(236,232,255,.85) 18%, rgba(255,206,160,.98) 50%, rgba(236,232,255,.85) 82%, rgba(236,232,255,0));
+  box-shadow: 0 0 16px 2px rgba(150,156,255,.5); }
+.cd-line::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; transform: translateY(100%);
+  background: linear-gradient(to bottom, rgba(120,112,220,.26), rgba(120,112,220,0)); }
+.cd-pill { left: 50%; top: 0; transform: translate(-50%, -50%); transition: opacity .3s ease; }
+.cd-pill-in { display: flex; align-items: center; gap: 10px; padding: 10px 16px 9px; border-radius: 999px; white-space: nowrap;
+  background: rgba(10,12,22,.86); box-shadow: 0 0 0 1px rgba(230,232,255,.24), 0 12px 30px -12px rgba(0,0,0,.7);
+  font: 500 10.5px/1 'IBM Plex Mono', monospace; letter-spacing: .2em; text-transform: uppercase; color: #f2efff;
+  animation: cd-bob 1.5s ease-in-out infinite; transition: box-shadow .3s ease, color .3s ease; }
+.cd-pill-in b { font-weight: 400; font-size: 14px; letter-spacing: 0; color: #ffcf9a; }
+.cine.grabbed .cd-pill-in { animation: none; }
+.cine.past .cd-pill-in { box-shadow: 0 0 0 1px rgba(255,200,140,.6), 0 12px 30px -12px rgba(0,0,0,.7); color: #ffe6c8; }
+.cine.closing .cd-pill { opacity: 0; }
+@keyframes cd-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }

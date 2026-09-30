@@ -1836,8 +1836,19 @@ class Component extends DCLogic {
         paint(name, instant);
         if (this.applyScroll) this.applyScroll();   // the scrim depth is per plate
       };
-      // nightfall or daybreak (src/cine.js); a plain switch where it cannot run
-      if (window.cineTheme) window.cineTheme(name === "day" ? "light" : "dark", apply);
+      // back to the day if the reader lets a hand-drawn nightfall spring back
+      const prev = this.state.theme;
+      const revert = () => {
+        const back = () => {
+          this.wFrom = this.wCur.slice(); this.wTo = ONEHOT[prev].slice(); this.wCur = this.wTo.slice(); this.mixK = 1;
+          this.setState({ theme: prev }); paint(prev, true);
+          if (this.applyScroll) this.applyScroll();
+        };
+        back();
+        try { sessionStorage.setItem("lp-theme", prev); } catch (e) {}
+      };
+      // nightfall (by hand) or daybreak (src/cine.js); a plain switch where it cannot run
+      if (window.cineTheme) window.cineTheme(name === "day" ? "light" : "dark", apply, revert);
       else apply(false);
       try { sessionStorage.setItem("lp-theme", name); } catch (e) {}
     };
