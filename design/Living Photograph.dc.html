@@ -337,6 +337,7 @@
       <img data-alpine-img="night" data-src="assets/alpine-night.jpg" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; transform: scale(1.03); opacity: 0; transition: opacity 1.6s ease" />
       <canvas data-alpine-canvas style="position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .8s ease"></canvas>
       <div data-alpine-wild style="position: absolute; inset: 0; pointer-events: none; overflow: hidden"></div>
+      <video data-hero-video muted loop playsinline disablepictureinpicture preload="none" poster="assets/hero-moon.jpg" aria-hidden="true" tabindex="-1" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.2s ease; pointer-events: none"></video>
       <div data-alpine-scrim="day" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 64% 62% at 16% 58%, rgba(250,244,232,0.7) 0%, rgba(250,244,232,0.42) 50%, rgba(250,244,232,0) 100%)"></div>
       <div data-alpine-scrim="night" style="position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 1.8s ease; background: radial-gradient(ellipse 62% 58% at 16% 60%, rgba(5,10,24,0.6) 0%, rgba(5,10,24,0.34) 50%, rgba(5,10,24,0) 100%)"></div>
       <div style="position: absolute; left: 0; right: 0; top: 0; height: 22vh; pointer-events: none; background: linear-gradient(180deg, rgba(5,10,20,0.28), rgba(5,10,20,0))"></div>
@@ -1466,6 +1467,7 @@ void main(){
 const ALPINE_SRC = {
   day: "assets/alpine-day.jpg", night: "assets/alpine-night.jpg",
   dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
+  moon: "assets/hero-moon.mp4", moonWebm: "assets/hero-moon.webm",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
@@ -2222,6 +2224,42 @@ class Component extends DCLogic {
     const imgs = { day: stage.querySelector('[data-alpine-img="day"]'), night: stage.querySelector('[data-alpine-img="night"]') };
     const cv = stage.querySelector("[data-alpine-canvas]"), wild = stage.querySelector("[data-alpine-wild]");
     const scrim = { day: stage.querySelector('[data-alpine-scrim="day"]'), night: stage.querySelector('[data-alpine-scrim="night"]') };
+    // Night is the blood-moon film (rotated upright, cut to a seamless loop); day stays the
+    // sunlit valley. The film only loads the first time night is shown, never plays under
+    // reduced motion (its poster stands in), pauses with the tab, and once it fully covers
+    // the hero the valley's shader and animals stop drawing beneath it.
+    const vid = stage.querySelector("[data-hero-video]");
+    this.videoCover = false;
+    const setVideo = (night) => {
+      if (!vid) return;
+      clearTimeout(this.videoT);
+      if (night) {
+        if (!vid.getAttribute("src")) {
+          // H.264 where the browser has it (hardware decode almost everywhere), VP9 otherwise
+          const h264 = vid.canPlayType('video/mp4; codecs="avc1.640020"');
+          vid.src = h264 ? ALPINE_SRC.moon : ALPINE_SRC.moonWebm; vid.preload = "auto";
+        }
+        vid.style.opacity = "1";
+        if (wild) wild.style.opacity = "0";
+        if (!reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
+        this.videoT = setTimeout(() => { this.videoCover = true; }, 1300);
+      } else {
+        this.videoCover = false;
+        vid.style.opacity = "0";
+        if (wild) wild.style.opacity = "1";
+        this.videoT = setTimeout(() => vid.pause(), 1300);
+      }
+    };
+    const reducedV = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (wild) wild.style.transition = "opacity 1.2s ease";
+    if (vid) {
+      this.onVideoVis = () => {
+        if (document.hidden) vid.pause();
+        else if (vid.style.opacity === "1" && !reducedV) { const p = vid.play(); if (p && p.catch) p.catch(() => {}); }
+      };
+      document.addEventListener("visibilitychange", this.onVideoVis);
+    }
+
     // Phones and tablets: the same valley as portrait plates, held still under a slow CSS
     // drift, crossfading with the theme. No shader, no animals, no loop: nothing to cost
     // a frame while a phone scrolls.
@@ -2234,6 +2272,7 @@ class Component extends DCLogic {
         scrim.night.style.opacity = day ? "0" : "1";
         imgs.day.style.opacity = day ? "1" : "0";
         imgs.night.style.opacity = day ? "0" : "1";
+        setVideo(!day);
       };
       return true;
     }
@@ -2348,6 +2387,7 @@ class Component extends DCLogic {
       scrim.day.style.opacity = day ? "1" : "0";
       scrim.night.style.opacity = day ? "0" : "1";
       if (!st.gl) { imgs.day.style.opacity = day ? "1" : "0"; imgs.night.style.opacity = day ? "0" : "1"; }
+      setVideo(!day);
     };
 
     if (window.matchMedia("(pointer: fine)").matches) {
@@ -2380,6 +2420,7 @@ class Component extends DCLogic {
       // while the page is moving the scene is fixed behind it: half the frames leave the
       // GPU to the scroll, and a meadow at 30fps behind moving type reads the same
       const scrolling = now - (this.lastScrollAt || 0) < 160;
+      if (this.videoCover && !mixing && !first) return;
       const budget = mixing ? 16 : deep > 0.6 || scrolling ? 33 : 16;
       if (now - lastDraw < budget - 4) return;
       lastDraw = now;
@@ -3025,6 +3066,7 @@ class Component extends DCLogic {
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.navRaf);
     cancelAnimationFrame(this.alpineRaf);
+    if (this.onVideoVis) document.removeEventListener("visibilitychange", this.onVideoVis);
     if (this.alpineRO) this.alpineRO.disconnect();
     if (this.onAlpineMove) window.removeEventListener("pointermove", this.onAlpineMove);
     window.removeEventListener("pointermove", this.onNavMove);
