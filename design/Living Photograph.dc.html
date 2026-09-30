@@ -245,7 +245,11 @@
   html[data-alpine][data-scene="day"][data-day-photo] [data-hero-cta] { color: #1c130b !important; background: linear-gradient(180deg, #fcf3e4, #ecd9bd) !important; }
   html[data-alpine][data-scene="day"][data-day-photo] [data-hero-secondary] { color: #f6c486 !important; border-bottom-color: rgba(246,196,134,.8) !important; text-shadow: 0 1px 3px rgba(12,6,2,.55), 0 1px 18px rgba(12,6,2,.5) !important; }
   @media (max-width: 820px) {
-    html[data-alpine][data-scene="day"][data-day-photo] [data-alpine-scrim="day"] { background: linear-gradient(180deg, rgba(16,9,4,0.3) 0%, rgba(16,9,4,0.58) 26%, rgba(16,9,4,0.56) 64%, rgba(16,9,4,0.22) 100%) !important; }
+    html[data-alpine][data-scene="day"][data-day-photo] [data-alpine-scrim="day"] { background: linear-gradient(180deg, rgba(16,9,4,0.2) 0%, rgba(16,9,4,0.5) 26%, rgba(16,9,4,0.46) 64%, rgba(16,9,4,0.12) 100%) !important; }
+    /* the phone portrait: frame to the right so the setting sun stays in shot, and let
+       the glow breathe where that sun actually sits */
+    html[data-alpine-lite] [data-hero-day] { object-position: 100% 50% !important; transform-origin: 80% 45%; }
+    html[data-alpine-lite] .fx-sun-day { background: radial-gradient(ellipse 70% 34% at 100% 40%, rgba(255,196,120,0.36), rgba(255,160,80,0.12) 44%, rgba(255,150,70,0) 74%); }
   }
   /* Desktop hero copy: the glide and fade run on the browser's scroll timeline, on the
      compositor, locked to the scroll itself. Driving them from a rAF loop always trailed
@@ -1541,7 +1545,7 @@ const ALPINE_SRC = {
   dayM: "assets/alpine-day-m.jpg", nightM: "assets/alpine-night-m.jpg",
   moon: "assets/hero-moon.mp4", moonWebm: "assets/hero-moon.webm",
   moonHd: "assets/hero-moon-hd.mp4", moonHdWebm: "assets/hero-moon-hd.webm", mist: "assets/hero-mist.webp",
-  photo: "assets/hero-day-1600.webp", photoHd: "assets/hero-day-2560.webp", photoM: "assets/hero-day-m-1080.webp",
+  photo: "assets/hero-day-1600.webp", photoHd: "assets/hero-day-2560.webp", photoM: "assets/hero-day-portrait-1080.webp",
   "day-deer-1": "assets/wild-day-deer-1.webp", "day-deer-2": "assets/wild-day-deer-2.webp",
   "day-marmot": "assets/wild-day-marmot.webp", "day-butterfly-1": "assets/wild-day-butterfly-1.webp",
   "day-butterfly-2": "assets/wild-day-butterfly-2.webp", "day-birds": "assets/wild-day-birds.webp",
