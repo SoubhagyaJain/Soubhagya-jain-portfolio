@@ -1,0 +1,27 @@
+/* ── the Projects backdrop (src/projects-bg.js) ──────────────────────────────
+   A fixed full-screen layer, first in the section, so it paints over the page's
+   ground and under every project. The film is dark in itself, and the projects'
+   type is light in both themes, so one scrim serves day and night alike. */
+#selected-systems > .pj-bg {
+  position: fixed; inset: 0; z-index: auto;
+  pointer-events: none; visibility: hidden; opacity: 0;
+  background: #07080a;
+  contain: strict;
+}
+#selected-systems > .pj-bg.on { visibility: visible; }
+.pj-bg .pj-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pj-bg .pj-scrim {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 50%, rgba(6, 7, 9, 0) 45%, rgba(6, 7, 9, 0.55) 100%),
+    linear-gradient(90deg, rgba(6, 7, 9, 0.5) 0%, rgba(6, 7, 9, 0.18) 60%, rgba(6, 7, 9, 0.1) 100%),
+    rgba(6, 7, 9, 0.3);
+}
+@media (max-width: 767px) {
+  /* on a phone the type spans the screen: an even scrim instead of a left-heavy one */
+  .pj-bg .pj-scrim {
+    background:
+      radial-gradient(130% 80% at 50% 50%, rgba(6, 7, 9, 0) 40%, rgba(6, 7, 9, 0.5) 100%),
+      rgba(6, 7, 9, 0.45);
+  }
+}

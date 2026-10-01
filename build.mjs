@@ -339,6 +339,7 @@ html,body{max-width:100%;overflow-x:clip}
   readFileSync(join(ROOT, "src", "activity.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "fullscreen.css"), "utf8").trim(),
   readFileSync(join(ROOT, "src", "cine-seq.css"), "utf8").trim(),
+  readFileSync(join(ROOT, "src", "projects-bg.css"), "utf8").trim(),
   "/* style-hover, lifted out of the markup */",
   ...hoverRules,
 ].join("\n\n");
@@ -377,6 +378,9 @@ ${readFileSync(join(ROOT, "src", "activity.js"), "utf8")}
 
 /* ── three cinematic entrances: src/cine-seq.js (before the pager, which pages its tracks) ── */
 ${readFileSync(join(ROOT, "src", "cine-seq.js"), "utf8")}
+
+/* ── the Projects backdrop: src/projects-bg.js ─────────────────────────── */
+${readFileSync(join(ROOT, "src", "projects-bg.js"), "utf8")}
 
 /* ── one screen per section: src/fullscreen.js ──────────────────────────── */
 ${readFileSync(join(ROOT, "src", "fullscreen.js"), "utf8")}
