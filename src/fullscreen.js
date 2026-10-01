@@ -119,10 +119,23 @@
       if (!t) return;
       var top = t.getBoundingClientRect().top + sy, H = t.offsetHeight;
       if (H <= vh * 1.2) return;
+      // the credential wheel rests only on a whole record (src/activity.js settles it
+      // there), so its stops fall on records too: as many as make about a screen
+      var recs = parseInt(t.style.getPropertyValue("--n"), 10);
+      if (recs > 1) {
+        var turn = (H - vh) / recs, k = Math.max(1, Math.round(vh / turn));
+        if (k * turn > vh * PAGE) k--;
+        for (var r = 0; r < recs; r += k) ys.push(top + r * turn);
+        ys.push(top + H - vh);
+        return;
+      }
       var n = Math.floor((H - vh) / vh), last = 0;
       for (var i = 0; i <= n; i++) { ys.push(top + i * vh); last = i * vh; }
-      // the last screen of the pin, so the stage can be seen at rest
-      if (H - vh - last > vh * 0.25) ys.push(top + H - vh);
+      // the last screen of the pin, so the stage can be seen at rest; when it is only a
+      // sliver past the last screen it takes that screen's place, so the section after
+      // the pin is never more than a page away
+      if (H - vh - last <= vh * 0.25 && n > 0) ys.pop();
+      ys.push(top + H - vh);
     });
     ys = ys.map(Math.round).sort(function (a, b) { return a - b; })
       .filter(function (y, i, a) { return i === 0 || y - a[i - 1] > 2; });
@@ -130,15 +143,27 @@
     while (have.length > ys.length) layer.removeChild(layer.lastChild);
     while (have.length < ys.length) { var m = document.createElement("i"); m.className = "fs-stop"; layer.appendChild(m); }
     ys.forEach(function (y, i) { have[i].style.top = y + "px"; });
+    // a refit that nudges the stops (a late image, a font) keeps the reader on the same
+    // one: a glide under way is retargeted, and a page at rest moves with its stop
+    var old = pagerStops;
     pagerStops = ys;
+    if (old.length === ys.length && pagerOn()) {
+      var at = gliding ? aTo : settled, i = old.indexOf(Math.round(at));
+      if (i >= 0 && ys[i] !== old[i] && Math.abs(ys[i] - old[i]) < vh * 0.5) {
+        if (gliding) { aTo = target = settled = ys[i]; }
+        else if (Math.abs(window.scrollY - old[i]) <= 2) { settled = ys[i]; window.scrollTo(0, ys[i]); }
+      }
+    }
   }
 
   /* ── the pager ──────────────────────────────────────────────────────────
      When a wheel, trackpad or keyboard scroll comes to rest between two stops, it
      glides on to the next stop in the direction the reader was going; a nudge too
      small to mean anything settles back. Where the space between two stops is more
-     than a screen (a panel that runs long), the reader scrolls freely and is only
+     than PAGE screens (a panel that runs long), the reader scrolls freely and is only
      drawn to a stop once it is close. Touch keeps the platform's own scrolling. */
+  // a gap up to this many screens is paged; only a panel longer than that scrolls freely
+  var PAGE = 1.3;
   var pagerStops = [], settled = 0, gliding = false, target = 0, idle = 0, held = false;
   var reducedMq = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)");
   function pagerOn() {
@@ -152,6 +177,7 @@
      native half-move followed by a correction. The glide is our own eased tween,
      slower and softer than the browser's smooth scroll, and it can be retargeted
      in flight. Keys page the same way. */
+  var qDir = 0, aEnd = 0;
   var anim = 0, aFrom = 0, aTo = 0, aT0 = 0, aDur = 0, aEase = null, lastSet = -1;
   var inOut = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
@@ -166,7 +192,7 @@
     // already moving: carry on from here without stopping first
     aEase = gliding ? easeOut : inOut;
     aFrom = from; aTo = y; aT0 = performance.now();
-    aDur = Math.max(620, Math.min(1150, 520 + 0.42 * Math.abs(y - from)));
+    aDur = Math.max(460, Math.min(820, 400 + 0.3 * Math.abs(y - from)));
     gliding = true;
     if (!anim) anim = requestAnimationFrame(step);
   }
@@ -174,46 +200,77 @@
     var t = Math.min(1, (now - aT0) / aDur);
     lastSet = aFrom + (aTo - aFrom) * aEase(t);
     window.scrollTo(0, lastSet);
+    // a scroll that came early in this glide carries on to the page after it
+    if (qDir && t >= 0.5) {
+      var q = nextStop(aTo, qDir); qDir = 0;
+      if (q !== null) { glide(q); anim = requestAnimationFrame(step); return; }
+    }
     if (t < 1) anim = requestAnimationFrame(step);
-    else { anim = 0; gliding = false; lastSet = -1; }
+    else { anim = 0; gliding = false; lastSet = -1; aEnd = now; }
   }
-  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; }
+  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; qDir = 0; }
   // the next stop from y in a direction, if it is a page away and not a long scroll
   function nextStop(y, dir) {
     var ys = pagerStops, vh = window.innerHeight, t = null;
     if (dir > 0) { for (var i = 0; i < ys.length; i++) if (ys[i] > y + 2) { t = ys[i]; break; } }
     else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < y - 2) { t = ys[j]; break; } }
-    if (t === null || Math.abs(t - y) > vh * 1.05) return null;
+    if (t === null || Math.abs(t - y) > vh * PAGE) return null;
     return t;
+  }
+  // the first stop strictly between two scroll positions, in the direction of travel
+  function crossed(from, to) {
+    var ys = pagerStops;
+    if (to > from) { for (var i = 0; i < ys.length; i++) if (ys[i] > from + 2 && ys[i] < to - 2) return ys[i]; }
+    else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < from - 2 && ys[j] > to + 2) return ys[j]; }
+    return null;
   }
   // gestures: a wheel stream is one gesture until it pauses, or until a trackpad
   // flicks again (the deltas rise after decaying) once the current glide is well on
-  var wLast = 0, wAbs = 0, wDecay = false, wDir = 0;
+  var wLast = 0, wAbs = 0, wPeak = 0, wLow = 0, wRise = 0, wDecay = false, wDir = 0;
   function onWheel(e) {
     if (!pagerOn() || e.ctrlKey || held) return;
     var vh = window.innerHeight;
     var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1);
     if (Math.abs(dy) < 0.5 || Math.abs(e.deltaX) > Math.abs(dy)) return;
     var now = performance.now(), abs = Math.abs(dy), dir = dy > 0 ? 1 : -1;
-    var fresh = now - wLast > 180 || dir !== wDir;
-    // after a short lull, a weaker event is still the tail of the same gesture (a
-    // trackpad's momentum can stutter); a new flick arrives at least as strong
-    // (a real new flick is recognised by its deltas rising again, just below)
-    if (fresh && dir === wDir && now - wLast < 700 && abs <= wAbs * 1.02) fresh = false;
-    if (!fresh && wDecay && abs > wAbs * 1.5 && progress() > 0.6) fresh = true;
+    var gap = now - wLast, fresh = gap > 180 || dir !== wDir;
+    // after a short lull, a weaker event is still the tail of a trackpad's momentum
+    // (it can stutter); a wheel's notches repeat the same size, so they never are
+    if (fresh && dir === wDir && gap < 400 && abs < wAbs * 0.97) fresh = false;
+    if (!fresh) {
+      if (gliding) {
+        // a new flick under way: a sharp rise, close to the gesture's own peak
+        if (wDecay && abs > wAbs * 2 && abs >= wPeak * 0.6 && progress() > 0.5) fresh = true;
+      } else if ((wRise >= 1 && abs > wAbs * 1.2 && abs >= wLow * 2.5 && abs >= wPeak * 0.2) || (abs > wAbs * 3 && abs >= wPeak * 0.4)) {
+        // a new flick after the glide has landed: the deltas climb for a few events,
+        // or jump straight back near full strength (one jittery spike does neither)
+        fresh = true;
+      } else if (now - aEnd > 120 && abs >= wPeak * 0.6) {
+        // still scrolling as hard as when it began, after landing: the reader means
+        // the next page (momentum has long faded by now; a rolled wheel has not)
+        fresh = true;
+      }
+    }
+    wRise = abs > wAbs * 1.2 ? wRise + 1 : 0;
+    wPeak = fresh ? abs : Math.max(wPeak, abs);
+    wLow = fresh ? abs : Math.min(wLow, abs);
     wDecay = abs < wAbs; wAbs = abs; wLast = now; wDir = dir;
     // where the reader is headed: the glide's end if one is under way
     var same = gliding && dir === Math.sign(aTo - aFrom);
     var t = nextStop(same ? aTo : window.scrollY, dir);
     if (t === null) {
       // a long panel or the footer: scroll natively, unless a glide is still running
-      if (gliding) e.preventDefault();
+      if (gliding) { e.preventDefault(); return; }
+      // but never past a stop: a native step that would cross one lands on it instead
+      var c = crossed(window.scrollY, window.scrollY + dy + dir * 3);
+      if (c !== null) { e.preventDefault(); clearTimeout(idle); glide(c); }
       return;
     }
     e.preventDefault();
     clearTimeout(idle);
     if (!fresh) return;
-    if (same && progress() < 0.6) return;
+    // early in a glide, remember it: the glide carries on to the next page
+    if (same && progress() < 0.5) { qDir = dir; return; }
     glide(t);
   }
   function onKey(e) {
@@ -241,9 +298,12 @@
     if (next === null) { settled = y; return; }          // past the last stop: the footer
     var d = y - from, gap = next - prev;
     // a long jump is a link or a hash, not a gesture: settle on the nearest stop
-    if (Math.abs(d) > vh * 1.5) { if (gap <= vh * 1.05 || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
+    if (Math.abs(d) > vh * 1.5) { if (gap <= vh * PAGE || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
     if (Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
-    if (gap <= vh * 1.05) { glide(d > 0 ? next : prev); return; }
+    // a scroll that ran past a stop comes back to it: no section is ever skipped
+    var c = crossed(from, y);
+    if (c !== null) { glide(c); return; }
+    if (gap <= vh * PAGE) { glide(d > 0 ? next : prev); return; }
     if (d > 0 && next - y < vh * 0.3) { glide(next); return; }
     if (d < 0 && y - prev < vh * 0.3) { glide(prev); return; }
     settled = y;
