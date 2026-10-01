@@ -121,8 +121,11 @@
       if (H <= vh * 1.2) return;
       var n = Math.floor((H - vh) / vh), last = 0;
       for (var i = 0; i <= n; i++) { ys.push(top + i * vh); last = i * vh; }
-      // the last screen of the pin, so the stage can be seen at rest
-      if (H - vh - last > vh * 0.25) ys.push(top + H - vh);
+      // the last screen of the pin, so the stage can be seen at rest; when it is only a
+      // sliver past the last screen it takes that screen's place, so the section after
+      // the pin is never more than a page away
+      if (H - vh - last <= vh * 0.25 && n > 0) ys.pop();
+      ys.push(top + H - vh);
     });
     ys = ys.map(Math.round).sort(function (a, b) { return a - b; })
       .filter(function (y, i, a) { return i === 0 || y - a[i - 1] > 2; });
@@ -137,8 +140,10 @@
      When a wheel, trackpad or keyboard scroll comes to rest between two stops, it
      glides on to the next stop in the direction the reader was going; a nudge too
      small to mean anything settles back. Where the space between two stops is more
-     than a screen (a panel that runs long), the reader scrolls freely and is only
+     than PAGE screens (a panel that runs long), the reader scrolls freely and is only
      drawn to a stop once it is close. Touch keeps the platform's own scrolling. */
+  // a gap up to this many screens is paged; only a panel longer than that scrolls freely
+  var PAGE = 1.3;
   var pagerStops = [], settled = 0, gliding = false, target = 0, idle = 0, held = false;
   var reducedMq = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)");
   function pagerOn() {
@@ -183,12 +188,19 @@
     var ys = pagerStops, vh = window.innerHeight, t = null;
     if (dir > 0) { for (var i = 0; i < ys.length; i++) if (ys[i] > y + 2) { t = ys[i]; break; } }
     else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < y - 2) { t = ys[j]; break; } }
-    if (t === null || Math.abs(t - y) > vh * 1.05) return null;
+    if (t === null || Math.abs(t - y) > vh * PAGE) return null;
     return t;
+  }
+  // the first stop strictly between two scroll positions, in the direction of travel
+  function crossed(from, to) {
+    var ys = pagerStops;
+    if (to > from) { for (var i = 0; i < ys.length; i++) if (ys[i] > from + 2 && ys[i] < to - 2) return ys[i]; }
+    else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < from - 2 && ys[j] > to + 2) return ys[j]; }
+    return null;
   }
   // gestures: a wheel stream is one gesture until it pauses, or until a trackpad
   // flicks again (the deltas rise after decaying) once the current glide is well on
-  var wLast = 0, wAbs = 0, wDecay = false, wDir = 0;
+  var wLast = 0, wAbs = 0, wPeak = 0, wDecay = false, wDir = 0;
   function onWheel(e) {
     if (!pagerOn() || e.ctrlKey || held) return;
     var vh = window.innerHeight;
@@ -200,14 +212,21 @@
     // trackpad's momentum can stutter); a new flick arrives at least as strong
     // (a real new flick is recognised by its deltas rising again, just below)
     if (fresh && dir === wDir && now - wLast < 700 && abs <= wAbs * 1.02) fresh = false;
-    if (!fresh && wDecay && abs > wAbs * 1.5 && progress() > 0.6) fresh = true;
+    // a new flick inside the stream: a sharp rise, nearly as strong as the gesture's
+    // own peak, once the glide is well on (a noisy device's momentum wobbles, but
+    // never back up to its peak)
+    if (!fresh && wDecay && abs > wAbs * 2 && abs >= wPeak * 0.6 && progress() > 0.6 && now - aT0 > 350) fresh = true;
+    wPeak = fresh ? abs : Math.max(wPeak, abs);
     wDecay = abs < wAbs; wAbs = abs; wLast = now; wDir = dir;
     // where the reader is headed: the glide's end if one is under way
     var same = gliding && dir === Math.sign(aTo - aFrom);
     var t = nextStop(same ? aTo : window.scrollY, dir);
     if (t === null) {
       // a long panel or the footer: scroll natively, unless a glide is still running
-      if (gliding) e.preventDefault();
+      if (gliding) { e.preventDefault(); return; }
+      // but never past a stop: a native step that would cross one lands on it instead
+      var c = crossed(window.scrollY, window.scrollY + dy + dir * 3);
+      if (c !== null) { e.preventDefault(); clearTimeout(idle); glide(c); }
       return;
     }
     e.preventDefault();
@@ -241,9 +260,12 @@
     if (next === null) { settled = y; return; }          // past the last stop: the footer
     var d = y - from, gap = next - prev;
     // a long jump is a link or a hash, not a gesture: settle on the nearest stop
-    if (Math.abs(d) > vh * 1.5) { if (gap <= vh * 1.05 || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
+    if (Math.abs(d) > vh * 1.5) { if (gap <= vh * PAGE || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
     if (Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
-    if (gap <= vh * 1.05) { glide(d > 0 ? next : prev); return; }
+    // a scroll that ran past a stop comes back to it: no section is ever skipped
+    var c = crossed(from, y);
+    if (c !== null) { glide(c); return; }
+    if (gap <= vh * PAGE) { glide(d > 0 ? next : prev); return; }
     if (d > 0 && next - y < vh * 0.3) { glide(next); return; }
     if (d < 0 && y - prev < vh * 0.3) { glide(prev); return; }
     settled = y;
