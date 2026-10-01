@@ -119,6 +119,16 @@
       if (!t) return;
       var top = t.getBoundingClientRect().top + sy, H = t.offsetHeight;
       if (H <= vh * 1.2) return;
+      // the credential wheel rests only on a whole record (src/activity.js settles it
+      // there), so its stops fall on records too: as many as make about a screen
+      var recs = parseInt(t.style.getPropertyValue("--n"), 10);
+      if (recs > 1) {
+        var turn = (H - vh) / recs, k = Math.max(1, Math.round(vh / turn));
+        if (k * turn > vh * PAGE) k--;
+        for (var r = 0; r < recs; r += k) ys.push(top + r * turn);
+        ys.push(top + H - vh);
+        return;
+      }
       var n = Math.floor((H - vh) / vh), last = 0;
       for (var i = 0; i <= n; i++) { ys.push(top + i * vh); last = i * vh; }
       // the last screen of the pin, so the stage can be seen at rest; when it is only a
@@ -157,6 +167,7 @@
      native half-move followed by a correction. The glide is our own eased tween,
      slower and softer than the browser's smooth scroll, and it can be retargeted
      in flight. Keys page the same way. */
+  var qDir = 0, aEnd = 0;
   var anim = 0, aFrom = 0, aTo = 0, aT0 = 0, aDur = 0, aEase = null, lastSet = -1;
   var inOut = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
@@ -171,7 +182,7 @@
     // already moving: carry on from here without stopping first
     aEase = gliding ? easeOut : inOut;
     aFrom = from; aTo = y; aT0 = performance.now();
-    aDur = Math.max(620, Math.min(1150, 520 + 0.42 * Math.abs(y - from)));
+    aDur = Math.max(460, Math.min(820, 400 + 0.3 * Math.abs(y - from)));
     gliding = true;
     if (!anim) anim = requestAnimationFrame(step);
   }
@@ -179,10 +190,15 @@
     var t = Math.min(1, (now - aT0) / aDur);
     lastSet = aFrom + (aTo - aFrom) * aEase(t);
     window.scrollTo(0, lastSet);
+    // a scroll that came early in this glide carries on to the page after it
+    if (qDir && t >= 0.5) {
+      var q = nextStop(aTo, qDir); qDir = 0;
+      if (q !== null) { glide(q); anim = requestAnimationFrame(step); return; }
+    }
     if (t < 1) anim = requestAnimationFrame(step);
-    else { anim = 0; gliding = false; lastSet = -1; }
+    else { anim = 0; gliding = false; lastSet = -1; aEnd = now; }
   }
-  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; }
+  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; qDir = 0; }
   // the next stop from y in a direction, if it is a page away and not a long scroll
   function nextStop(y, dir) {
     var ys = pagerStops, vh = window.innerHeight, t = null;
@@ -200,23 +216,34 @@
   }
   // gestures: a wheel stream is one gesture until it pauses, or until a trackpad
   // flicks again (the deltas rise after decaying) once the current glide is well on
-  var wLast = 0, wAbs = 0, wPeak = 0, wDecay = false, wDir = 0;
+  var wLast = 0, wAbs = 0, wPeak = 0, wLow = 0, wRise = 0, wDecay = false, wDir = 0;
   function onWheel(e) {
     if (!pagerOn() || e.ctrlKey || held) return;
     var vh = window.innerHeight;
     var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1);
     if (Math.abs(dy) < 0.5 || Math.abs(e.deltaX) > Math.abs(dy)) return;
     var now = performance.now(), abs = Math.abs(dy), dir = dy > 0 ? 1 : -1;
-    var fresh = now - wLast > 180 || dir !== wDir;
-    // after a short lull, a weaker event is still the tail of the same gesture (a
-    // trackpad's momentum can stutter); a new flick arrives at least as strong
-    // (a real new flick is recognised by its deltas rising again, just below)
-    if (fresh && dir === wDir && now - wLast < 700 && abs <= wAbs * 1.02) fresh = false;
-    // a new flick inside the stream: a sharp rise, nearly as strong as the gesture's
-    // own peak, once the glide is well on (a noisy device's momentum wobbles, but
-    // never back up to its peak)
-    if (!fresh && wDecay && abs > wAbs * 2 && abs >= wPeak * 0.6 && progress() > 0.6 && now - aT0 > 350) fresh = true;
+    var gap = now - wLast, fresh = gap > 180 || dir !== wDir;
+    // after a short lull, a weaker event is still the tail of a trackpad's momentum
+    // (it can stutter); a wheel's notches repeat the same size, so they never are
+    if (fresh && dir === wDir && gap < 400 && abs < wAbs * 0.97) fresh = false;
+    if (!fresh) {
+      if (gliding) {
+        // a new flick under way: a sharp rise, close to the gesture's own peak
+        if (wDecay && abs > wAbs * 2 && abs >= wPeak * 0.6 && progress() > 0.5) fresh = true;
+      } else if ((wRise >= 1 && abs > wAbs * 1.2 && abs >= wLow * 2.5 && abs >= wPeak * 0.2) || (abs > wAbs * 3 && abs >= wPeak * 0.4)) {
+        // a new flick after the glide has landed: the deltas climb for a few events,
+        // or jump straight back near full strength (one jittery spike does neither)
+        fresh = true;
+      } else if (now - aEnd > 120 && abs >= wPeak * 0.6) {
+        // still scrolling as hard as when it began, after landing: the reader means
+        // the next page (momentum has long faded by now; a rolled wheel has not)
+        fresh = true;
+      }
+    }
+    wRise = abs > wAbs * 1.2 ? wRise + 1 : 0;
     wPeak = fresh ? abs : Math.max(wPeak, abs);
+    wLow = fresh ? abs : Math.min(wLow, abs);
     wDecay = abs < wAbs; wAbs = abs; wLast = now; wDir = dir;
     // where the reader is headed: the glide's end if one is under way
     var same = gliding && dir === Math.sign(aTo - aFrom);
@@ -232,7 +259,8 @@
     e.preventDefault();
     clearTimeout(idle);
     if (!fresh) return;
-    if (same && progress() < 0.6) return;
+    // early in a glide, remember it: the glide carries on to the next page
+    if (same && progress() < 0.5) { qDir = dir; return; }
     glide(t);
   }
   function onKey(e) {
