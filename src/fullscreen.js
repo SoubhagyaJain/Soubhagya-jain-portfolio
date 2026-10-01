@@ -143,7 +143,17 @@
     while (have.length > ys.length) layer.removeChild(layer.lastChild);
     while (have.length < ys.length) { var m = document.createElement("i"); m.className = "fs-stop"; layer.appendChild(m); }
     ys.forEach(function (y, i) { have[i].style.top = y + "px"; });
+    // a refit that nudges the stops (a late image, a font) keeps the reader on the same
+    // one: a glide under way is retargeted, and a page at rest moves with its stop
+    var old = pagerStops;
     pagerStops = ys;
+    if (old.length === ys.length && pagerOn()) {
+      var at = gliding ? aTo : settled, i = old.indexOf(Math.round(at));
+      if (i >= 0 && ys[i] !== old[i] && Math.abs(ys[i] - old[i]) < vh * 0.5) {
+        if (gliding) { aTo = target = settled = ys[i]; }
+        else if (Math.abs(window.scrollY - old[i]) <= 2) { settled = ys[i]; window.scrollTo(0, ys[i]); }
+      }
+    }
   }
 
   /* ── the pager ──────────────────────────────────────────────────────────
