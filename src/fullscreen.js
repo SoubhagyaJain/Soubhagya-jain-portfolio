@@ -299,7 +299,7 @@
     var d = y - from, gap = next - prev;
     // a long jump is a link or a hash, not a gesture: settle on the nearest stop
     if (Math.abs(d) > vh * 1.5) { if (gap <= vh * PAGE || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
-    if (Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
+    if (gap <= vh * PAGE && Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
     // a scroll that ran past a stop comes back to it: no section is ever skipped
     var c = crossed(from, y);
     if (c !== null) { glide(c); return; }
