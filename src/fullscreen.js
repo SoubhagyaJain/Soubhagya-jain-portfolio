@@ -171,6 +171,11 @@
     if (root.classList.contains("bi-on")) return false;
     return window.innerWidth > 820 && !!(window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches);
   }
+  function workOn() {
+    var first = document.getElementById("cs-builder") || document.getElementById("selected-systems");
+    var after = document.getElementById("thinking");
+    return !!(first && after && first.getBoundingClientRect().top <= 2 && after.getBoundingClientRect().top > 2);
+  }
   /* One gesture, one page, one unbroken move. A wheel or trackpad gesture that
      starts at a stop is taken whole: the glide begins on its first event and the
      rest of it (a trackpad's momentum included) is absorbed, so there is never a
@@ -245,9 +250,11 @@
         // a new flick after the glide has landed: the deltas climb for a few events,
         // or jump straight back near full strength (one jittery spike does neither)
         fresh = true;
-      } else if (now - aEnd > 120 && abs >= wPeak * 0.6) {
+      } else if (now - aEnd > 120 && (abs >= wPeak * 0.6 ||
+        (abs >= 16 && abs === wAbs && !wDecay && workOn()))) {
         // still scrolling as hard as when it began, after landing: the reader means
         // the next page (momentum has long faded by now; a rolled wheel has not)
+        // Work also accepts steady wheel notches after an initially stronger event.
         fresh = true;
       }
     }
@@ -299,7 +306,7 @@
     var d = y - from, gap = next - prev;
     // a long jump is a link or a hash, not a gesture: settle on the nearest stop
     if (Math.abs(d) > vh * 1.5) { if (gap <= vh * PAGE || Math.min(y - prev, next - y) < vh * 0.3) glide(y - prev <= next - y ? prev : next); else settled = y; return; }
-    if (Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
+    if (gap <= vh * PAGE && Math.abs(d) < 24 && Math.abs(from - y) < vh) { glide(from); return; }
     // a scroll that ran past a stop comes back to it: no section is ever skipped
     var c = crossed(from, y);
     if (c !== null) { glide(c); return; }
