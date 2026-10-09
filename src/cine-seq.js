@@ -636,7 +636,9 @@
       var p = (y - top) / H;
       if (pv < 0 || p <= 0 || p >= 1) pv = clamp(p, 0, 1);
       else { pv += (p - pv) * (1 - Math.exp(-dt / 110)); if (Math.abs(p - pv) < 1e-4) pv = p; }
-      var on = y > top - vh && p < 1;
+      // Scroll positions round to pixels, but a fitted section can end between
+      // pixels. Release the overlay at that rounded endpoint too.
+      var on = y > top - vh && y < top + H - 0.5;
       if (on) {
         if (!held) { target.classList.add("cs-held"); held = true; }
         land(target);
@@ -668,6 +670,9 @@
     function unmount() {
       io.disconnect();
       window.removeEventListener("scroll", queue);
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0; active = false; lastP = -1; pv = -1; lastT = 0;
+      ov.classList.remove("on"); ov.style.opacity = "0";
       if (held) { target.classList.remove("cs-held"); held = false; }
       if (track.parentNode) track.parentNode.removeChild(track);
       if (ov.parentNode) ov.parentNode.removeChild(ov);

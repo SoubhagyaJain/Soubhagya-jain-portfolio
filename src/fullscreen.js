@@ -104,7 +104,7 @@
 
   // every snap stop lives in one unzoomed layer at the top of the page: one per panel,
   // one for the hero, and one per screen down each pinned stage's track
-  var layer = null;
+  var layer = null, ctaRange = null;
   function stops(vh) {
     if (!layer) {
       layer = document.createElement("div");
@@ -114,11 +114,22 @@
     }
     var sy = window.scrollY, ys = [0];  // local; the pager reads pagerStops
     panels.forEach(function (el) { ys.push(el.getBoundingClientRect().top + sy); });
+    ctaRange = null;
     TRACKS.forEach(function (s) {
       var t = document.querySelector(s);
       if (!t) return;
       var top = t.getBoundingClientRect().top + sy, H = t.offsetHeight;
       if (H <= vh * 1.2) return;
+      // Written down -> Contact is one continuous shot, rather than five pages
+      // that each consume a separate gesture. Keep its film and track intact.
+      if (s === "#cs-cta") {
+        var writing = document.getElementById("writing");
+        if (writing) {
+          ctaRange = { start: Math.round(writing.getBoundingClientRect().top + sy), end: Math.round(top + H), track: t };
+          ys.push(ctaRange.end);
+          return;
+        }
+      }
       // the credential wheel rests only on a whole record (src/activity.js settles it
       // there), so its stops fall on records too: as many as make about a screen
       var recs = parseInt(t.style.getPropertyValue("--n"), 10);
@@ -147,6 +158,9 @@
     // one: a glide under way is retargeted, and a page at rest moves with its stop
     var old = pagerStops;
     pagerStops = ys;
+    // Switching to night removes this film's track. Cancel its old destination
+    // after the theme has preserved the reader's position in the new layout.
+    if (gliding && aCta && !ctaRange) { stopGlide(); settled = window.scrollY; }
     if (old.length === ys.length && pagerOn()) {
       var at = gliding ? aTo : settled, i = old.indexOf(Math.round(at));
       if (i >= 0 && ys[i] !== old[i] && Math.abs(ys[i] - old[i]) < vh * 0.5) {
@@ -183,7 +197,7 @@
      slower and softer than the browser's smooth scroll, and it can be retargeted
      in flight. Keys page the same way. */
   var qDir = 0, aEnd = 0;
-  var anim = 0, aFrom = 0, aTo = 0, aT0 = 0, aDur = 0, aEase = null, lastSet = -1;
+  var anim = 0, aFrom = 0, aTo = 0, aT0 = 0, aDur = 0, aEase = null, lastSet = -1, aCta = false;
   var inOut = function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
   function progress() { return gliding ? Math.min(1, (performance.now() - aT0) / aDur) : 1; }
@@ -198,6 +212,9 @@
     aEase = gliding ? easeOut : inOut;
     aFrom = from; aTo = y; aT0 = performance.now();
     aDur = Math.max(460, Math.min(820, 400 + 0.3 * Math.abs(y - from)));
+    aCta = !!(ctaRange && ctaRange.track.isConnected && from >= ctaRange.start - 2 && from <= ctaRange.end + 2 &&
+      (y === ctaRange.start || y === ctaRange.end));
+    if (aCta) aDur = Math.max(aDur, 1900 * Math.abs(y - from) / (ctaRange.end - ctaRange.start));
     gliding = true;
     if (!anim) anim = requestAnimationFrame(step);
   }
@@ -216,6 +233,10 @@
   function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; qDir = 0; }
   // the next stop from y in a direction, if it is a page away and not a long scroll
   function nextStop(y, dir) {
+    if (ctaRange && ctaRange.track.isConnected && y >= ctaRange.start - 2 && y <= ctaRange.end + 2) {
+      if (dir > 0 && y < ctaRange.end - 2) return ctaRange.end;
+      if (dir < 0 && y > ctaRange.start + 2) return ctaRange.start;
+    }
     var ys = pagerStops, vh = window.innerHeight, t = null;
     if (dir > 0) { for (var i = 0; i < ys.length; i++) if (ys[i] > y + 2) { t = ys[i]; break; } }
     else { for (var j = ys.length - 1; j >= 0; j--) if (ys[j] < y - 2) { t = ys[j]; break; } }
@@ -298,6 +319,9 @@
     var y = window.scrollY, vh = window.innerHeight, from = settled;
     var ys = pagerStops;
     if (!ys.length || held) { settled = y; return; }
+    // A scrollbar drag inside the shot stays where the reader left it; the next
+    // wheel gesture can carry the film smoothly to either end.
+    if (ctaRange && ctaRange.track.isConnected && y > ctaRange.start + 2 && y < ctaRange.end - 2) { settled = y; return; }
     for (var j = 0; j < ys.length; j++) if (Math.abs(ys[j] - y) <= 2) { settled = ys[j]; return; }
     var k = -1;
     for (var i = 0; i < ys.length; i++) if (ys[i] < y) k = i;
