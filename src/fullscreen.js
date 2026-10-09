@@ -204,6 +204,14 @@
     aEase = gliding ? easeOut : inOut;
     aFrom = from; aTo = y; aT0 = performance.now();
     aDur = Math.max(460, Math.min(820, 400 + 0.3 * Math.abs(y - from)));
+    // Let the closing film breathe without asking for more wheel gestures.
+    var cta = root.getAttribute("data-scene") === "day" && document.getElementById("cs-cta");
+    if (cta) {
+      var r = cta.getBoundingClientRect(), top = r.top + from, bottom = top + r.height;
+      if (r.height > 0 && Math.min(from, y) < bottom - 1 && Math.max(from, y) > top + 1) {
+        aDur = Math.max(1000, Math.min(3600, 3200 * Math.abs(y - from) / r.height));
+      }
+    }
     gliding = true;
     if (!anim) anim = requestAnimationFrame(step);
   }

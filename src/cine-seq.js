@@ -634,6 +634,8 @@
       var top = track.getBoundingClientRect().top + y, H = track.offsetHeight;
       var enter = seg(y, top - vh, top);
       var p = (y - top) / H;
+      // Pager stops are rounded to pixels; finish the closing cut at that same boundary.
+      if (cfg.id === "cs-cta" && y >= top + H - 1) p = 1;
       if (pv < 0 || p <= 0 || p >= 1) pv = clamp(p, 0, 1);
       else { pv += (p - pv) * (1 - Math.exp(-dt / 110)); if (Math.abs(p - pv) < 1e-4) pv = p; }
       var on = y > top - vh && p < 1;
