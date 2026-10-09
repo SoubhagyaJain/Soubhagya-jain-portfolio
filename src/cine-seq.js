@@ -622,9 +622,9 @@
       });
     }
 
-    // The film does not jump with the scroll: it eases after it (critically damped,
-    // about a tenth of a second), so a wheel's notches and a glide's steps become one
-    // continuous camera move. Out of the track it snaps, so the cut is still exact.
+    // The Builder eases after scroll by about a tenth of a second. The CTA's
+    // scroll is already eased by the pager, so follow its position directly to
+    // keep the camera synchronized without adding a second layer of lag.
     var raf = 0, active = false, lastP = -1, pv = -1, lastT = 0;
     function tick(now) {
       raf = 0;
@@ -634,7 +634,7 @@
       var top = track.getBoundingClientRect().top + y, H = track.offsetHeight;
       var enter = seg(y, top - vh, top);
       var p = (y - top) / H;
-      if (pv < 0 || p <= 0 || p >= 1) pv = clamp(p, 0, 1);
+      if (cfg.id === "cs-cta" || pv < 0 || p <= 0 || p >= 1) pv = clamp(p, 0, 1);
       else { pv += (p - pv) * (1 - Math.exp(-dt / 110)); if (Math.abs(p - pv) < 1e-4) pv = p; }
       // Scroll positions round to pixels, but a fitted section can end between
       // pixels. Release the overlay at that rounded endpoint too.
