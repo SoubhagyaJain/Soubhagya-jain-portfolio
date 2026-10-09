@@ -104,7 +104,7 @@
 
   // every snap stop lives in one unzoomed layer at the top of the page: one per panel,
   // one for the hero, and one per screen down each pinned stage's track
-  var layer = null;
+  var layer = null, ctaRange = null;
   function stops(vh) {
     if (!layer) {
       layer = document.createElement("div");
@@ -112,13 +112,24 @@
       layer.style.cssText = "position:absolute;left:0;top:0;width:0;height:0;pointer-events:none";
       document.body.appendChild(layer);
     }
-    var sy = window.scrollY, ys = [0];  // local; the pager reads pagerStops
+    var sy = window.scrollY, ys = [0], oldCta = ctaRange;  // local; the pager reads pagerStops
     panels.forEach(function (el) { ys.push(el.getBoundingClientRect().top + sy); });
+    ctaRange = null;
     TRACKS.forEach(function (s) {
       var t = document.querySelector(s);
       if (!t) return;
       var top = t.getBoundingClientRect().top + sy, H = t.offsetHeight;
       if (H <= vh * 1.2) return;
+      // Written down -> Contact follows scroll continuously, without intermediate
+      // page stops. Keep its film and track intact.
+      if (s === "#cs-cta") {
+        var writing = document.getElementById("writing");
+        if (writing) {
+          ctaRange = { start: Math.round(writing.getBoundingClientRect().top + sy), end: Math.round(top + H), track: t };
+          ys.push(ctaRange.end);
+          return;
+        }
+      }
       // the credential wheel rests only on a whole record (src/activity.js settles it
       // there), so its stops fall on records too: as many as make about a screen
       var recs = parseInt(t.style.getPropertyValue("--n"), 10);
@@ -147,6 +158,10 @@
     // one: a glide under way is retargeted, and a page at rest moves with its stop
     var old = pagerStops;
     pagerStops = ys;
+    if (ctaAnim) {
+      if (!ctaRange) { stopCta(); settled = window.scrollY; }
+      else ctaTarget = Math.max(ctaRange.start, Math.min(ctaRange.end, ctaTarget + ctaRange.start - oldCta.start));
+    }
     if (old.length === ys.length && pagerOn()) {
       var at = gliding ? aTo : settled, i = old.indexOf(Math.round(at));
       if (i >= 0 && ys[i] !== old[i] && Math.abs(ys[i] - old[i]) < vh * 0.5) {
@@ -188,6 +203,7 @@
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
   function progress() { return gliding ? Math.min(1, (performance.now() - aT0) / aDur) : 1; }
   function glide(y) {
+    stopCta();
     target = y; settled = y;
     var from = window.scrollY;
     if ((reducedMq && reducedMq.matches) || Math.abs(y - from) < 1) {
@@ -213,7 +229,40 @@
     if (t < 1) anim = requestAnimationFrame(step);
     else { anim = 0; gliding = false; lastSet = -1; aEnd = now; }
   }
-  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; qDir = 0; }
+  function stopGlide() { if (anim) cancelAnimationFrame(anim); anim = 0; gliding = false; lastSet = -1; qDir = 0; stopCta(); }
+  // Only this film uses continuous input: every wheel delta advances its own
+  // distance, with a short, frame-rate-independent ease instead of autoplay.
+  var ctaAnim = 0, ctaTarget = 0, ctaPosition = 0, ctaLastSet = -1, ctaTime = 0, ctaDir = 0;
+  function stopCta() {
+    if (ctaAnim) cancelAnimationFrame(ctaAnim);
+    ctaAnim = 0; ctaLastSet = -1; ctaTime = 0; ctaDir = 0;
+  }
+  function ctaOwns(y, dir) {
+    return !!(ctaRange && ctaRange.track.isConnected && y >= ctaRange.start - 2 && y <= ctaRange.end + 2 &&
+      (dir > 0 ? y < ctaRange.end - 0.5 : y > ctaRange.start + 0.5));
+  }
+  function scrollCta(dy) {
+    var dir = dy > 0 ? 1 : -1, y = window.scrollY;
+    var from = ctaAnim && ctaDir === dir ? ctaTarget : y;
+    if (gliding) stopGlide();
+    clearTimeout(idle);
+    ctaTarget = Math.max(ctaRange.start, Math.min(ctaRange.end, from + dy));
+    if (!ctaAnim || ctaDir !== dir) ctaPosition = y;
+    ctaDir = dir;
+    if (!ctaAnim) { ctaTime = performance.now(); ctaAnim = requestAnimationFrame(ctaStep); }
+  }
+  function ctaStep(now) {
+    if (!ctaRange || !ctaRange.track.isConnected || !pagerOn()) { stopCta(); return; }
+    var dt = Math.min(64, Math.max(1, now - ctaTime)); ctaTime = now;
+    // Preserve subpixels between frames so even tiny trackpad deltas converge.
+    var gap = ctaTarget - ctaPosition;
+    ctaPosition = Math.abs(gap) <= 1 ? ctaTarget : ctaPosition + gap * (1 - Math.exp(-dt / 85));
+    ctaLastSet = ctaPosition;
+    window.scrollTo(0, ctaLastSet);
+    if (Math.abs(ctaTarget - window.scrollY) <= 1) {
+      window.scrollTo(0, ctaTarget); settled = window.scrollY; stopCta();
+    } else ctaAnim = requestAnimationFrame(ctaStep);
+  }
   // the next stop from y in a direction, if it is a page away and not a long scroll
   function nextStop(y, dir) {
     var ys = pagerStops, vh = window.innerHeight, t = null;
@@ -238,6 +287,11 @@
     var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? vh : 1);
     if (Math.abs(dy) < 0.5 || Math.abs(e.deltaX) > Math.abs(dy)) return;
     var now = performance.now(), abs = Math.abs(dy), dir = dy > 0 ? 1 : -1;
+    if (ctaOwns(window.scrollY, dir)) {
+      e.preventDefault(); scrollCta(dy);
+      wLast = now; wDir = dir; wAbs = abs;
+      return;
+    }
     var gap = now - wLast, fresh = gap > 180 || dir !== wDir;
     // after a short lull, a weaker event is still the tail of a trackpad's momentum
     // (it can stutter); a wheel's notches repeat the same size, so they never are
@@ -289,6 +343,11 @@
     else if (k === "ArrowUp" || k === "PageUp" || (k === " " && e.shiftKey)) dir = -1;
     else if (k === "Home") { e.preventDefault(); glide(0); return; }
     else return;
+    if (ctaOwns(window.scrollY, dir)) {
+      e.preventDefault();
+      scrollCta(dir * (k === "ArrowDown" || k === "ArrowUp" ? 64 : window.innerHeight * 0.85));
+      return;
+    }
     var t = nextStop(gliding ? aTo : window.scrollY, dir);
     if (t === null) return;             // a long panel: the key scrolls it natively
     e.preventDefault();
@@ -298,6 +357,9 @@
     var y = window.scrollY, vh = window.innerHeight, from = settled;
     var ys = pagerStops;
     if (!ys.length || held) { settled = y; return; }
+    // Pause exactly where the reader stops inside the shot; never autoplay the
+    // rest of the film or pull the scrollbar back to a page stop.
+    if (ctaRange && ctaRange.track.isConnected && y > ctaRange.start + 2 && y < ctaRange.end - 2) { settled = y; return; }
     for (var j = 0; j < ys.length; j++) if (Math.abs(ys[j] - y) <= 2) { settled = ys[j]; return; }
     var k = -1;
     for (var i = 0; i < ys.length; i++) if (ys[i] < y) k = i;
@@ -317,6 +379,10 @@
   }
   function onScroll() {
     if (!pagerOn()) return;
+    if (ctaAnim) {
+      if (ctaLastSet >= 0 && Math.abs(window.scrollY - ctaLastSet) > 4) stopCta();
+      else return;
+    }
     if (gliding) {
       // our own tween moves the page; anything else (a scrollbar drag) takes over
       if (lastSet >= 0 && Math.abs(window.scrollY - lastSet) > 4) stopGlide();
