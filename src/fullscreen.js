@@ -182,6 +182,13 @@
     var writing = document.getElementById("writing");
     return root.getAttribute("data-scene") === "day" && !!writing && writing.getBoundingClientRect().top <= 2;
   }
+  function directionOn() {
+    if (root.getAttribute("data-scene") !== "day") return false;
+    var direction = document.getElementById("direction");
+    if (!direction) return false;
+    var r = direction.getBoundingClientRect();
+    return r.top <= 2 && r.bottom > 2;
+  }
   /* One gesture, one page, one unbroken move. A wheel or trackpad gesture that
      starts at a stop is taken whole: the glide begins on its first event and the
      rest of it (a trackpad's momentum included) is absorbed, so there is never a
@@ -265,10 +272,10 @@
         // or jump straight back near full strength (one jittery spike does neither)
         fresh = true;
       } else if (now - aEnd > 120 && (abs >= wPeak * 0.6 ||
-        (abs >= 16 && abs === wAbs && !wDecay && (workOn() || closingOn())))) {
+        (abs >= 16 && abs === wAbs && !wDecay && (workOn() || closingOn() || directionOn())))) {
         // still scrolling as hard as when it began, after landing: the reader means
         // the next page (momentum has long faded by now; a rolled wheel has not)
-        // Work and the light-mode closing chapters also accept steady wheel notches
+        // Work, light-mode Direction and the closing chapters accept steady wheel notches
         // after an initially stronger event.
         fresh = true;
       }
