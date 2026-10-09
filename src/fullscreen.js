@@ -118,6 +118,8 @@
       var t = document.querySelector(s);
       if (!t) return;
       var top = t.getBoundingClientRect().top + sy, H = t.offsetHeight;
+      // The closing film is one continuous page, ending exactly at Contact.
+      if (t.id === "cs-cta") { ys.push(top, top + H); return; }
       if (H <= vh * 1.2) return;
       // the credential wheel rests only on a whole record (src/activity.js settles it
       // there), so its stops fall on records too: as many as make about a screen
@@ -175,6 +177,10 @@
     var first = document.getElementById("cs-builder") || document.getElementById("selected-systems");
     var after = document.getElementById("thinking");
     return !!(first && after && first.getBoundingClientRect().top <= 2 && after.getBoundingClientRect().top > 2);
+  }
+  function closingOn() {
+    var writing = document.getElementById("writing");
+    return root.getAttribute("data-scene") === "day" && !!writing && writing.getBoundingClientRect().top <= 2;
   }
   /* One gesture, one page, one unbroken move. A wheel or trackpad gesture that
      starts at a stop is taken whole: the glide begins on its first event and the
@@ -251,10 +257,11 @@
         // or jump straight back near full strength (one jittery spike does neither)
         fresh = true;
       } else if (now - aEnd > 120 && (abs >= wPeak * 0.6 ||
-        (abs >= 16 && abs === wAbs && !wDecay && workOn()))) {
+        (abs >= 16 && abs === wAbs && !wDecay && (workOn() || closingOn())))) {
         // still scrolling as hard as when it began, after landing: the reader means
         // the next page (momentum has long faded by now; a rolled wheel has not)
-        // Work also accepts steady wheel notches after an initially stronger event.
+        // Work and the light-mode closing chapters also accept steady wheel notches
+        // after an initially stronger event.
         fresh = true;
       }
     }

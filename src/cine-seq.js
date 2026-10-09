@@ -438,7 +438,7 @@
     { id: "cs-builder", dir: "assets/seq/builder/", before: "#selected-systems", target: "#selected-systems > div > header", screens: 5.5,
       filmEnd: 0.78, frag: true, anchor: 1, wakeAt: 156, w: 1280, h: 720 },
     // the CTA is re-mastered at 1080p: its last seconds are pushed in close
-    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 5, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 126, w: 1920, h: 1080 }
+    { id: "cs-cta", dir: "assets/seq/cta/", before: "#contact", target: "#contact", screens: 1, filmEnd: 0.76, frag: false, anchor: 0.5, wakeAt: 126, w: 1920, h: 1080 }
   ];
   // every frame the camera shot, at its own 24 fps: no frame is skipped or blended
   var N = 240;

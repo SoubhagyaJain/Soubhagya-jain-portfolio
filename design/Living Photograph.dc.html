@@ -2087,7 +2087,8 @@ class Component extends DCLogic {
           el.dataset.lpShown = "1";
           clearTimeout(el._lpT);
           el._lpT = setTimeout(() => land(it), it.delay);
-        } else if (el.dataset.lpShown === "1" && !small) {
+        } else if (el.dataset.lpShown === "1" && !small &&
+                   !(document.documentElement.dataset.scene === "day" && el.closest("#writing"))) {
           // On a phone a reveal plays once. Re-arming on exit meant that scrolling back up
           // met every block hidden again and fading in late under the thumb — content
           // that is half there is worse than content that simply stays.
