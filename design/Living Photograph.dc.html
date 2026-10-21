@@ -158,6 +158,12 @@
      plates and canvas stand down, the valley takes the stage, and the hero copy sits
      in the design's left column. Phones never set it and keep the bay. */
   html[data-alpine] [data-alpine-stage] { display: block !important; }
+  /* This film belongs to the dark hero only; the fixed chapter backdrop stays intact. */
+  [data-dark-hero] { position: absolute; inset: 0; overflow: hidden; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 1.2s ease, visibility 0s linear 1.2s; }
+  [data-scene="dark"] [data-dark-hero] { opacity: 1; visibility: visible; transition: opacity 1.2s ease; }
+  [data-dark-hero-video] { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  [data-dark-hero]::after { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 16% 60%, rgba(5,10,24,0.64), rgba(5,10,24,0.28) 65%, rgba(5,10,24,0.08)), linear-gradient(180deg, rgba(5,10,20,0.28), transparent 24%); }
   /* The night film's screen and air: a bloom on the moon with an anamorphic streak, mist
      drifting over the water, sparse embers falling, and the projected-film finish (grain,
      vignette, a trace of edge fringing). Shown and hidden with the film; transform and
@@ -475,6 +481,9 @@
     </nav>
 
     <div style="position: relative; height: 100vh; min-height: 460px">
+    <div data-dark-hero aria-hidden="true">
+      <video data-dark-hero-video data-src="assets/dark-hero.mp4" muted loop playsinline disablepictureinpicture preload="none" poster="assets/dark-hero.jpg" tabindex="-1"></video>
+    </div>
     <div ref="{{ copyRef }}" data-hero-copy style="position: absolute; inset: 0; display: grid; will-change: transform, opacity; grid-template-rows: 1fr auto; padding: clamp(104px, 15vh, 168px) clamp(22px, 4vw, 54px) clamp(22px, 4vw, 54px); box-sizing: border-box; will-change: transform, opacity">
       <div data-hero-stack>
         <div data-hero-sky>
@@ -1881,6 +1890,7 @@ class Component extends DCLogic {
       const c = CHROME[name] || CHROME.dark;
       // chapter 03 draws its own canvases and styles its paper per plate
       document.documentElement.dataset.scene = name === "day" ? "day" : "dark";
+      if (this.syncDarkHeroVideo) this.syncDarkHeroVideo();
       const veil = this.veilRef.current, dim = this.dimRef.current;
       if (veil) veil.style.background = c.veil;
       if (dim) dim.style.background = c.dim;
@@ -2695,6 +2705,31 @@ class Component extends DCLogic {
     pill.style.background = "linear-gradient(178deg, rgba(255,255,255," + (0.18 + 0.07 * q).toFixed(3) + ") 0%, rgba(8,18,26," + (0.52 + 0.12 * q).toFixed(3) + ") 46%, rgba(255,255,255," + (0.09 + 0.05 * q).toFixed(3) + ") 100%)";
   }
 
+  initDarkHeroVideo() {
+    const video = document.querySelector("[data-dark-hero-video]");
+    if (!video) return;
+    const hero = video.parentElement;
+    const motion = this.darkHeroMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const bounds = hero.getBoundingClientRect();
+    let inView = bounds.bottom > 0 && bounds.top < window.innerHeight;
+    this.syncDarkHeroVideo = () => {
+      const active = document.documentElement.dataset.scene === "dark" && inView && !document.hidden;
+      if (!active || motion.matches) { video.pause(); return; }
+      if (!video.getAttribute("src")) video.src = video.dataset.src;
+      video.muted = true;
+      const playing = video.play();
+      if (playing && playing.catch) playing.catch(() => {});
+    };
+    this.darkHeroObserver = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      this.syncDarkHeroVideo();
+    });
+    this.darkHeroObserver.observe(hero);
+    document.addEventListener("visibilitychange", this.syncDarkHeroVideo);
+    motion.addEventListener("change", this.syncDarkHeroVideo);
+    this.syncDarkHeroVideo();
+  }
+
   componentDidMount() {
     this.alpineOn = this.initAlpine();
     this.cssGlide = !!(window.CSS && CSS.supports && CSS.supports("animation-timeline: scroll()"));
@@ -2806,6 +2841,7 @@ class Component extends DCLogic {
     }
     this.initNav();
     this.initWork();
+    this.initDarkHeroVideo();
     this.initTheme();
     this.onScroll();
 
@@ -3213,6 +3249,13 @@ class Component extends DCLogic {
   }
 
   componentWillUnmount() {
+    if (this.darkHeroObserver) this.darkHeroObserver.disconnect();
+    if (this.syncDarkHeroVideo) {
+      document.removeEventListener("visibilitychange", this.syncDarkHeroVideo);
+      this.darkHeroMotion.removeEventListener("change", this.syncDarkHeroVideo);
+      const video = document.querySelector("[data-dark-hero-video]");
+      if (video) video.pause();
+    }
     if (this.smallQuery) {
       if (this.smallQuery.removeEventListener) this.smallQuery.removeEventListener("change", this.onSmall);
       else this.smallQuery.removeListener(this.onSmall);
